@@ -104,22 +104,36 @@ Tick them off as you go.
 - [x] Tap **Lock now** → the Unlock screen.
 - [x] Enter the right password → back to your wallet. 📝 Note the Test info
       line again. Same, but 0.1 s
-- [ ] Lock again, then enter a wrong password **5 times**. After the 5th you
+- [x] Lock again, then enter a wrong password **5 times**. After the 5th you
       should see "try again in 30 s" counting down, and the Unlock button
       greyed out.
-- [ ] While it's counting down, close the Signer completely (swipe its card away
+- [x] While it's counting down, close the Signer completely (swipe its card away
       in the app switcher) and reopen it. The waiting time should still be there.
-- [ ] After the wait, the right password unlocks it again.
+- [x] After the wait, the right password unlocks it again.
 
 **C6. Automatic locking**
-- [ ] While unlocked, switch to another app (or press the home button), then
+- [x] While unlocked, switch to another app (or press the home button), then
       come back → the Signer should be locked again.
 
-**C7. Does the wallet match Klever's own app?** (optional, but very valuable)
-- [ ] In the **Klever Wallet** app, import/restore a wallet using the same
-      24 test words.
-- [ ] The Klever address shown there should be **exactly** the same `klv1…`
-      address as in the Signer. If it isn't, tell Claude before going further.
+**C7. Does the wallet match Klever's own recipe?** (very valuable)
+
+In the Klever Wallet *phone app*, a recovery phrase can only be entered when
+setting the app up from scratch ("Restore Wallet"), because the phrase *is*
+the whole wallet there. **Don't reset your Klever Wallet app for this test.**
+(Importing a private key instead wouldn't help. It skips exactly the step
+we want to check: phrase → key.) Use the **Klever Extension** in a separate
+Chrome profile instead, so nothing of yours is touched:
+
+- [ ] In Chrome: profile icon (top right) → **Add** → continue without an
+      account. A new, empty Chrome window opens.
+- [ ] In that window, install the **Klever Extension** from the Chrome Web Store.
+- [ ] Open it and choose **Restore wallet** (not "Create"). Enter the 24 test
+      words, set any password.
+- [ ] Switch it to **KleverChain (KLV)** if needed and look at the address.
+      It should be **exactly** the same `klv1…` address as in the Signer. If
+      it isn't, tell Claude before going further.
+- [ ] Afterwards you can delete that Chrome profile (profile icon → manage
+      profiles → ⋮ → Delete).
 
 **C8. "I forgot my password" and restoring**
 - [ ] Lock the Signer. On the Unlock screen, tap **I forgot my password**.
