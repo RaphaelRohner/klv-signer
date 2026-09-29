@@ -1,8 +1,12 @@
 # KLV Signer
 
 A small Android app that keeps a Klever wallet's private key safe and signs
-transactions for the **Devikins Legacy Hub**, without the Hub ever seeing the
-key.
+transactions for **any Android app that uses the Klever chain**, without
+those apps ever seeing the key. You see which app is asking and what it
+wants, and nothing is signed unless you approve it with your password.
+It fills a gap: the Klever Wallet app for Android doesn't let other apps ask
+it to sign Klever transactions, so any developer can call the Signer from
+their own app instead. The **Devikins Legacy Hub** is the first app that will use it.
 
 **New here? Read [HOW-IT-WORKS.md](HOW-IT-WORKS.md) first.** It explains the
 whole idea in plain English, with a build plan and a glossary.
@@ -45,8 +49,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | App name | KLV Signer | What you see under the icon. |
 | Android package | `com.raphaelrohner.klvsigner` | The app's permanent ID on Android. Never change it after installing, or Android treats it as a different app (and its stored wallet is gone). |
 | Network | testnet | Set in `app/src/config.js`. |
-| Link address | `klvsigner://` | How the Hub will open the Signer. |
-| Hub's reply address | `dlh://` (to be added to the Hub in Stage 3) | How the Signer will open the Hub again. |
+| How apps ask | Android "ask another app for a result" (Stage 3) | Android tells the Signer which app is asking and returns the answer only to that app. Details will go in SIGNER-PROTOCOL.md. |
 | Cloud backup | Off | The scrambled key never leaves the phone through Android backups. |
 | Expo version | SDK 57 | Same as the Hub. |
 

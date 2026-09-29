@@ -23,8 +23,8 @@ export default function WelcomeScreen({ onCreate, onRestore }) {
       <NetworkBadge />
       <Title>KLV Signer</Title>
       <Body>
-        This app keeps your Klever wallet's private key safe on this phone and signs transactions
-        for the Devikins Legacy Hub. The Hub never sees the key.
+        This app keeps your Klever wallet's private key safe on this phone and signs transactions for
+        other Klever apps, only when you approve. Those apps never see the key.
       </Body>
       <Notice kind="warning">
         Testing phase: please only use a brand-new wallet that has never held anything of real value.

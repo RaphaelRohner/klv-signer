@@ -16,16 +16,26 @@ design this project follows, and `app/AGENTS.md` for Expo-specific rules.
 
 ## Project facts
 
-- Expo SDK 57, plain JavaScript (no TypeScript), same as the sister app
-  **Devikins Legacy Hub** (package `com.raphaelrohner.devikinslegacyhub`,
-  app name "DLH").
+- **Scope: a general-purpose signer for ANY Android app using the Klever
+  chain** ("client apps"). The **Devikins Legacy Hub** (package
+  `com.raphaelrohner.devikinslegacyhub`, app name "DLH") is the first client
+  and test partner, but nothing in the Signer may be specific to it.
+- Expo SDK 57, plain JavaScript (no TypeScript), same as the Hub.
 - Builds: `npx eas-cli@latest build --platform android --profile preview --local`
   on the owner's Mac (Java 17 via Homebrew temurin@17, Android SDK 36 + NDK).
   Same as the Hub. Only the owner can build; the AI sandbox can't.
 - The template's `app/AGENTS.md` recommends Expo Router and EAS cloud builds.
   We use neither: navigation is a simple state machine in `App.js`, and
   builds are local.
-- Signer link scheme: `klvsigner://`. Hub reply scheme: `dlh://`.
+- Client ↔ Signer transport (Stage 3): Android startActivityForResult. Clients
+  call it via `expo-intent-launcher` (`startActivityAsync(<custom action>, { extra })`);
+  the Signer reads the intent, identifies the caller with
+  `Activity.getCallingPackage()` (set by the OS, only present for
+  for-result calls; additionally verify the caller's signing certificate via
+  PackageManager), and replies with `setResult()`. This needs a small local
+  Expo native module in the Signer. The `klvsigner://` scheme in app.json is
+  left over from the earlier two-deep-link plan and must NOT be used for
+  signing requests (deep links don't identify the caller).
 - Android package `com.raphaelrohner.klvsigner`. Never change it.
 
 ## Before declaring any change done
@@ -48,10 +58,13 @@ From `app/`:
    no network, no deep-link reply containing it. The recovery phrase is shown
    once at creation and never stored.
 2. The approval screen shows what it decoded from the transaction bytes
-   itself. Never display text supplied by the caller as if it were the
-   transaction's content.
-3. Only allow-listed transaction types get signed (start: transfers). Refuse
-   anything else, and refuse wrong network or wrong sender.
+   itself, plus the OS-verified identity of the calling app. Never display
+   text supplied by the caller as if it were the transaction's content or
+   the caller's identity. Unknown callers must first be allowed by the user
+   ("connected apps"), which the user can revoke.
+3. Only transaction types the Signer can fully decode and explain get signed
+   (start: transfers of KLV/KDA/NFTs). Refuse anything else, and refuse wrong
+   network or wrong sender.
 4. Vault = scrypt(password NFKC, 16-byte salt; N=2^15,r=8,p=1) → AES-256-GCM
    (12-byte nonce, AAD = "klv-signer-vault-v1:<address>"), stored as JSON in
    expo-secure-store (`klvsigner.vault.v1`). Password never stored. After
