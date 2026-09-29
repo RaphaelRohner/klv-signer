@@ -26,6 +26,12 @@
     "plugins": [
       "expo-secure-store",
       "react-native-quick-crypto"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9c182657-9104-4a4e-9034-5fdb6f29588b"
+      }
+    },
+    "owner": "raphaelrohner"
   }
 }

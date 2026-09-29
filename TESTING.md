@@ -78,32 +78,32 @@ Tick them off as you go.
 - [x] Tap **Create a new wallet**. You see 24 numbered words.
 - [x] Try to take a screenshot. It should be blocked (black image, or a
       "can't take screenshot" message).
-- [ ] Open the phone's **app switcher** ("Recents", the view of open apps as
+- [x] Open the phone's **app switcher** ("Recents", the view of open apps as
       cards). With gesture navigation: swipe up from the very bottom edge and
       hold a moment. With three buttons: tap the square button (on some
       Samsungs: three vertical lines). The Signer's card should be blank or
       black, not showing the words.
-- [ ] **Continue** is greyed out until you tick "I have written all 24 words down".
-- [ ] Write the words on paper (this is a test wallet, but practise doing it properly).
+- [x] **Continue** is greyed out until you tick "I have written all 24 words down".
+- [x] Write the words on paper (this is a test wallet, but practise doing it properly).
 
 **C3. Checking the paper**
-- [ ] You're asked for 3 words by number. Type one wrong on purpose → a red
+- [x] You're asked for 3 words by number. Type one wrong on purpose → a red
       "doesn't match" message.
-- [ ] Type all three correctly → you move on to the password screen.
+- [x] Type all three correctly → you move on to the password screen.
 
 **C4. Choosing the password**
 - [ ] Type fewer than 8 characters → a message asks for at least 8.
-- [ ] Type two different passwords → "don't match yet".
-- [ ] Type a proper password twice and tap **Save and lock my wallet** →
+- [x] Type two different passwords → "don't match yet".
+- [x] Type a proper password twice and tap **Save and lock my wallet** →
       a spinner for a moment, then the **Your wallet** screen with your
       `klv1…` address.
-- [ ] 📝 **Please note down the "Test info" line** (how many seconds, which
-      engine). Claude needs it to tune the speed.
+- [x] 📝 **Please note down the "Test info" line** (how many seconds, which
+      engine). Claude needs it to tune the speed. (Test info:the last password check took 0.2 s using the fast (native) engine.
 
 **C5. Locking and unlocking**
-- [ ] Tap **Lock now** → the Unlock screen.
-- [ ] Enter the right password → back to your wallet. 📝 Note the Test info
-      line again.
+- [x] Tap **Lock now** → the Unlock screen.
+- [x] Enter the right password → back to your wallet. 📝 Note the Test info
+      line again. Same, but 0.1 s
 - [ ] Lock again, then enter a wrong password **5 times**. After the 5th you
       should see "try again in 30 s" counting down, and the Unlock button
       greyed out.
