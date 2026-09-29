@@ -123,8 +123,8 @@ test('the same key locked twice gives two different vaults (random salt and nonc
 
 test('passwords typed with different accent input still match (NFKC)', async () => {
   const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
-  const vault = await lockKey(privateKey, 'café pass', address, QUICK); // é as one character
-  const back = await unlockKey(vault, 'café pass');                   // e + separate accent
+  const vault = await lockKey(privateKey, 'caf\u00e9 pass', address, QUICK); // \u00e9 as one character
+  const back = await unlockKey(vault, 'cafe\u0301 pass');                   // e + separate accent
   assert.equal(back.length, 32);
 });
 
@@ -191,4 +191,11 @@ test('the counter records failures and the time you must wait', () => {
   assert.equal(secondsLeft(state, now), 30);
   assert.equal(secondsLeft(state, now + 29_500), 1);
   assert.equal(secondsLeft(state, now + 30_000), 0);
+});
+
+test('waiting times are shown in plain words', async () => {
+  const { formatWait } = await import('../src/security/wrongPasswordPolicy.js');
+  assert.equal(formatWait(30), '30 s');
+  assert.equal(formatWait(75), '1 min 15 s');
+  assert.equal(formatWait(3600), '60 min 0 s');
 });

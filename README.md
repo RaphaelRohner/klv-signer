@@ -15,6 +15,7 @@ whole idea in plain English, with a build plan and a glossary.
 ## Current status
 
 **Stage 1 — Wallet + password: done and tested on the phone (29 Sep 2026).**
+**Stage 2 — Reading and signing: built, waiting for the phone test** (TESTING.md, Part D).
 The Signer can create a new wallet (or restore one from its recovery phrase),
 lock it with your app password, unlock it, and remove it. It can't sign
 anything yet (that's Stage 2). It's set to **testnet**.
@@ -34,11 +35,13 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/App.js` | The "traffic controller": decides which screen you see. Has a map of all screens at the top. |
 | `app/src/config.js` | All important settings in one place (network, password rules, waiting times…). |
 | `app/src/crypto/` | The security core: `wallet.js` (making/restoring wallets), `passwordKey.js` (turning your password into a key), `vault.js` (scrambling the private key), `setupRandom.js` (secure randomness), `phraseInput.js` (the numbered word boxes on the Restore screen). |
-| `app/src/security/` | `wrongPasswordPolicy.js`: the waiting-time rules after wrong passwords. |
+| `app/src/security/` | `wrongPasswordPolicy.js`: the waiting-time rules after wrong passwords. `usePasswordCheck.js`: the one shared "check the password, use the key, wipe it" step. |
+| `app/src/klever/` | Reading and signing Klever transactions: `readTransaction.js` (the strict reader and all safety checks), `signTransaction.js`, `protobuf.js` + `schema.js` (Klever's data format, from the node's official definitions), `format.js` (plain-words amounts), `networks.js`. |
+| `app/tools/` | Helper tools for your Mac (testnet only): `make-test-tx.mjs` prepares a test transaction, `send-signed-tx.mjs` checks and sends a signed one. |
 | `app/src/storage/` | `secureStore.js`: the only file that saves anything on the phone. |
-| `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home). |
+| `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home, paste transaction, approve, signed). |
 | `app/src/components/` | Shared looks (`ui.js`) and the "remove wallet" box (`RemoveWallet.js`). |
-| `app/tests/` | Automatic checks for the security core. Run with `npm test`. |
+| `app/tests/` | Automatic checks for the security core and the transaction reader (43 checks). Run with `npm test`. |
 | `app/eas.json` | Build settings (same as the Hub's). |
 | `app/eslint.config.js` | Settings for the code checker (`npx expo lint`). |
 
@@ -58,6 +61,8 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | Library | Job |
 |---|---|
 | `@klever/connect-crypto` | Klever's official code for recovery phrases, keys and addresses. Pinned to exactly 0.2.0 so it can't change under us. |
+| `@klever/connect-encoding` | Only used for small helpers. Its transfer definition is wrong (amount and token swapped), so the Signer reads transactions with its own reader instead. |
+| `@klever/connect-provider`, `@klever/connect-transactions` | Only used by the Mac helper tools, to talk to the testnet node. Not part of the phone app. |
 | `@noble/hashes`, `@noble/ciphers` | Well-known, audited crypto code: the password recipe (scrypt) and the scrambling (AES-GCM). Klever's own library is built on the same family. |
 | `react-native-quick-crypto` | Runs the slow password recipe in the phone's fast built-in crypto code. |
 | `expo-secure-store` | Saves the scrambled wallet in Android's Keystore-protected storage. |

@@ -13,25 +13,31 @@
  *        no wallet ─┴─ wallet saved
  *            │              │
  *            ▼              ▼
- *        "welcome"       "unlock" ◄───────────── "Lock now", or leaving the app
+ *        "welcome"       "unlock" ◄──────── "Lock now", or leaving the app
  *        │       │          │ right password
  *   Create│       │Restore   ▼
- *        ▼       ▼        "home"
- *  "showPhrase" "restore"
- *        ▼       │
+ *        ▼       ▼        "home" ──► "pasteTx" ──► "approve" ──► "signed"
+ *  "showPhrase" "restore"    ▲                        │ Reject      │ Done
+ *        ▼       │           └────────────────────────┴─────────────┘
  * "confirmPhrase"│
  *        ▼       ▼
  *       "setPassword" ──► wallet scrambled and saved ──► "home"
  *
  *   Removing the wallet (from "home" or "unlock") goes back to "welcome".
+ *   Stage 2: "pasteTx" → "approve" → "signed" is the test path for signing a
+ *   transaction pasted by hand. In Stage 3, other apps' requests will open
+ *   "approve" directly.
  *
  * WHAT'S KEPT IN MEMORY HERE, AND FOR HOW LONG
  *   draftPhrase  the recovery phrase, ONLY during setup. Cleared as soon as
  *                the wallet is saved, or when you back out to the welcome screen.
  *   address      the public klv1… address (not secret).
  *   unlockInfo   test info: how long the last password check took.
+ *   reading      the transaction being approved. Forgotten on Reject, after
+ *                signing, or when you leave the app.
+ *   signResult   the signed transaction (not secret), until you tap Done.
  * The private key is never kept here. It only exists for a moment inside
- * the setup and unlock steps, and is wiped right after.
+ * the setup step and the password check, and is wiped right after.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -53,6 +59,18 @@ import RestoreScreen from './src/screens/RestoreScreen.js';
 import SetPasswordScreen from './src/screens/SetPasswordScreen.js';
 import UnlockScreen from './src/screens/UnlockScreen.js';
 import HomeScreen from './src/screens/HomeScreen.js';
+import PasteTransactionScreen from './src/screens/PasteTransactionScreen.js';
+import ApproveScreen from './src/screens/ApproveScreen.js';
+import SignedScreen from './src/screens/SignedScreen.js';
+
+/**
+ * The screens that are only reachable while the Signer is unlocked. Leaving
+ * the app on any of them locks it (and forgets any transaction in progress).
+ */
+const UNLOCKED_SCREENS = ['home', 'pasteTx', 'approve', 'signed'];
+
+/** Who is asking, for requests pasted by hand (Stage 2). Stage 3 adds real apps. */
+const MANUAL_REQUESTER = { name: 'You (pasted by hand)', detail: 'Test request, not from another app' };
 
 export default function App() {
   const [screen, setScreen] = useState('loading');
@@ -61,6 +79,8 @@ export default function App() {
   const [address, setAddress] = useState(null);
   const [unlockInfo, setUnlockInfo] = useState(null);
   const [justCreated, setJustCreated] = useState(false);
+  const [reading, setReading] = useState(null);       // the transaction being approved (Stage 2)
+  const [signResult, setSignResult] = useState(null); // the signed result, until you tap Done
 
   // --- On start: is there a wallet on this phone? --------------------------
   useEffect(() => {
@@ -86,7 +106,9 @@ export default function App() {
     if (!LOCK_WHEN_LEFT) return undefined;
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'background') {
-        setScreen((current) => (current === 'home' ? 'unlock' : current));
+        setReading(null);    // forget any transaction in progress
+        setSignResult(null);
+        setScreen((current) => (UNLOCKED_SCREENS.includes(current) ? 'unlock' : current));
       }
     });
     return () => subscription.remove();
@@ -108,6 +130,9 @@ export default function App() {
       restore: backToWelcome,
       confirmPhrase: () => setScreen('showPhrase'),
       setPassword: () => setScreen(setupOrigin === 'create' ? 'confirmPhrase' : 'restore'),
+      pasteTx: () => setScreen('home'),
+      approve: () => { setReading(null); setScreen('home'); },  // back = reject
+      signed: () => { setSignResult(null); setScreen('home'); },
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       if (previous[screen]) {
@@ -208,9 +233,29 @@ export default function App() {
             unlockInfo={unlockInfo}
             justCreated={justCreated}
             onLock={() => setScreen('unlock')}
+            onSignTest={() => setScreen('pasteTx')}
             onRemoved={afterRemoved}
           />
         );
+      case 'pasteTx':
+        return (
+          <PasteTransactionScreen
+            address={address}
+            onRead={(r) => { setReading(r); setScreen('approve'); }}
+            onCancel={() => setScreen('home')}
+          />
+        );
+      case 'approve':
+        return (
+          <ApproveScreen
+            reading={reading}
+            requester={MANUAL_REQUESTER}
+            onSigned={(result) => { setReading(null); setSignResult(result); setScreen('signed'); }}
+            onRejected={() => { setReading(null); setScreen('home'); }}
+          />
+        );
+      case 'signed':
+        return <SignedScreen result={signResult} onDone={() => { setSignResult(null); setScreen('home'); }} />;
       default: // 'loading'
         return (
           <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>

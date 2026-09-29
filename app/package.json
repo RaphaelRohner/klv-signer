@@ -4,6 +4,7 @@
   "main": "index.js",
   "dependencies": {
     "@klever/connect-crypto": "0.2.0",
+    "@klever/connect-encoding": "0.1.3",
     "@noble/ciphers": "~1.3.0",
     "@noble/hashes": "~1.8.0",
     "@scure/bip39": "1.6.0",
@@ -25,10 +26,14 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.js",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "make-test-tx": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/make-test-tx.mjs",
+    "send-signed-tx": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/send-signed-tx.mjs"
   },
   "private": true,
   "devDependencies": {
+    "@klever/connect-provider": "0.2.2",
+    "@klever/connect-transactions": "0.1.8",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2"
   }

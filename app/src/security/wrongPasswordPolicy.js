@@ -50,6 +50,13 @@ export function recordFailure(state, now, policy = WRONG_PASSWORD_POLICY) {
 /** The state after a correct password: everything reset. */
 export const FRESH_STATE = Object.freeze({ failures: 0, lockedUntil: 0 });
 
+/** formatWait — turns 75 into "1 min 15 s", for the waiting message. */
+export function formatWait(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m} min ${s} s` : `${s} s`;
+}
+
 /**
  * secondsLeft — how many seconds until the next attempt is allowed (0 = now).
  *

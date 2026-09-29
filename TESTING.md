@@ -1,6 +1,7 @@
 # TESTING.md — how to build the Signer and test it on your phone
 
-This guide is for **Stage 1: wallet + password**. Follow the parts in order.
+This guide covers **Stage 1: wallet + password** (Parts A–C) and
+**Stage 2: reading and signing** (Part D). Follow the parts in order.
 Each test says what you should see. If something looks different, stop and
 tell Claude what happened (a photo of the screen helps. Just never
 photograph a recovery phrase you intend to keep).
@@ -153,6 +154,76 @@ Chrome profile instead, so nothing of yours is touched:
 
 **Result 2026-09-29: all Stage 1 tests passed.** Password checks always ran on the
 fast (native) engine, 0.1–0.2 s each.
+
+---
+
+## Part D — Stage 2 tests: reading and signing a transaction
+
+Stage 2 adds "Sign a test transaction" to the Home screen. You paste an
+unsigned transaction, the Signer explains it, you approve with your password,
+and it signs. Two helper tools on your Mac make the test transactions and send
+the signed ones to the Klever **testnet**.
+
+**D0. Before you start (once)**
+- [ ] Build and install the new version (Part A1, A2, then Part B; install
+      with `adb install -r` so your test wallet stays). `npm test` should now
+      show `# pass 43`.
+- [ ] Get free test KLV: in the Chrome profile where you restored your test
+      wallet in the Klever Extension, open **testnet.kleverscan.org**, open
+      your wallet's page (your `klv1…` address), and use the **faucet**
+      button there. After a minute, the page should show a KLV balance.
+- [ ] Have a second address to send to. Any `klv1…` address works on testnet,
+      e.g. create a second account in the Klever Extension.
+
+**D1. Make a test transaction (on your Mac, in the `app` folder)**
+```
+npm run make-test-tx -- --from <your test address> --to <receiver address> --amount 0.5
+```
+- [ ] It prints what the Signer should show (amount, receiver, fee, number,
+      fingerprint) and a long transaction code.
+- [ ] With the phone connected by USB: open the Signer → unlock → **Sign a
+      test transaction** → tap the text box. Then press Enter in Terminal. The
+      code is typed into the phone for you. (Without the cable: email the
+      code to yourself and paste it.)
+
+**D2. Reading it**
+- [ ] Tap **Read transaction**. The approval screen shows **"Requested by:
+      You (pasted by hand)"**, the network **Testnet (practice network)**,
+      **Send 0.5 KLV**, the receiver's full address, the fee, and a
+      fingerprint.
+- [ ] Compare them with what Terminal printed. Everything must match
+      (especially the fingerprint).
+
+**D3. Wrong password and Reject**
+- [ ] Type a wrong password and tap **Approve and sign** → "Wrong password.",
+      nothing signed. (It counts towards the same waiting times as the lock
+      screen.)
+- [ ] Tap **Reject** → back to the Home screen, nothing signed.
+
+**D4. Signing and sending**
+- [ ] Make a new code (D1), read it (D2), type your right password and tap
+      **Approve and sign** → **Signed ✓** with a long signed code.
+- [ ] Tap **Share…** and send the code to your Mac (e.g. email to yourself).
+- [ ] On the Mac: `npm run send-signed-tx -- <the signed code>`
+      It should say **Signature ✔ valid** and **✔ Sent!**, with a link.
+- [ ] Open the link: after a few seconds the explorer shows the transfer as
+      successful, and the receiver has the KLV. 🎉 This proves the whole chain
+      works: the Signer's reading, fingerprint and signature are exactly what
+      the Klever network expects.
+
+**D5. The Signer refuses what it shouldn't sign**
+- [ ] Paste some nonsense (e.g. `hello`) → a plain-words explanation, no approval screen.
+- [ ] Make a transaction **from a different address** than your test wallet:
+      `npm run make-test-tx -- --from <receiver address> --to <your test address> --amount 0.1`
+      → the Signer says it's "not from the wallet in this Signer".
+- [ ] Leave the Signer while the approval screen is open (switch to another
+      app and back) → it's locked, and the transaction is forgotten.
+
+**D6. Optional: an NFT transfer** (only if your test wallet owns a testnet NFT)
+```
+npm run make-test-tx -- --from <your test address> --to <receiver> --nft <COLLECTION/NUMBER>
+```
+- [ ] The approval screen shows **NFT <collection> #<number>**.
 
 ---
 

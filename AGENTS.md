@@ -74,7 +74,15 @@ From `app/`:
 5. Wallet derivation: `@klever/connect-crypto` 0.2.0 (pinned). BIP-39 →
    SLIP-10 Ed25519 at m/44'/690'/0'/0'/0'. Verified against an independent
    implementation (test vector in `tests/crypto.test.js`).
-6. Klever signing (Stage 2): Ed25519 signature over blake2b-256 of the
-   transaction's RawData protobuf bytes (see `@klever/connect-transactions`,
-   `Transaction.getHash()`).
-7. Testnet until the owner explicitly decides to go to mainnet.
+6. Klever signing: Ed25519 signature over blake2b-256 of the transaction's
+   RawData protobuf bytes (fingerprints verified against the testnet node's
+   /transaction/decode). Signed tx = unsigned bytes + field 2 (0x12 0x40 + sig).
+7. Transactions are read ONLY with our own strict reader (`src/klever/`),
+   built from klever-go's .proto files (data/transaction/proto, commit 24e0c1d).
+   It refuses unknown fields and non-canonical encodings (decode → re-encode
+   must be byte-identical, also inside Any values). Do NOT use
+   `@klever/connect-encoding`'s TransferContract: in 0.1.3 its field numbers
+   are wrong (Amount/AssetID swapped). Chain IDs: mainnet 108, testnet 109.
+   Node JSON broadcast works; `sendRawTransaction(hex)` in connect-provider
+   0.2.2 is broken, pass `JSON.stringify(Transaction.fromHex(h).toJSON())`.
+8. Testnet until the owner explicitly decides to go to mainnet.
