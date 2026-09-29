@@ -20,6 +20,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Keyboard, StyleSheet, Text } from 'react-native';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, NetworkBadge, Notice, Screen, Title, colors } from '../components/ui.js';
 import RemoveWallet from '../components/RemoveWallet.js';
 import { unlockKey, WrongPasswordError } from '../crypto/vault.js';
@@ -43,6 +44,8 @@ function formatWait(seconds) {
  * @param {() => void} props.onRemoved   called if the wallet is removed ("I forgot my password")
  */
 export default function UnlockScreen({ address, onUnlocked, onRemoved }) {
+  // The "Show" button can put the password on screen, so block screenshots here.
+  usePreventScreenCapture('unlock');
   const [showRemove, setShowRemove] = useState(false);
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);

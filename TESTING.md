@@ -140,10 +140,16 @@ Chrome profile instead, so nothing of yours is touched:
 - [ ] Lock the Signer. On the Unlock screen, tap **I forgot my password**.
 - [ ] The **Remove wallet** button stays greyed out until you type `REMOVE`.
 - [ ] Type `REMOVE` and tap the button → you're back on the first screen.
-- [ ] Tap **Restore a wallet from its recovery phrase** and type your 24 words.
-      Try one wrong word first → it should say the words aren't valid.
-- [ ] With the right words, it shows an address. It must be the **same**
-      address as before. Continue, choose a new password → your wallet again.
+- [ ] Tap **Restore a wallet from its recovery phrase**. You see 24 numbered
+      boxes (and a 12 / 24 words choice).
+- [ ] Type a word, then a space → the cursor jumps to the next box.
+- [ ] Type a made-up word (e.g. `bitcoin`) and move to another box → that box
+      turns red.
+- [ ] Fill in your 24 words and tap **Check the words**. It shows an address,
+      which must be the **same** address as before.
+- [ ] Continue to the password screen. **This is where C4 happens**: try fewer
+      than 8 characters first, then **Show**/**Hide**, then set the new password
+      → your wallet again.
 
 ---
 

@@ -116,12 +116,16 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy }) {
 /**
  * Field — a labelled text box.
  *
- * `secret` hides what you type (for passwords). For secret words we also
+ * `secret` hides what you type (for passwords) and adds a "Show"/"Hide"
+ * button, so you can check what you typed. For secret words we also
  * switch off auto-correct, auto-capitals and the keyboard's word
  * suggestions, so the keyboard app doesn't "learn" your recovery words.
  * Any other TextInput settings can be passed through (`...rest`).
  */
 export function Field({ label, secret, noLearning, error, ...rest }) {
+  // For password boxes: is the password currently shown in plain text?
+  // Starts hidden every time the screen opens.
+  const [revealed, setRevealed] = React.useState(false);
   const privacy = secret || noLearning
     ? {
       autoCorrect: false,
@@ -137,13 +141,29 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
   return (
     <View style={styles.fieldWrap}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <TextInput
-        style={[styles.input, rest.multiline && styles.inputMultiline, error && { borderColor: colors.danger }]}
-        placeholderTextColor={colors.muted}
-        secureTextEntry={!!secret}
-        {...privacy}
-        {...rest}
-      />
+      <View style={styles.inputRow}>
+        <TextInput
+          style={[
+            styles.input, styles.flex, rest.multiline && styles.inputMultiline,
+            error && { borderColor: colors.danger },
+          ]}
+          placeholderTextColor={colors.muted}
+          secureTextEntry={!!secret && !revealed}
+          {...privacy}
+          {...rest}
+        />
+        {secret ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
+            onPress={() => setRevealed(!revealed)}
+            style={styles.reveal}
+            hitSlop={8}
+          >
+            <Text style={styles.revealText}>{revealed ? 'Hide' : 'Show'}</Text>
+          </Pressable>
+        ) : null}
+      </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
@@ -190,6 +210,9 @@ const styles = StyleSheet.create({
   buttonPressed: { opacity: 0.75 },
   buttonText: { fontSize: 16, fontWeight: '600' },
   fieldWrap: { marginVertical: 8 },
+  inputRow: { flexDirection: 'row', alignItems: 'center' },
+  reveal: { paddingHorizontal: 12, paddingVertical: 12, marginLeft: 6 },
+  revealText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
   label: { color: colors.muted, fontSize: 14, marginBottom: 6 },
   input: {
     backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 10,

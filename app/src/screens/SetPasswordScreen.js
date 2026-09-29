@@ -6,12 +6,14 @@
  * crypto/vault.js). It's never saved anywhere, only used to scramble and,
  * later, to unscramble.
  *
- * You type it twice so a typo can't lock you out. Tapping "Save" hands it to
+ * You type it twice so a typo can't lock you out. The "Show" button next to
+ * each box reveals what you typed (screenshots are blocked on this screen). Tapping "Save" hands it to
  * App.js, which scrambles the key and saves the result. That takes a moment,
  * on purpose (see crypto/passwordKey.js), so the button shows a spinner.
  */
 
 import React, { useState } from 'react';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title } from '../components/ui.js';
 import { MIN_PASSWORD_LENGTH } from '../config.js';
 
@@ -21,6 +23,8 @@ import { MIN_PASSWORD_LENGTH } from '../config.js';
  * @param {() => void} props.onBack
  */
 export default function SetPasswordScreen({ onSubmit, onBack }) {
+  // The "Show" button can put the password on screen, so block screenshots here.
+  usePreventScreenCapture('set-password');
   const [password, setPassword] = useState('');
   const [repeat, setRepeat] = useState('');
   const [busy, setBusy] = useState(false);

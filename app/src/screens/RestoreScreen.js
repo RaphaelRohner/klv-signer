@@ -4,47 +4,80 @@
  *
  * Use this to:
  *   - put an existing (test!) wallet into the Signer, or
- *   - get back in after forgetting your app password (remove the wallet on
- *     the Home screen first, then restore it here with a new password).
+ *   - get back in after forgetting your app password ("I forgot my password"
+ *     on the lock screen, then restore here with a new password).
  *
  * HOW IT WORKS
- *   1. You type or paste the words (12 or 24; spacing and capitals don't matter).
- *   2. The Signer checks them. The last word contains a built-in check, so most
- *      typos are caught.
- *   3. It shows you the wallet address those words belong to, so you can
- *      confirm it's the wallet you expected before continuing.
+ *   1. One numbered box per word, like in the Klever Wallet app. Choose 24
+ *      words (Klever's standard) or 12 (some older wallets).
+ *      - Typing a space jumps to the next box.
+ *      - Pasting the whole phrase into box 1 fills all boxes at once.
+ *      - A box turns red if its word isn't on the official list of 2048
+ *        recovery words, so typos show up right away.
+ *   2. "Check the words" verifies the whole phrase. The last word contains
+ *      a built-in check, so even a wrong-but-real word is usually caught.
+ *   3. It shows the wallet address those words belong to, so you can confirm
+ *      it's the wallet you expected before continuing.
  *
- * Screenshots are blocked while this screen is open.
+ * Screenshots are blocked while this screen is open. The boxes switch off
+ * the keyboard's suggestions and learning, so it doesn't remember your words.
  */
 
-import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
-import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
-import { isValidRecoveryPhrase, tidyPhrase, walletFromPhrase, wipeBytes } from '../crypto/wallet.js';
+import { Body, Button, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
+import { isValidRecoveryPhrase, walletFromPhrase, wipeBytes } from '../crypto/wallet.js';
+import { cleanWord, isKnownWord, spreadWords } from '../crypto/phraseInput.js';
+
+/** Makes an array of `count` empty boxes. */
+const emptyWords = (count) => Array.from({ length: count }, () => '');
 
 /**
  * @param {object} props
- * @param {(phrase: string) => void} props.onRestored  called with the tidied phrase once confirmed
+ * @param {(phrase: string) => void} props.onRestored  called with the phrase once confirmed
  * @param {() => void} props.onBack
  */
 export default function RestoreScreen({ onRestored, onBack }) {
   usePreventScreenCapture('restore');
 
-  const [text, setText] = useState('');
+  const [wordCount, setWordCount] = useState(24);
+  const [words, setWords] = useState(() => emptyWords(24));
+  const [focused, setFocused] = useState(null);      // which box the cursor is in
   const [problem, setProblem] = useState('');
   const [foundAddress, setFoundAddress] = useState(null); // shown after a successful check
+  const boxes = useRef([]);                           // handles to each box, to move the cursor
 
-  const phrase = tidyPhrase(text);
-  const wordCount = phrase ? phrase.split(' ').length : 0;
+  const filled = words.filter((w) => cleanWord(w)).length;
+  const phrase = words.map(cleanWord).join(' ');
+
+  /** Switch between 12 and 24 boxes (keeps what's already typed where it fits). */
+  function chooseCount(count) {
+    setWordCount(count);
+    setWords((current) => [...current, ...emptyWords(24)].slice(0, count));
+    setProblem('');
+  }
+
+  /** Called on every keystroke (or paste) in box `index`. */
+  function onType(index, text) {
+    const result = spreadWords(words, index, text);
+    setWords(result.words);
+    setProblem('');
+    if (result.focus !== null) boxes.current[result.focus]?.focus();
+  }
 
   function check() {
-    if (![12, 15, 18, 21, 24].includes(wordCount)) {
-      setProblem(`That's ${wordCount} words. A recovery phrase has 12 or 24 words.`);
+    if (filled < wordCount) {
+      setProblem(`Please fill in all ${wordCount} words (${filled} so far).`);
+      return;
+    }
+    const unknown = words.map((w, i) => (isKnownWord(w) ? null : i + 1)).filter(Boolean);
+    if (unknown.length > 0) {
+      setProblem(`Word${unknown.length > 1 ? 's' : ''} #${unknown.join(', #')} ${unknown.length > 1 ? 'are' : 'is'} not a recovery word. Check the spelling.`);
       return;
     }
     if (!isValidRecoveryPhrase(phrase)) {
-      setProblem('These words are not a valid recovery phrase. Check each word\'s spelling and the order.');
+      setProblem('All words are real recovery words, but together they are not a valid phrase. Most likely two words are swapped or one is wrong. Compare the order with your paper.');
       return;
     }
     // Work out the address, then wipe the key. We only need the address here.
@@ -56,20 +89,56 @@ export default function RestoreScreen({ onRestored, onBack }) {
   return (
     <Screen>
       <Title>Restore a wallet</Title>
-      <Body>Type or paste the recovery phrase, with the words in order, separated by spaces.</Body>
+      <Body>Type your recovery words, one per box, in the order written on your paper.</Body>
+      <Body muted>Tip: a space jumps to the next box. You can also paste the whole phrase into box 1.</Body>
 
-      <Field
-        label={`Recovery phrase (${wordCount} word${wordCount === 1 ? '' : 's'})`}
-        value={text}
-        multiline
-        noLearning
-        editable={!foundAddress}
-        onChangeText={(value) => {
-          setText(value);
-          setProblem('');
-        }}
-        error={problem}
-      />
+      {/* 24 / 12 words choice */}
+      <View style={styles.countRow}>
+        {[24, 12].map((count) => (
+          <Pressable
+            key={count}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: wordCount === count }}
+            onPress={() => !foundAddress && chooseCount(count)}
+            style={[styles.countChoice, wordCount === count && styles.countChosen]}
+          >
+            <Text style={[styles.countText, wordCount === count && styles.countTextChosen]}>{count} words</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* The numbered boxes, two columns */}
+      <View style={styles.grid}>
+        {words.map((word, index) => {
+          const looksWrong = cleanWord(word) !== '' && focused !== index && !isKnownWord(word);
+          return (
+            <View key={index} style={styles.cell}>
+              <Text style={styles.number}>{index + 1}.</Text>
+              <TextInput
+                ref={(el) => { boxes.current[index] = el; }}
+                style={[styles.box, looksWrong && styles.boxWrong]}
+                value={word}
+                editable={!foundAddress}
+                onChangeText={(text) => onType(index, text)}
+                onFocus={() => setFocused(index)}
+                onBlur={() => setFocused(null)}
+                onSubmitEditing={() => boxes.current[index + 1]?.focus()}
+                returnKeyType={index < wordCount - 1 ? 'next' : 'done'}
+                blurOnSubmit={index === wordCount - 1}
+                // Privacy: no auto-correct, no suggestions, no learning, no autofill.
+                autoCorrect={false}
+                autoCapitalize="none"
+                autoComplete="off"
+                importantForAutofill="no"
+                spellCheck={false}
+                keyboardType="visible-password"
+              />
+            </View>
+          );
+        })}
+      </View>
+
+      {problem ? <Notice kind="danger">{problem}</Notice> : null}
 
       {foundAddress ? (
         <>
@@ -83,7 +152,7 @@ export default function RestoreScreen({ onRestored, onBack }) {
         </>
       ) : (
         <>
-          <Button title="Check the words" onPress={check} disabled={wordCount === 0} />
+          <Button title={`Check the words (${filled}/${wordCount})`} onPress={check} disabled={filled === 0} />
           <Button title="Back" kind="secondary" onPress={onBack} />
         </>
       )}
@@ -96,5 +165,20 @@ export default function RestoreScreen({ onRestored, onBack }) {
 }
 
 const styles = StyleSheet.create({
+  countRow: { flexDirection: 'row', marginVertical: 10 },
+  countChoice: {
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, marginRight: 10,
+  },
+  countChosen: { borderColor: colors.accent, backgroundColor: colors.accent },
+  countText: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  countTextChosen: { color: colors.accentText },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 8 },
+  cell: { width: '50%', flexDirection: 'row', alignItems: 'center', paddingVertical: 4, paddingRight: 8 },
+  number: { color: colors.muted, width: 28, fontSize: 14, textAlign: 'right', marginRight: 6 },
+  box: {
+    flex: 1, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+    color: colors.text, fontSize: 16, paddingHorizontal: 10, paddingVertical: 8,
+  },
+  boxWrong: { borderColor: colors.danger },
   address: { color: colors.accent, fontSize: 15, fontFamily: 'monospace', marginVertical: 8 },
 });

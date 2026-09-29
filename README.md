@@ -29,7 +29,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/index.js` | The first file that runs. Sets up secure randomness, then starts the app. |
 | `app/App.js` | The "traffic controller": decides which screen you see. Has a map of all screens at the top. |
 | `app/src/config.js` | All important settings in one place (network, password rules, waiting times…). |
-| `app/src/crypto/` | The security core: `wallet.js` (making/restoring wallets), `passwordKey.js` (turning your password into a key), `vault.js` (scrambling the private key), `setupRandom.js` (secure randomness). |
+| `app/src/crypto/` | The security core: `wallet.js` (making/restoring wallets), `passwordKey.js` (turning your password into a key), `vault.js` (scrambling the private key), `setupRandom.js` (secure randomness), `phraseInput.js` (the numbered word boxes on the Restore screen). |
 | `app/src/security/` | `wrongPasswordPolicy.js`: the waiting-time rules after wrong passwords. |
 | `app/src/storage/` | `secureStore.js`: the only file that saves anything on the phone. |
 | `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home). |
