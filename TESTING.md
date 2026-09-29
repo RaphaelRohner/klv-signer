@@ -92,7 +92,7 @@ Tick them off as you go.
 - [x] Type all three correctly → you move on to the password screen.
 
 **C4. Choosing the password**
-- [ ] Type fewer than 8 characters → a message asks for at least 8.
+- [x] Type fewer than 8 characters → a message asks for at least 8.
 - [x] Type two different passwords → "don't match yet".
 - [x] Type a proper password twice and tap **Save and lock my wallet** →
       a spinner for a moment, then the **Your wallet** screen with your
