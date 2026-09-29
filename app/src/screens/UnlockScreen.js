@@ -19,7 +19,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Keyboard, StyleSheet, Text } from 'react-native';
 import { Body, Button, Field, NetworkBadge, Notice, Screen, Title, colors } from '../components/ui.js';
 import RemoveWallet from '../components/RemoveWallet.js';
 import { unlockKey, WrongPasswordError } from '../crypto/vault.js';
@@ -87,6 +87,9 @@ export default function UnlockScreen({ address, onUnlocked, onRemoved }) {
       if (error instanceof WrongPasswordError) {
         const next = recordFailure(current, Date.now());
         await saveAttempts(next);
+        // If a waiting period just started, close the keyboard so the
+        // "try again in …" message isn't hidden behind it.
+        if (secondsLeft(next, Date.now()) > 0) Keyboard.dismiss();
         setAttempts(next);
         setPassword('');
         setMessage('Wrong password.');
@@ -104,6 +107,15 @@ export default function UnlockScreen({ address, onUnlocked, onRemoved }) {
       <Body muted>Wallet</Body>
       <Text selectable style={styles.address}>{address}</Text>
 
+      {/* Messages sit ABOVE the password box: below it, the phone's keyboard
+          can cover them (that's how the 30-second message got hidden in testing). */}
+      {message ? <Notice kind="danger">{message}</Notice> : null}
+      {wait > 0 ? (
+        <Notice kind="warning">
+          Too many wrong passwords. You can try again in {formatWait(wait)}.
+        </Notice>
+      ) : null}
+
       <Field
         label="App password"
         value={password}
@@ -113,13 +125,6 @@ export default function UnlockScreen({ address, onUnlocked, onRemoved }) {
         onSubmitEditing={unlock}
         returnKeyType="go"
       />
-
-      {message ? <Notice kind="danger">{message}</Notice> : null}
-      {wait > 0 ? (
-        <Notice kind="warning">
-          Too many wrong passwords. You can try again in {formatWait(wait)}.
-        </Notice>
-      ) : null}
 
       <Button
         title={busy ? 'Checking…' : 'Unlock'}
