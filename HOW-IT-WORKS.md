@@ -203,10 +203,10 @@ We build in small stages. Each stage ends with something you can install and try
 | Stage | What you'll be able to do at the end |
 |---|---|
 | **0. Skeleton** ✅ | An empty Signer app exists and builds. |
-| **1. Wallet + password** 🔨 | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Built, now being tested on the phone. See TESTING.md.)* |
+| **1. Wallet + password** ✅ | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Tested on the phone. The address matches the Klever Extension, and a password check takes 0.1–0.2 s.)* |
 | **2. Reading and signing** | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. |
 | **3. The handoff** | The Hub gets its "Send" button. Tap it → Signer opens → approve → back in the Hub → sent on testnet. |
-| **4. Safety polish** | Wrong-password waiting times, screenshot blocking on sensitive screens, the internet-permission check, and a careful review of everything. |
+| **4. Safety polish** | Make the password check heavier (it's currently faster than needed, so there's room to make guessing harder), the internet-permission check, and a careful review of everything. (Wrong-password waiting times and screenshot blocking were already done in Stage 1.) |
 | **5. Mainnet** | Switch both apps to the real network and do one small real transfer. |
 
 ---

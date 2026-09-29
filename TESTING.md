@@ -137,19 +137,22 @@ Chrome profile instead, so nothing of yours is touched:
       profiles → ⋮ → Delete).
 
 **C8. "I forgot my password" and restoring**
-- [ ] Lock the Signer. On the Unlock screen, tap **I forgot my password**.
-- [ ] The **Remove wallet** button stays greyed out until you type `REMOVE`.
-- [ ] Type `REMOVE` and tap the button → you're back on the first screen.
-- [ ] Tap **Restore a wallet from its recovery phrase**. You see 24 numbered
+- [x] Lock the Signer. On the Unlock screen, tap **I forgot my password**.
+- [x] The **Remove wallet** button stays greyed out until you type `REMOVE`.
+- [x] Type `REMOVE` and tap the button → you're back on the first screen.
+- [x] Tap **Restore a wallet from its recovery phrase**. You see 24 numbered
       boxes (and a 12 / 24 words choice).
-- [ ] Type a word, then a space → the cursor jumps to the next box.
-- [ ] Type a made-up word (e.g. `bitcoin`) and move to another box → that box
+- [x] Type a word, then a space → the cursor jumps to the next box.
+- [x] Type a made-up word (e.g. `bitcoin`) and move to another box → that box
       turns red.
-- [ ] Fill in your 24 words and tap **Check the words**. It shows an address,
+- [x] Fill in your 24 words and tap **Check the words**. It shows an address,
       which must be the **same** address as before.
-- [ ] Continue to the password screen. **This is where C4 happens**: try fewer
+- [x] Continue to the password screen. **This is where C4 happens**: try fewer
       than 8 characters first, then **Show**/**Hide**, then set the new password
       → your wallet again.
+
+**Result 2026-09-29: all Stage 1 tests passed.** Password checks always ran on the
+fast (native) engine, 0.1–0.2 s each.
 
 ---
 

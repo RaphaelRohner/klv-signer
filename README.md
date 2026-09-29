@@ -10,7 +10,7 @@ whole idea in plain English, with a build plan and a glossary.
 
 ## Current status
 
-**Stage 1 — Wallet + password: built, waiting for the first phone test.**
+**Stage 1 — Wallet + password: done and tested on the phone (29 Sep 2026).**
 The Signer can create a new wallet (or restore one from its recovery phrase),
 lock it with your app password, unlock it, and remove it. It can't sign
 anything yet (that's Stage 2). It's set to **testnet**.
