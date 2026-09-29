@@ -124,15 +124,16 @@ the whole wallet there. **Don't reset your Klever Wallet app for this test.**
 we want to check: phrase → key.) Use the **Klever Extension** in a separate
 Chrome profile instead, so nothing of yours is touched:
 
-- [ ] In Chrome: profile icon (top right) → **Add** → continue without an
+- [x] In Chrome: profile icon (top right) → **Add** → continue without an
       account. A new, empty Chrome window opens.
-- [ ] In that window, install the **Klever Extension** from the Chrome Web Store.
-- [ ] Open it and choose **Restore wallet** (not "Create"). Enter the 24 test
+- [x] In that window, install the **Klever Extension** from the Chrome Web Store.
+- [x] Open it and choose **Restore wallet** (not "Create"). Enter the 24 test
       words, set any password.
-- [ ] Switch it to **KleverChain (KLV)** if needed and look at the address.
+- [x] Switch it to **KleverChain (KLV)** if needed and look at the address.
       It should be **exactly** the same `klv1…` address as in the Signer. If
       it isn't, tell Claude before going further.
-- [ ] Afterwards you can delete that Chrome profile (profile icon → manage
+      ✅ 2026-09-29: Klever Extension showed exactly the same address.
+- [x] Afterwards you can delete that Chrome profile (profile icon → manage
       profiles → ⋮ → Delete).
 
 **C8. "I forgot my password" and restoring**
