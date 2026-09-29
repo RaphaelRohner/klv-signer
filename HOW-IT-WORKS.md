@@ -107,9 +107,9 @@ code, with lots of comments.
 
 | Part | What it does, in plain words |
 |---|---|
-| **Wallet setup** | The first time you open the Signer, you bring in a wallet: either an existing Klever wallet (by typing its private key or recovery phrase) or a brand-new one. You also choose your app password here. |
+| **Wallet setup** | The first time you open the Signer, you bring in a wallet: either a brand-new one (the Signer shows you its 24-word recovery phrase **once**, checks you wrote it down, and never stores it), or an existing one restored from its recovery phrase. Klever's own official code does the wallet maths, so the same words give the same address in the Klever Wallet app. You also choose your app password here. |
 | **The vault** | Scrambles the key with your password and stores the scrambled result on the phone. Unscrambles it only for the moment of signing. |
-| **The lock screen** | Asks for your password. Counts wrong attempts and makes you wait longer after each run of mistakes, so nobody can sit and guess. |
+| **The lock screen** | Asks for your password. The first 4 wrong tries in a row are free. After that you wait 30 s, then 1 min, 2 min… up to 1 hour, even if you close the app. Also has "I forgot my password", which removes the wallet from the phone so you can restore it from the recovery phrase with a new password. The Signer also locks itself whenever you leave it. |
 | **The request reader** | Receives the deep link from the Hub, unpacks the transaction, and checks it: is it well-formed? Is it from *our* wallet? Is it a kind of transaction we allow? |
 | **The approval screen** | Shows the request in plain words with big **Approve** and **Reject** buttons. |
 | **The signer** | Does the actual maths (the **signature**) with the key. |
@@ -143,6 +143,10 @@ the scenes.
    (called **key stretching**; the recipe we'll use is named *scrypt*). We'll
    tune it so it takes roughly a second on your phone. For an attacker trying
    millions of guesses, a second per guess adds up to years.
+   The Signer has two engines for this recipe, which give identical results:
+   a **fast** one that uses the phone's built-in crypto code, and a slower
+   **backup** one written in plain JavaScript, used automatically if the fast
+   one ever fails to load. The Home screen shows which one ran.
 3. The result is used to **encrypt** (scramble) the private key. We use a
    standard, well-tested method called AES-GCM, which also detects if the
    stored data was tampered with.
@@ -198,8 +202,8 @@ We build in small stages. Each stage ends with something you can install and try
 
 | Stage | What you'll be able to do at the end |
 |---|---|
-| **0. Skeleton** ✅ | An empty Signer app exists and builds. (This is where we are now.) |
-| **1. Wallet + password** | Import a *testnet* wallet, set a password, lock and unlock the app, see your address. |
+| **0. Skeleton** ✅ | An empty Signer app exists and builds. |
+| **1. Wallet + password** 🔨 | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Built, now being tested on the phone. See TESTING.md.)* |
 | **2. Reading and signing** | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. |
 | **3. The handoff** | The Hub gets its "Send" button. Tap it → Signer opens → approve → back in the Hub → sent on testnet. |
 | **4. Safety polish** | Wrong-password waiting times, screenshot blocking on sensitive screens, the internet-permission check, and a careful review of everything. |

@@ -1,0 +1,194 @@
+/*
+ * crypto.test.js — automatic checks for the wallet and vault code
+ * ===============================================================
+ *
+ * These tests run on a computer (not the phone) and check that the
+ * security-critical parts behave exactly as intended. Run them from the
+ * `app` folder with:
+ *
+ *     npm test
+ *
+ * Every line starting with "✔" is a passed check. Any "✖" means something
+ * is wrong. Don't build the app until that's fixed.
+ *
+ * (The files under test only calculate. They don't need a phone, which is
+ * why we can test them here. The screens are tested by hand, see TESTING.md.)
+ */
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { scrypt as nodeScrypt } from 'node:crypto';
+
+import {
+  createRecoveryPhrase, tidyPhrase, isValidRecoveryPhrase, walletFromPhrase, addressFromPrivateKey,
+} from '../src/crypto/wallet.js';
+import { lockKey, unlockKey, WrongPasswordError } from '../src/crypto/vault.js';
+import { useEngineForTests, engineName, keyFromPassword } from '../src/crypto/passwordKey.js';
+import { waitSecondsAfter, recordFailure, secondsLeft, FRESH_STATE } from '../src/security/wrongPasswordPolicy.js';
+import { PASSWORD_STRETCHING } from '../src/config.js';
+
+// A famous PUBLIC test phrase from the BIP-39 standard. Everyone knows it,
+// so it must never hold anything of value. Used only to check the recipe.
+const PUBLIC_TEST_PHRASE =
+  'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+// Its Klever address, worked out independently from the published standards
+// (BIP-39 + SLIP-10 + path m/44'/690'/0'/0'/0'), not with Klever's library.
+const PUBLIC_TEST_ADDRESS = 'klv1usdnywjhrlv4tcyu6stxpl6yvhplg35nepljlt4y5r7yppe8er4qujlazy';
+
+// Light stretching settings so most tests run fast. One test uses the real ones.
+const QUICK = { N: 1024, r: 8, p: 1 };
+
+// A stand-in for the phone's fast engine: Node's own built-in scrypt.
+const nodeEngine = (pw, salt, params, dkLen) => new Promise((resolve, reject) => {
+  nodeScrypt(pw, salt, dkLen, { N: params.N, r: params.r, p: params.p, maxmem: 128 * params.N * params.r * 2 },
+    (err, out) => (err ? reject(err) : resolve(new Uint8Array(out))));
+});
+
+// --- Wallets ---------------------------------------------------------------
+
+test('the public test phrase gives the independently calculated Klever address', () => {
+  const { address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  assert.equal(address, PUBLIC_TEST_ADDRESS);
+});
+
+test('a new recovery phrase has 24 valid words and gives a klv1 address', () => {
+  const phrase = createRecoveryPhrase(24);
+  assert.equal(phrase.split(' ').length, 24);
+  assert.ok(isValidRecoveryPhrase(phrase));
+  const { privateKey, address } = walletFromPhrase(phrase);
+  assert.equal(privateKey.length, 32);
+  assert.match(address, /^klv1[0-9a-z]{58}$/);
+});
+
+test('two new phrases are never the same (randomness works)', () => {
+  assert.notEqual(createRecoveryPhrase(24), createRecoveryPhrase(24));
+});
+
+test('messy typing is tidied up before checking', () => {
+  assert.equal(tidyPhrase('  Abandon\n ABANDON   about \t'), 'abandon abandon about');
+  assert.ok(isValidRecoveryPhrase(tidyPhrase(PUBLIC_TEST_PHRASE.toUpperCase().replace(/ /g, '   '))));
+});
+
+test('a phrase with a typo is rejected, not turned into a different wallet', () => {
+  const typo = PUBLIC_TEST_PHRASE.replace(/about$/, 'above');
+  assert.equal(isValidRecoveryPhrase(typo), false);
+  assert.equal(isValidRecoveryPhrase('not a real phrase at all'), false);
+  assert.equal(isValidRecoveryPhrase(''), false);
+});
+
+// --- The vault ---------------------------------------------------------------
+
+test('lock then unlock with the right password gives back the same key', async () => {
+  useEngineForTests(null);
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const original = Uint8Array.from(privateKey);
+  const vault = await lockKey(privateKey, 'maple tunnel orbit', address, QUICK);
+  const back = await unlockKey(vault, 'maple tunnel orbit');
+  assert.deepEqual(back, original);
+  assert.equal(addressFromPrivateKey(back), address);
+});
+
+test('the saved vault contains no password and no readable key', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const keyHex = Buffer.from(privateKey).toString('hex');
+  const vault = await lockKey(privateKey, 'maple tunnel orbit', address, QUICK);
+  const saved = JSON.stringify(vault);
+  assert.ok(!saved.includes('maple'));
+  assert.ok(!saved.includes(keyHex));
+});
+
+test('a wrong password is refused with WrongPasswordError', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const vault = await lockKey(privateKey, 'right password', address, QUICK);
+  await assert.rejects(unlockKey(vault, 'wrong password'), WrongPasswordError);
+  await assert.rejects(unlockKey(vault, 'right passworD'), WrongPasswordError);
+  await assert.rejects(unlockKey(vault, ''), WrongPasswordError);
+});
+
+test('a tampered vault is refused', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const vault = await lockKey(privateKey, 'pw12345678', address, QUICK);
+  const flipped = vault.scrambledKey[0] === 'a' ? 'b' : 'a';
+  await assert.rejects(unlockKey({ ...vault, scrambledKey: flipped + vault.scrambledKey.slice(1) }, 'pw12345678'), WrongPasswordError);
+  await assert.rejects(unlockKey({ ...vault, address: 'klv1' + 'q'.repeat(58) }, 'pw12345678'), WrongPasswordError);
+});
+
+test('the same key locked twice gives two different vaults (random salt and nonce)', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const a = await lockKey(privateKey, 'pw12345678', address, QUICK);
+  const b = await lockKey(privateKey, 'pw12345678', address, QUICK);
+  assert.notEqual(a.salt, b.salt);
+  assert.notEqual(a.scrambledKey, b.scrambledKey);
+});
+
+test('passwords typed with different accent input still match (NFKC)', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const vault = await lockKey(privateKey, 'café pass', address, QUICK); // é as one character
+  const back = await unlockKey(vault, 'café pass');                   // e + separate accent
+  assert.equal(back.length, 32);
+});
+
+test('works with the real stretching settings from config.js', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const vault = await lockKey(privateKey, 'real settings pw', address, PASSWORD_STRETCHING);
+  assert.equal(vault.N, PASSWORD_STRETCHING.N);
+  const back = await unlockKey(vault, 'real settings pw');
+  assert.equal(addressFromPrivateKey(back), address);
+});
+
+// --- Choosing the engine -----------------------------------------------------
+
+test('a correct fast engine is used, and gives the same key as the backup engine', async () => {
+  const salt = new Uint8Array(16).fill(7);
+  useEngineForTests(null);
+  const fromBackup = await keyFromPassword('same password', salt, QUICK);
+  assert.equal(engineName(), 'backup (JavaScript)');
+  useEngineForTests(nodeEngine);
+  const fromFast = await keyFromPassword('same password', salt, QUICK);
+  assert.equal(engineName(), 'fast (native)');
+  assert.deepEqual(fromFast, fromBackup);
+});
+
+test('a vault made with one engine unlocks with the other', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  useEngineForTests(nodeEngine);
+  const vault = await lockKey(privateKey, 'cross engine pw', address, QUICK);
+  useEngineForTests(null);
+  const back = await unlockKey(vault, 'cross engine pw');
+  assert.equal(addressFromPrivateKey(back), address);
+});
+
+test('a broken fast engine is detected and the backup engine is used instead', async () => {
+  useEngineForTests(async () => new Uint8Array(32)); // always returns zeros: wrong
+  await keyFromPassword('x', new Uint8Array(16), QUICK);
+  assert.equal(engineName(), 'backup (JavaScript)');
+  useEngineForTests(async () => { throw new Error('native crashed'); });
+  await keyFromPassword('x', new Uint8Array(16), QUICK);
+  assert.equal(engineName(), 'backup (JavaScript)');
+  useEngineForTests(null);
+});
+
+// --- Wrong-password waiting times ------------------------------------------------
+
+test('first 4 wrong passwords are free, then waits double up to 1 hour', () => {
+  assert.equal(waitSecondsAfter(0), 0);
+  assert.equal(waitSecondsAfter(4), 0);
+  assert.equal(waitSecondsAfter(5), 30);
+  assert.equal(waitSecondsAfter(6), 60);
+  assert.equal(waitSecondsAfter(7), 120);
+  assert.equal(waitSecondsAfter(12), 3600);
+  assert.equal(waitSecondsAfter(500), 3600);
+});
+
+test('the counter records failures and the time you must wait', () => {
+  const now = 1_000_000;
+  let state = { ...FRESH_STATE };
+  for (let i = 0; i < 4; i += 1) state = recordFailure(state, now);
+  assert.equal(state.failures, 4);
+  assert.equal(secondsLeft(state, now), 0);
+  state = recordFailure(state, now);
+  assert.equal(state.failures, 5);
+  assert.equal(secondsLeft(state, now), 30);
+  assert.equal(secondsLeft(state, now + 29_500), 1);
+  assert.equal(secondsLeft(state, now + 30_000), 0);
+});
