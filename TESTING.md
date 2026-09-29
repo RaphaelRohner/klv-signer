@@ -71,15 +71,18 @@ them to Claude.
 Tick them off as you go.
 
 **C1. First start**
-- [ ] The app is called **KLV Signer** and opens on a dark screen with a yellow
+- [x] The app is called **KLV Signer** and opens on a dark screen with a yellow
       **TESTNET · practice network** label and two buttons.
 
 **C2. Creating a wallet: the recovery phrase**
-- [ ] Tap **Create a new wallet**. You see 24 numbered words.
-- [ ] Try to take a screenshot. It should be blocked (black image, or a
+- [x] Tap **Create a new wallet**. You see 24 numbered words.
+- [x] Try to take a screenshot. It should be blocked (black image, or a
       "can't take screenshot" message).
-- [ ] Open the phone's "recent apps" view. The Signer's preview should be
-      blank, not showing the words.
+- [ ] Open the phone's **app switcher** ("Recents", the view of open apps as
+      cards). With gesture navigation: swipe up from the very bottom edge and
+      hold a moment. With three buttons: tap the square button (on some
+      Samsungs: three vertical lines). The Signer's card should be blank or
+      black, not showing the words.
 - [ ] **Continue** is greyed out until you tick "I have written all 24 words down".
 - [ ] Write the words on paper (this is a test wallet, but practise doing it properly).
 
@@ -104,8 +107,8 @@ Tick them off as you go.
 - [ ] Lock again, then enter a wrong password **5 times**. After the 5th you
       should see "try again in 30 s" counting down, and the Unlock button
       greyed out.
-- [ ] While it's counting down, close the Signer completely (swipe it away
-      in recent apps) and reopen it. The waiting time should still be there.
+- [ ] While it's counting down, close the Signer completely (swipe its card away
+      in the app switcher) and reopen it. The waiting time should still be there.
 - [ ] After the wait, the right password unlocks it again.
 
 **C6. Automatic locking**
