@@ -165,40 +165,42 @@ and it signs. Two helper tools on your Mac make the test transactions and send
 the signed ones to the Klever **testnet**.
 
 **D0. Before you start (once)**
-- [ ] Build and install the new version (Part A1, A2, then Part B; install
+- [x] Build and install the new version (Part A1, A2, then Part B; install
       with `adb install -r` so your test wallet stays). `npm test` should now
       show `# pass 43`.
-- [ ] Get free test KLV: in the Chrome profile where you restored your test
+- [x] Get free test KLV: in the Chrome profile where you restored your test
       wallet in the Klever Extension, open **testnet.kleverscan.org**, open
       your wallet's page (your `klv1…` address), and use the **faucet**
       button there. After a minute, the page should show a KLV balance.
-- [ ] Have a second address to send to. Any `klv1…` address works on testnet,
+- [x] Have a second address to send to. Any `klv1…` address works on testnet,
       e.g. create a second account in the Klever Extension.
 
 **D1. Make a test transaction (on your Mac, in the `app` folder)**
 ```
-npm run make-test-tx -- --from <your test address> --to <receiver address> --amount 0.5
+npm run make-test-tx -- --from klv1txy66kqkznnycv3gv8w9uu9tpue7kjj089kcgm5yz4mhmwkyv6rsqhclaa --to klv1zekp46888zwrde9s8sxfx756kwk4680qhspr9fkpjra50mhe0gvskqruag --amount 0.5
 ```
-- [ ] It prints what the Signer should show (amount, receiver, fee, number,
+- [x] It prints what the Signer should show (amount, receiver, fee, number,
       fingerprint) and a long transaction code.
-- [ ] With the phone connected by USB: open the Signer → unlock → **Sign a
+- [x] With the phone connected by USB: open the Signer → unlock → **Sign a
       test transaction** → tap the text box. Then press Enter in Terminal. The
       code is typed into the phone for you. (Without the cable: email the
       code to yourself and paste it.)
 
 **D2. Reading it**
-- [ ] Tap **Read transaction**. The approval screen shows **"Requested by:
+- [x] Tap **Read transaction**. The approval screen shows **"Requested by:
       You (pasted by hand)"**, the network **Testnet (practice network)**,
       **Send 0.5 KLV**, the receiver's full address, the fee, and a
       fingerprint.
-- [ ] Compare them with what Terminal printed. Everything must match
+- [x] Compare them with what Terminal printed. Everything must match
       (especially the fingerprint).
 
 **D3. Wrong password and Reject**
-- [ ] Type a wrong password and tap **Approve and sign** → "Wrong password.",
+- [x] Type a wrong password and tap **Approve and sign** → "Wrong password.",
       nothing signed. (It counts towards the same waiting times as the lock
       screen.)
-- [ ] Tap **Reject** → back to the Home screen, nothing signed.
+- [x] Tap **Reject** → back to the Home screen, nothing signed.
+
+_29 Sep 2026: D0–D3 passed. Continue with D4._
 
 **D4. Signing and sending**
 - [ ] Make a new code (D1), read it (D2), type your right password and tap
