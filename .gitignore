@@ -1,0 +1,4 @@
+# Files git should never save (see app/.gitignore for the app-specific list)
+.DS_Store
+*.apk
+*.aab

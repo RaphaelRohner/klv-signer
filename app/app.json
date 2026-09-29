@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "KLV Signer",
+    "slug": "klv-signer",
+    "version": "0.1.0",
+    "scheme": "klvsigner",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.raphaelrohner.klvsigner",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#121214",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
