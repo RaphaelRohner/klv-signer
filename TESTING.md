@@ -200,26 +200,28 @@ npm run make-test-tx -- --from klv1txy66kqkznnycv3gv8w9uu9tpue7kjj089kcgm5yz4mhm
       screen.)
 - [x] Tap **Reject** → back to the Home screen, nothing signed.
 
-_29 Sep 2026: D0–D3 passed. Continue with D4._
+_29 Sep 2026: D0–D3 passed._
 
 **D4. Signing and sending**
-- [ ] Make a new code (D1), read it (D2), type your right password and tap
+- [x] Make a new code (D1), read it (D2), type your right password and tap
       **Approve and sign** → **Signed ✓** with a long signed code.
-- [ ] Tap **Share…** and send the code to your Mac (e.g. email to yourself).
-- [ ] On the Mac: `npm run send-signed-tx -- <the signed code>`
+- [x] Tap **Share…** and send the code to your Mac (e.g. email to yourself).
+- [x] On the Mac: `npm run send-signed-tx -- <the signed code>`
       It should say **Signature ✔ valid** and **✔ Sent!**, with a link.
-- [ ] Open the link: after a few seconds the explorer shows the transfer as
+- [x] Open the link: after a few seconds the explorer shows the transfer as
       successful, and the receiver has the KLV. 🎉 This proves the whole chain
       works: the Signer's reading, fingerprint and signature are exactly what
-      the Klever network expects.
+      the Klever network expects. (checked the account itself on testnet, it received 0.5 klv)
 
 **D5. The Signer refuses what it shouldn't sign**
-- [ ] Paste some nonsense (e.g. `hello`) → a plain-words explanation, no approval screen.
-- [ ] Make a transaction **from a different address** than your test wallet:
+- [x] Paste some nonsense (e.g. `hello`) → a plain-words explanation, no approval screen.
+- [x] Make a transaction **from a different address** than your test wallet:
       `npm run make-test-tx -- --from <receiver address> --to <your test address> --amount 0.1`
       → the Signer says it's "not from the wallet in this Signer".
-- [ ] Leave the Signer while the approval screen is open (switch to another
+- [x] Leave the Signer while the approval screen is open (switch to another
       app and back) → it's locked, and the transaction is forgotten.
+
+_30 Sep 2026: D4–D5 passed. The first real testnet transfer (0.5 KLV) arrived._
 
 **D6. Optional: an NFT transfer** (only if your test wallet owns a testnet NFT)
 ```
