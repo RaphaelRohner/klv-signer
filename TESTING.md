@@ -411,6 +411,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [ ] After installing, with the phone plugged in:
       `~/Library/Android/sdk/platform-tools/adb shell dumpsys package com.raphaelrohner.klvsigner | grep -E "INTERNET|SYSTEM_ALERT|STORAGE|VIBRATE"`
       → prints **nothing** (the Signer has none of these permissions).
+      (Passed 30 Sep 2026: nothing printed.)
 - [ ] Android's Settings → Apps → KLV Signer → Permissions / "Mobile data &
       Wi-Fi": no internet or data usage listed.
 - [ ] Everything still works: unlock (password and fingerprint), and send a
