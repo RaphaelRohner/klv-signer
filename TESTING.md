@@ -415,7 +415,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       Wi-Fi": no internet or data usage listed.
 - [x] Everything still works: unlock (password and fingerprint), and send a
       test from the Hub → approve → signed. (The Hub does the internet part.)
-- [ ] No red "This copy of the Signer can use the internet" box anywhere.
+- [x] No red "This copy of the Signer can use the internet" box anywhere.
 - Passed 30 Sep 2026 (password and fingerprint unlock, Hub test signed and arrived).
 
 ---

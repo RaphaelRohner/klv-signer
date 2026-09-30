@@ -106,3 +106,10 @@ From `app/`:
 10. Dependencies: see DEPENDENCIES.md. Crypto/native packages are pinned
    exactly; app/.npmrc has save-exact=true. Re-run its release checklist after
    any dependency change.
+11. Licence (planned, not applied yet): the owner intends the Signer to be
+   freeware and probably GPL. If GPL, it must be GPL-3.0 (or later), not
+   GPL-2.0: some dependencies are Apache-2.0 (compatible with GPLv3 only);
+   the rest are MIT/ISC/BSD, incl. Klever's libraries (MIT). Apply it only
+   when the owner decides, as part of the release work: LICENSE file,
+   "license" in app/package.json, a short header note in code files, and
+   making the repository public. Don't add a licence before that.
