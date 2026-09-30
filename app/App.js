@@ -115,13 +115,21 @@ export default function App() {
   const requestRef = useRef(null);
   const addressRef = useRef(null);
 
-  // Phone-safety warnings (root, unlocked bootloader, no screen lock), checked
-  // once when the app starts. See src/security/deviceChecks.js.
+  // Phone-safety warnings (root, unlocked bootloader, no screen lock). Checked
+  // when the app starts AND every time it comes back to the front, so a change
+  // in Android's settings (e.g. removing the screen lock) shows up on the
+  // Unlock screen straight away, without restarting the Signer.
+  // See src/security/deviceChecks.js.
   const [deviceFindings, setDeviceFindings] = useState([]);
   useEffect(() => {
-    getDeviceSecurity()
-      .then((report) => setDeviceFindings(describeDeviceSecurity(report).findings))
-      .catch(() => setDeviceFindings([]));
+    const refresh = () => {
+      getDeviceSecurity()
+        .then((report) => setDeviceFindings(describeDeviceSecurity(report).findings))
+        .catch(() => setDeviceFindings([]));
+    };
+    refresh();
+    const active = AppState.addEventListener('change', (state) => { if (state === 'active') refresh(); });
+    return () => active.remove();
   }, []);
   useEffect(() => { addressRef.current = address; }, [address]);
 
@@ -362,6 +370,7 @@ export default function App() {
         return (
           <UnlockScreen
             address={address}
+            deviceFindings={deviceFindings}
             onUnlocked={(info) => {
               setUnlockInfo(info);
               setJustCreated(false);

@@ -298,11 +298,12 @@ through the Signer, and the second wallet received 0.8 test KLV.
 
 **F2. The screen-lock warning** (keep your recovery words at hand, just in case)
 - [ ] In Android's Settings, temporarily remove your screen lock.
-- [ ] Close the Signer completely and open it again → Home shows **"This phone
-      may not be safe for a wallet · No screen lock is set"** with an explanation.
+- [ ] Go back to the Signer (no restart needed) → the **Unlock screen**, before
+      you type the password, shows **"This phone may not be safe for a wallet ·
+      No screen lock is set"** with an explanation. Home shows it again after unlocking.
 - [ ] Send a test from the Hub → the approval screen shows the short warning
       line at the top. (Reject it.)
-- [ ] Set your screen lock again, close and reopen the Signer → the warning is gone.
+- [ ] Set your screen lock again and go back to the Signer → the warning is gone.
 
 **F3. Android version**
 - [ ] Nothing to see on your phone (it's newer than Android 12). Phones older

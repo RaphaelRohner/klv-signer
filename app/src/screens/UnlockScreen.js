@@ -17,6 +17,12 @@
  *   4. Wrong password: the counter goes up, and past the free tries you must
  *      wait before trying again. The waiting time survives closing the app,
  *      because the counter is saved.
+ *
+ * PHONE-SAFETY WARNING
+ * If the phone looks unsafe for a wallet (rooted, unlocked bootloader, no
+ * screen lock …), the warning box is shown right here, BEFORE you unlock, so
+ * you see it every time you open the Signer. The checks themselves run once
+ * when the app starts (App.js) and are explained in security/deviceChecks.js.
  */
 
 import React, { useState } from 'react';
@@ -24,6 +30,7 @@ import { StyleSheet, Text } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, NetworkBadge, Notice, Screen, Title, colors } from '../components/ui.js';
 import RemoveWallet from '../components/RemoveWallet.js';
+import DeviceWarning from '../components/DeviceWarning.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 
 /**
@@ -33,7 +40,7 @@ import { usePasswordCheck } from '../security/usePasswordCheck.js';
  *        called after a correct password, with how long it took (test info)
  * @param {() => void} props.onRemoved   called if the wallet is removed ("I forgot my password")
  */
-export default function UnlockScreen({ address, onUnlocked, onRemoved }) {
+export default function UnlockScreen({ address, deviceFindings, onUnlocked, onRemoved }) {
   // The "Show" button can put the password on screen, so block screenshots here.
   usePreventScreenCapture('unlock');
   const [showRemove, setShowRemove] = useState(false);
@@ -53,6 +60,9 @@ export default function UnlockScreen({ address, onUnlocked, onRemoved }) {
       <Title>Unlock</Title>
       <Body muted>Wallet</Body>
       <Text selectable style={styles.address}>{address}</Text>
+
+      {/* "This phone may not be safe" box. Shows nothing on a safe phone. */}
+      <DeviceWarning findings={deviceFindings} />
 
       {/* Messages sit ABOVE the password box: below it, the phone's keyboard
           can cover them (that's how the 30-second message got hidden in testing). */}

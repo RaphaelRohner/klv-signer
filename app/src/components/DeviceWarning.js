@@ -4,7 +4,7 @@
  *
  * Shows the warnings from security/deviceChecks.js, if there are any.
  *   - full (default): every warning with its explanation, plus the honest
- *     limit of these checks. Used on the Welcome and Home screens.
+ *     limit of these checks. Used on the Welcome, Unlock and Home screens.
  *   - compact: one short line. Used on the approval screen, so the warning is
  *     visible at the moment of signing without pushing the transaction down.
  * Shows nothing when no warnings were found.
