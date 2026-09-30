@@ -348,28 +348,28 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       the Hub, signed and confirmed.)
 
 **F8. Fingerprint or face (optional shortcut)**
-- [ ] Home → **Fingerprint or face** says "Off" (or, if your phone has no
+- [x] Home → **Fingerprint or face** says "Off" (or, if your phone has no
       fingerprint set up, that only the password can be used).
-- [ ] Tap **Switch on**, type your password, tap **Continue** → Android's
+- [x] Tap **Switch on**, type your password, tap **Continue** → Android's
       fingerprint prompt appears → touch the sensor → it now says **On**.
-- [ ] Wrong password there → "Wrong password." and it stays off (and it
+- [x] Wrong password there → "Wrong password." and it stays off (and it
       counts as a wrong try, like on the lock screen).
-- [ ] **Lock now** → the Unlock screen shows **Unlock with fingerprint or
+- [x] **Lock now** → the Unlock screen shows **Unlock with fingerprint or
       face** above the password box → use it → you're in. Home says
       "Unlocked with fingerprint or face." The password box still works too.
-- [ ] Cancel Android's prompt → nothing happens, no error; the password still works.
-- [ ] Send a test from the Hub → the approval screen shows **Approve with
+- [x] Cancel Android's prompt → nothing happens, no error; the password still works.
+- [x] Send a test from the Hub → the approval screen shows **Approve with
       fingerprint or face**; Android's prompt names the amount ("Sign: send
       0.1 KLV") → touch the sensor → signed, back in the Hub.
-- [ ] Restart the phone, open the Signer → no fingerprint button, instead a
+- [x] Restart the phone, open the Signer → no fingerprint button, instead a
       note that the phone was restarted → unlock with the password → the
       next time, the fingerprint button is back.
-- [ ] Optional: add a new fingerprint in Android's settings, go back to the
+- [x] Optional: add a new fingerprint in Android's settings, go back to the
       Signer, try the fingerprint button → it says fingerprint/face was
       switched off because the phone's fingerprints changed; the password
       works; you can switch it on again on Home. (Delete the extra
       fingerprint afterwards if you like.)
-- [ ] **Switch off** on Home → the fingerprint buttons are gone.
+- [x] **Switch off** on Home → the fingerprint buttons are gone.
 
 ---
 
