@@ -42,7 +42,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | --- | --- | --- | --- |
 | Guessing the password in the app | A thief tries password after password on the lock screen. | 4 free tries, then waits of 30 s, 1 min, 2 min … up to 1 hour, kept even if the app is closed. | Protected |
 | Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt + AES-256-GCM) inside Android Keystore-protected storage. Planned: a 4× heavier password check, 12-character minimum, strength warning. | Partly |
-| Rooted or hacked phone | Tools with full control of the phone read memory or change how the app runs. | The key is only unscrambled for a moment and wiped straight after. The Signer warns when it finds signs of root, an unlocked bootloader or no screen lock (rooting tools can hide, so no warning isn't proof). No app can fully protect itself on a compromised phone. | Partly |
+| Rooted or hacked phone | Tools with full control of the phone read memory or change how the app runs. | The key is only unscrambled for a moment and wiped straight after. The Signer warns when it finds signs of root, an unlocked bootloader or no screen lock. The warning is on the Unlock screen every time you open the Signer, and again on Home and when approving (rooting tools can hide, so no warning isn't proof). No app can fully protect itself on a compromised phone. | Partly |
 | Backup extraction | The wallet is copied out through Android or cloud backups. | Android backup is switched off; storage is tied to the phone's Keystore. | Protected |
 | Shoulder surfing | Someone watches the password being typed or reads the recovery words. | Passwords are hidden by default (Show/Hide). Keep the recovery words private. | Your side |
 
@@ -82,6 +82,17 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Account takeover | Someone gets into the GitHub, Expo or Google Play account and replaces the app or code. | Two-factor authentication on every account involved. | Your side |
 
 ---
+
+## Progress
+
+How the open scenarios are shrinking. This file is updated with every change
+that affects a row above.
+
+| Date | Change | Protected / Partly / Your side |
+| --- | --- | --- |
+| 29 Sep 2026 | First list (end of Stage 3) | 13 / 10 / 6 |
+| 30 Sep 2026 | Android 12 minimum: task hijacking closed | 14 / 9 / 6 |
+| 30 Sep 2026 | Phone-safety warnings (root, bootloader, screen lock), shown on the Unlock screen | 14 / 9 / 6 (rooted phones: still Partly, no app can fully fix that) |
 
 ## Planned fixes (Stage 4)
 

@@ -99,3 +99,7 @@ From `app/`:
    Node JSON broadcast works; `sendRawTransaction(hex)` in connect-provider
    0.2.2 is broken, pass `JSON.stringify(Transaction.fromHex(h).toJSON())`.
 8. Testnet until the owner explicitly decides to go to mainnet.
+9. SECURITY.md is the running security status. After ANY change that affects
+   one of its rows: update the row, the counts at the top, the Progress table
+   and the "Planned fixes" checklist, and the Claude Docs copy "Attacks on
+   Android Blockchain Apps" (same content, for the owner).
