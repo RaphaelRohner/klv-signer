@@ -394,15 +394,18 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       common word). Try `maple tunnel orbit ginger` → **Strength: Strong**.
       Something in between, like `violinrocket7` → **Fair** with a tip.
       (No need to actually change it; tap **Back**.)
-- [ ] The upgrade of your existing wallet (made with the old, lighter
+- [x] The upgrade of your existing wallet (made with the old, lighter
       setting): switch **Fingerprint or face** OFF on Home (it's skipped while
       that's on) → **Lock now** → unlock with your password (this one unlock
       takes a little longer) → **Lock now** again → unlock with the password
       again → Home's test info now shows a longer check time than before
       (about 4×, e.g. 0.5 s instead of 0.15 s). That's the stronger setting.
       (Measured 30 Sep 2026: 0.2 s before the upgrade, 0.5 s after, fast engine.)
-- [ ] Switch fingerprint on again → it works.
-- [ ] Send a test from the Hub → approve → signed.
+- [x] Switch fingerprint on again → it works.
+- [x] Send a test from the Hub → approve → signed.
+
+- Passed 30 Sep 2026 (after the upgrade: fingerprint switched on again,
+  0.9 KLV sent from the Hub with fingerprint approval, arrived).
 
 ---
 
