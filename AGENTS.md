@@ -32,10 +32,23 @@ design this project follows, and `app/AGENTS.md` for Expo-specific rules.
   the Signer reads the intent, identifies the caller with
   `Activity.getCallingPackage()` (set by the OS, only present for
   for-result calls; additionally verify the caller's signing certificate via
-  PackageManager), and replies with `setResult()`. This needs a small local
-  Expo native module in the Signer. The `klvsigner://` scheme in app.json is
-  left over from the earlier two-deep-link plan and must NOT be used for
-  signing requests (deep links don't identify the caller).
+  PackageManager), and replies with `setResult()`. Implemented in the local
+  Expo module `app/modules/klv-signer-requests/` (Kotlin): the exported,
+  translucent `SignRequestActivity` lives in the CALLER's task, stores one
+  pending request in `SignerRequests` (in memory), launches the RN
+  MainActivity (singleTask, own task), and delivers the result when JS calls
+  `completeRequest`; the module then `moveTaskToBack`s the Signer. If the
+  carrier activity becomes visible again after being covered (user went back
+  to the caller), it answers USER_REJECTED and emits onRequestClosed.
+  Clients MUST address it explicitly (package + className) because
+  expo-intent-launcher ignores packageName without className, and need a
+  `<queries>` entry (Android 11+). Protocol: SIGNER-PROTOCOL.md (version 1);
+  names in SignerProtocol.kt / modules/…/actions.js / src/requests/protocol.js
+  must stay in sync. The Kotlin can be compile-checked in the sandbox with
+  kotlinc + android-35 android.jar and a small stub of expo's Module DSL.
+  The `klvsigner://` scheme in app.json is left over from the earlier
+  two-deep-link plan and must NOT be used for signing requests (deep links
+  don't identify the caller).
 - Android package `com.raphaelrohner.klvsigner`. Never change it.
 
 ## Before declaring any change done

@@ -135,8 +135,8 @@ signature and carries out the transaction.
 | **The request reader** | Unpacks the transaction and checks it: is it well-formed and written the standard way? Does it contain anything the Signer doesn't understand (then it refuses)? Is it from *our* wallet? For the right network? A kind of transaction we allow? It uses its own strict reader built from the Klever node's official definitions, because Klever's JavaScript library reads transfers wrongly (amount and token swapped). | ✅ Stage 2 |
 | **The approval screen** | Shows who's asking and the request in plain words (amount, full receiver address, fee, any note, fingerprint), asks for your password, with **Approve and sign** and **Reject**. | ✅ Stage 2 |
 | **The signer** | Does the actual maths (the **signature**) with the key, then double-checks the signature before handing it out. | ✅ Stage 2 |
-| **Connected apps** | Remembers which apps you've allowed to send requests, and lets you remove them. | Stage 3 |
-| **The reply** | Hands the signature (or "rejected") back to the asking app through Android. | Stage 3 |
+| **Connected apps** | "Allow this app?" the first time an app asks, showing its name, id and certificate fingerprint. Remembers allowed apps by id AND certificate (a fake copy with the same id gets a warning), lists them on the Home screen with Remove. | ✅ Stage 3 |
+| **The reply** | Hands the signature (or "rejected", with the reason) back to the asking app through Android, then steps aside so you land back in that app. Leaving the Signer without deciding counts as "rejected". | ✅ Stage 3 |
 | **Settings** | Your wallet address, connected apps, change password, remove wallet. | Stages 3–4 |
 
 ### What the Signer deliberately does NOT do
@@ -230,8 +230,8 @@ We build in small stages. Each stage ends with something you can install and try
 |---|---|
 | **0. Skeleton** ✅ | An empty Signer app exists and builds. |
 | **1. Wallet + password** ✅ | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Tested on the phone. The address matches the Klever Extension, and a password check takes 0.1–0.2 s.)* |
-| **2. Reading and signing** 🔨 | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. *(Built, now being tested on the phone. See TESTING.md, Part D.)* |
-| **3. Talking to other apps** | The Signer accepts requests from other apps through Android, with "Allow this app?" and a connected-apps list. SIGNER-PROTOCOL.md describes how to ask. The Hub becomes the first client: tap "Send" → Signer opens → approve → back in the Hub → sent on testnet. |
+| **2. Reading and signing** ✅ | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. *(Tested: a real 0.5 KLV testnet transfer signed by the Signer arrived.)* |
+| **3. Talking to other apps** 🔨 | The Signer accepts requests from other apps through Android, with "Allow this app?" and a connected-apps list. SIGNER-PROTOCOL.md describes how to ask. The Hub is the first client (menu → "KLV Signer (test)"): Connect → Send → Signer opens → approve → back in the Hub → sent on testnet. *(Built, now being tested. See TESTING.md, Part E.)* |
 | **4. Safety polish** | Make the password check heavier, the internet-permission check, and a careful review of everything. |
 | **5. More kinds of requests** | More transaction types (each with its own plain-words display), and "sign a message" for logging in to apps with your wallet. |
 | **6. Mainnet** | Allow the real network, then one small real transfer. |
