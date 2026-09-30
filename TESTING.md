@@ -385,7 +385,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       The address on Home is the same as before.
 - [x] Send a test from the Hub → approve with the new password → signed.
 - [x] Switch fingerprint on again with the new password → it works.
-- Passed 30 Sep 2026.
+- Passed 30 Sep 2026 (0.4 KLV sent from the Hub with the new password, arrived).
 
 ---
 
