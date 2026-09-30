@@ -44,6 +44,15 @@ export async function getDeviceSecurity() {
   return native ? native.getDeviceSecurity() : null;
 }
 
+/**
+ * protectWindow — hide other apps' overlays, ignore taps through a covered
+ * screen, hide the screens from non-accessibility-tool apps. See
+ * android/.../WindowProtection.kt. Safe to call any time.
+ */
+export async function protectWindow() {
+  return native ? native.protectWindow() : false;
+}
+
 export function addClosedListener(listener) {
   if (!native) return { remove() {} };
   return native.addListener('onRequestClosed', (event) => listener(event.id));

@@ -158,6 +158,7 @@ was closed by the system), treat it as "rejected".
 | `INVALID_REQUEST` | Required values missing or too long. |
 | `UNSUPPORTED_PROTOCOL` | `protocolVersion` missing or unknown. |
 | `UNKNOWN_ACTION` | Unknown action. |
+| `UNSAFE_DEVICE` | Signing is switched off because the phone looks rooted, its bootloader is unlocked, or its startup check failed. `GET_ADDRESS` still works. Tell the user to check the Signer. |
 | `NOT_FOR_RESULT` | You opened the Signer without "for result". Use `startActivityForResult`. |
 | `BUSY` | The Signer is already handling another request. Try again. |
 | `INTERRUPTED`, `INTERNAL` | Something went wrong in the Signer. Try again. |

@@ -34,6 +34,7 @@ export const ERRORS = {
   INVALID_REQUEST: 'INVALID_REQUEST',         // required values missing
   INVALID_TRANSACTION: 'INVALID_TRANSACTION', // the Signer refused the transaction (see message)
   UNKNOWN_ACTION: 'UNKNOWN_ACTION',
+  UNSAFE_DEVICE: 'UNSAFE_DEVICE',             // signing is switched off: the phone looks rooted/unlocked
 };
 
 /** Plain-words names for the request types, for the screens. */

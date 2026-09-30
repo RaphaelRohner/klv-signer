@@ -286,11 +286,11 @@ through the Signer, and the second wallet received 0.8 test KLV.
 
 ---
 
-## Part F — Stage 4 tests: phone-safety warnings and Android 12
+## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [ ] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 56`),
-      build, `adb install -r`. This build compiles the new native safety check.
+- [ ] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 60`),
+      build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
 - [ ] Open the Signer. Your usual (not rooted, locked bootloader, with screen
@@ -308,6 +308,34 @@ through the Signer, and the second wallet received 0.8 test KLV.
 **F3. Android version**
 - [ ] Nothing to see on your phone (it's newer than Android 12). Phones older
       than Android 12 can't install the Signer anymore.
+
+**F4. Overlays are hidden** (only if you use something that floats over other
+apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
+- [ ] With the floating thing showing, open the Signer → it disappears while
+      the Signer is on screen, and comes back when you switch away.
+- [ ] Everything in the Signer still reacts normally to taps.
+
+**F5. Keyboard warning** (optional: only if you want to try another keyboard)
+- [ ] With your normal keyboard (Gboard, Samsung or SwiftKey), there's no
+      keyboard warning.
+- [ ] Optional: install another keyboard from the Play Store, make it the
+      active one, go back to the Signer → **"You're typing with …"** warning
+      naming it. Switch back to your normal keyboard → warning gone.
+
+**F6. Accessibility warning** (optional)
+- [ ] If an app you installed has accessibility access switched on (some
+      password managers, "button mapper" or "auto clicker" apps do), the
+      Signer names it in an **"… can read and control the screen"** warning.
+      Apps that came with the phone (like TalkBack) are not listed.
+
+**F7. Signing switched off on a rooted phone**
+- [ ] Can't be tried on your normal phone (it isn't rooted). The automated
+      tests check the rules. What you'd see: a red **"Signing is switched off
+      on this phone"** box; "Sign a test transaction" greyed out; the approval
+      screen shows the transaction but only **Reject**; apps asking to sign
+      get the error `UNSAFE_DEVICE`, while asking for the address still works.
+- [ ] Nothing changed for you: sending 0.1 KLV from the Hub still asks for
+      approval and signs as before.
 
 ---
 

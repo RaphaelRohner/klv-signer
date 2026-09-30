@@ -9,6 +9,12 @@
  *   getDeviceSecurity()         → signs that the phone's protections are off
  *                                 (root, unlocked bootloader, no screen lock;
  *                                 see DeviceSecurity.kt)
+ *   protectWindow()             → hides other apps' overlays, ignores taps
+ *                                 through a covered screen, and hides the
+ *                                 screens from non-accessibility-tool apps
+ *                                 (see WindowProtection.kt). Also done
+ *                                 automatically each time the Signer comes
+ *                                 to the front.
  *
  * After answering, it moves the Signer to the background, so you land back
  * in the app that asked.
@@ -29,6 +35,11 @@ class KlvSignerRequestsModule : Module() {
       SignerRequests.onClosed = { id -> sendEvent("onRequestClosed", mapOf("id" to id)) }
     }
 
+    // Each time the Signer comes to the front, (re)apply the window protections.
+    OnActivityEntersForeground {
+      applyWindowProtection()
+    }
+
     OnDestroy {
       SignerRequests.onRequest = null
       SignerRequests.onClosed = null
@@ -43,6 +54,13 @@ class KlvSignerRequestsModule : Module() {
       deviceSecurityReport()
     }
 
+    // Called by App.js at start too (the first "foreground" can happen before
+    // this module exists). Runs on the UI thread, as Android requires.
+    AsyncFunction("protectWindow") {
+      applyWindowProtection()
+      true
+    }
+
     Function("completeRequest") { id: String, ok: Boolean, extras: Map<String, String> ->
       val delivered = SignerRequests.complete(id, ok, extras)
       // Step aside so the person lands back in the app that asked.
@@ -50,6 +68,12 @@ class KlvSignerRequestsModule : Module() {
       activity?.runOnUiThread { activity.moveTaskToBack(true) }
       delivered
     }
+  }
+
+  /** Applies WindowProtection to the Signer's current screen, on the UI thread. */
+  private fun applyWindowProtection() {
+    val activity = appContext.currentActivity ?: return
+    activity.runOnUiThread { WindowProtection.apply(activity) }
   }
 
   /** The phone-safety facts (DeviceSecurity.kt), or null if the app isn't fully started. */

@@ -7,9 +7,17 @@
  * state Android's startup check ("verified boot") is in, is a screen lock set.
  * This file decides which of those deserve a warning and says why, in words.
  *
- * The Signer only WARNS. It never refuses to work: it's your phone and your
- * decision. But a wallet on a rooted or unlocked phone is much easier to
- * attack, and you should know that before you trust it with real funds.
+ * TWO LEVELS
+ *   - Signing switched off ("blocks": true): signs of root, an unlocked
+ *     bootloader, or a failed Android startup check. On such a phone other
+ *     apps (or a changed Android) could take over the Signer, so it refuses to
+ *     sign. You can still open it, see your address and remove the wallet, and
+ *     your funds are safe on the blockchain: restore them anywhere else with
+ *     your 24 recovery words. If you rooted on purpose, undoing that switches
+ *     signing back on. If you didn't, it's a sign something is wrong.
+ *   - Warning only: no screen lock, a keyboard you installed yourself, apps
+ *     with accessibility access. These are worth knowing about, but can have
+ *     good reasons, so the Signer keeps working.
  *
  * Pure calculations (no screens, no native code), so the automated tests can
  * check them on a computer.
@@ -24,7 +32,9 @@ export const DEVICE_CHECK_LIMIT =
  *
  * @param {object|null} report  facts from getDeviceSecurity():
  *   { suBinary, testKeys, rootApps: string[], verifiedBootState, flashLocked, screenLockSet }
- * @returns {{ checked: boolean, findings: { id: string, title: string, text: string }[] }}
+ *   plus keyboard: { package, label, trusted } | null
+ *   and accessibilityApps: { package, label, cameWithPhone, isTool }[]
+ * @returns {{ checked: boolean, findings: { id: string, title: string, text: string, blocks?: boolean }[] }}
  *   checked = false when the check couldn't run (e.g. in the tests on a computer)
  */
 export function describeDeviceSecurity(report) {
@@ -40,6 +50,7 @@ export function describeDeviceSecurity(report) {
   if (signs.length > 0) {
     findings.push({
       id: 'root',
+      blocks: true,
       title: 'This phone looks rooted',
       text: `Found ${signs.join('; ')}. On a rooted phone, harmful apps can take full control and watch what the Signer does, including your key at the moment it signs.`,
     });
@@ -50,6 +61,7 @@ export function describeDeviceSecurity(report) {
   if (boot === 'orange' || report.flashLocked === '0') {
     findings.push({
       id: 'bootloader',
+      blocks: true,
       title: 'The bootloader is unlocked',
       text: 'Android\'s startup check is switched off, so the operating system itself could have been changed without you noticing. Anyone with the phone in hand can also load tools that copy its data.',
     });
@@ -62,6 +74,7 @@ export function describeDeviceSecurity(report) {
   } else if (boot === 'red') {
     findings.push({
       id: 'bootFailed',
+      blocks: true,
       title: 'Android\'s startup check failed',
       text: 'The phone reported that its operating system didn\'t pass its own integrity check. Don\'t use a wallet on it.',
     });
@@ -76,5 +89,36 @@ export function describeDeviceSecurity(report) {
     });
   }
 
+  // 4. Keyboard: one you installed yourself sees every letter you type
+  const kb = report.keyboard;
+  if (kb && kb.trusted === false) {
+    findings.push({
+      id: 'keyboard',
+      title: `You're typing with "${kb.label}"`,
+      text: `This keyboard didn't come with the phone (${kb.package}). A keyboard sees everything you type, including your Signer password. Only keep using it if you trust whoever made it, or switch to the phone's own keyboard in Android's settings.`,
+    });
+  }
+
+  // 5. Apps with accessibility access (can read the screen and press buttons)
+  const watchers = (report.accessibilityApps || []).filter((a) => !a.cameWithPhone);
+  if (watchers.length > 0) {
+    const names = watchers.map((a) => `"${a.label}"`).join(', ');
+    const tools = watchers.filter((a) => a.isTool).length;
+    findings.push({
+      id: 'accessibility',
+      title: watchers.length > 1 ? 'Some apps can read and control the screen' : 'An app can read and control the screen',
+      text: `Accessibility access is switched on for ${names}. Harmful apps misuse this access to watch what you type and press buttons for you. The Signer hides its screens from apps that aren't real accessibility tools${tools > 0 ? ', but apps that call themselves one can still see them' : ''}. If you don't recognise an app here, switch its access off in Android's settings (Accessibility).`,
+    });
+  }
+
   return { checked: true, findings };
 }
+
+/** True if any finding switches signing off (root, unlocked bootloader, failed startup check). */
+export function isSigningBlocked(findings) {
+  return (findings || []).some((f) => f.blocks);
+}
+
+/** What the Signer says when signing is switched off. */
+export const SIGNING_BLOCKED_TEXT =
+  'Signing is switched off on this phone, because it looks rooted or its protections are switched off. You can still see your address and remove the wallet. Your funds are safe on the blockchain: your 24 recovery words restore them on any other phone or in the Klever app.';

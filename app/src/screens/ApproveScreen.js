@@ -30,6 +30,7 @@ import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../c
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { signTransaction } from '../klever/signTransaction.js';
 import DeviceWarning from '../components/DeviceWarning.js';
+import { isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
 import { NETWORKS } from '../klever/networks.js';
 
 /**
@@ -40,13 +41,17 @@ import { NETWORKS } from '../klever/networks.js';
  * @param {() => void} props.onRejected
  * @param {object[]} [props.deviceFindings]  phone-safety warnings, shown in short form
  */
-export default function ApproveScreen({ reading, requester, onSigned, onRejected, deviceFindings }) {
+export default function ApproveScreen({ reading, requester, onSigned, onRejected, deviceFindings, deviceChecked = true }) {
+  // Rooted or unlocked phone: show the transaction, but no way to sign it.
+  // Before the first phone check has finished, "Approve" waits for it.
+  const blocked = isSigningBlocked(deviceFindings);
   usePreventScreenCapture('approve');
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
   const several = reading.transfers.length > 1;
 
   async function approve() {
+    if (blocked || !deviceChecked) return; // the button is hidden/disabled then; this is a second guard
     const result = await pw.check(password, (privateKey) => signTransaction(reading, privateKey));
     setPassword('');
     if (result.ok) onSigned(result.value);
@@ -106,24 +111,30 @@ export default function ApproveScreen({ reading, requester, onSigned, onRejected
         you expected, tap <Strong>Reject</Strong>.
       </Body>
 
-      {/* Password and buttons. Messages above the box, so the keyboard can't hide them. */}
-      {pw.message ? <Notice kind="danger">{pw.message}</Notice> : null}
-      {pw.wait > 0 ? (
-        <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice>
-      ) : null}
-      <Field
-        label="App password"
-        value={password}
-        secret
-        editable={!pw.busy && pw.wait === 0}
-        onChangeText={(value) => { setPassword(value); pw.clearMessage(); }}
-      />
-      <Button
-        title={pw.busy ? 'Signing…' : 'Approve and sign'}
-        onPress={approve}
-        busy={pw.busy}
-        disabled={!password || pw.wait > 0}
-      />
+      {blocked ? (
+        <Notice kind="danger">{SIGNING_BLOCKED_TEXT}</Notice>
+      ) : (
+        <>
+          {/* Password and buttons. Messages above the box, so the keyboard can't hide them. */}
+          {pw.message ? <Notice kind="danger">{pw.message}</Notice> : null}
+          {pw.wait > 0 ? (
+            <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice>
+          ) : null}
+          <Field
+            label="App password"
+            value={password}
+            secret
+            editable={!pw.busy && pw.wait === 0}
+            onChangeText={(value) => { setPassword(value); pw.clearMessage(); }}
+          />
+          <Button
+            title={pw.busy ? 'Signing…' : deviceChecked ? 'Approve and sign' : 'Checking the phone…'}
+            onPress={approve}
+            busy={pw.busy}
+            disabled={!password || pw.wait > 0 || !deviceChecked}
+          />
+        </>
+      )}
       <Button title="Reject" kind="danger" onPress={onRejected} disabled={pw.busy} />
     </Screen>
   );

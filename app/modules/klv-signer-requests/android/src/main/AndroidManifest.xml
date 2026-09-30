@@ -2,7 +2,8 @@
   AndroidManifest.xml (Signer request module)
   ===========================================
   Declares the Signer's "front door" screen for other apps (SignRequestActivity),
-  and the rooting apps the phone-safety check may look for (DeviceSecurity.kt).
+  the rooting apps the phone-safety check may look for (DeviceSecurity.kt),
+  and the permission to hide other apps' overlays (WindowProtection.kt).
   Expo merges this into the Signer's main Android manifest automatically.
 
   - exported="true": other apps are allowed to open it (that's its purpose).
@@ -14,6 +15,9 @@
     name this screen exactly (package + class), see SIGNER-PROTOCOL.md.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Lets the Signer hide other apps' floating windows while its screens are
+       showing (WindowProtection.kt). Granted automatically, never asked. -->
+  <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
   <!-- Rooting apps the phone-safety check looks for (DeviceSecurity.kt). Android 11+
        hides other apps unless they're listed here. Keep in sync with ROOT_APPS. -->
   <queries>

@@ -9,7 +9,9 @@
  *     the password work (see crypto/passwordKey.js). This helps us tune the
  *     speed on your phone.
  *   - "Sign a test transaction" (Stage 2: paste a transaction by hand),
- *   - a warning if the phone looks rooted, unlocked or has no screen lock,
+ *   - a warning if the phone looks rooted or unlocked (then signing is
+ *     switched off), has no screen lock, a keyboard you installed yourself,
+ *     or apps with accessibility access,
  *   - the apps you've allowed to use the Signer ("Connected apps"),
  *   - "Lock now" and "Remove wallet from this phone".
  *
@@ -32,9 +34,10 @@ import DeviceWarning from '../components/DeviceWarning.js';
  * @param {() => void} props.onLock
  * @param {object[]} props.deviceFindings  phone-safety warnings (security/deviceChecks.js)
  * @param {() => void} props.onSignTest  opens the "sign a test transaction" screen
+ * @param {boolean} props.signingBlocked  true on a rooted/unlocked phone: no signing
  * @param {() => void} props.onRemoved
  */
-export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings }) {
+export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings, signingBlocked }) {
   const [showRemove, setShowRemove] = useState(false);
 
   return (
@@ -68,7 +71,7 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
       ) : null}
 
       <Gap />
-      <Button title="Sign a test transaction" onPress={onSignTest} />
+      <Button title="Sign a test transaction" onPress={onSignTest} disabled={signingBlocked} />
       <Button title="Lock now" kind="secondary" onPress={onLock} />
       <ConnectedAppsList />
       <Gap size={24} />

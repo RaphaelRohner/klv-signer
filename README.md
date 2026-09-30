@@ -44,7 +44,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/src/storage/` | `secureStore.js` (the wallet) and `connectedApps.js` (the apps you've allowed): the only files that save anything on the phone. |
 | `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home, paste transaction, approve, signed, allow this app, request refused). |
 | `app/src/components/` | Shared looks (`ui.js`) and the "remove wallet" box (`RemoveWallet.js`). |
-| `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. |
+| `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. Also the phone-safety checks (`DeviceSecurity.kt`) and the window protections against overlays and accessibility misuse (`WindowProtection.kt`). |
 | `app/src/requests/` | The rules for requests from other apps: `protocol.js` (request checks and answers) and `appTrust.js` (which apps you've allowed). |
 | `app/tests/` | Automatic checks for the security core and the transaction reader (56 checks). Run with `npm test`. |
 | `app/eas.json` | Build settings (same as the Hub's). |

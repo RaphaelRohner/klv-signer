@@ -75,9 +75,9 @@ import RequestProblemScreen from './src/screens/RequestProblemScreen.js';
 
 // Requests from other apps (Stage 3)
 import {
-  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest,
+  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest, protectWindow,
 } from './modules/klv-signer-requests/index.js';
-import { describeDeviceSecurity } from './src/security/deviceChecks.js';
+import { describeDeviceSecurity, isSigningBlocked, SIGNING_BLOCKED_TEXT } from './src/security/deviceChecks.js';
 import { ACTIONS, ERRORS, addressReply, checkRequest, errorReply, signedReply } from './src/requests/protocol.js';
 import { trustStatus, withApp } from './src/requests/appTrust.js';
 import { loadConnectedApps, saveConnectedApps } from './src/storage/connectedApps.js';
@@ -115,17 +115,31 @@ export default function App() {
   const requestRef = useRef(null);
   const addressRef = useRef(null);
 
-  // Phone-safety warnings (root, unlocked bootloader, no screen lock). Checked
-  // when the app starts AND every time it comes back to the front, so a change
-  // in Android's settings (e.g. removing the screen lock) shows up on the
-  // Unlock screen straight away, without restarting the Signer.
-  // See src/security/deviceChecks.js.
+  // Phone-safety checks (root, unlocked bootloader, no screen lock, keyboard,
+  // accessibility apps). Checked when the app starts AND every time it comes
+  // back to the front, so a change in Android's settings (e.g. removing the
+  // screen lock) shows up on the Unlock screen straight away.
+  // Some findings switch signing off (see src/security/deviceChecks.js).
+  // Until the first check has finished, "Approve" waits (deviceChecked).
   const [deviceFindings, setDeviceFindings] = useState([]);
+  const [deviceChecked, setDeviceChecked] = useState(false);
+  const signingBlocked = isSigningBlocked(deviceFindings);
+  const signingBlockedRef = useRef(false);
+  useEffect(() => { signingBlockedRef.current = signingBlocked; }, [signingBlocked]);
   useEffect(() => {
+    // Hide other apps' overlays, ignore covered taps, hide the screens from
+    // non-accessibility-tool apps (native WindowProtection.kt). The native side
+    // also re-applies this whenever the Signer comes to the front.
+    protectWindow().catch(() => {});
     const refresh = () => {
       getDeviceSecurity()
-        .then((report) => setDeviceFindings(describeDeviceSecurity(report).findings))
-        .catch(() => setDeviceFindings([]));
+        .then((report) => {
+          const findings = describeDeviceSecurity(report).findings;
+          signingBlockedRef.current = isSigningBlocked(findings);
+          setDeviceFindings(findings);
+        })
+        .catch(() => setDeviceFindings([]))
+        .finally(() => setDeviceChecked(true));
     };
     refresh();
     const active = AppState.addEventListener('change', (state) => { if (state === 'active') refresh(); });
@@ -186,6 +200,11 @@ export default function App() {
   const proceedWithRequest = useCallback((req, walletAddress) => {
     if (req.action === ACTIONS.GET_ADDRESS) {
       finishRequest(true, addressReply(req, walletAddress, NETWORK));
+      return;
+    }
+    // Rooted or unlocked phone: sharing the address is fine, signing is not.
+    if (signingBlockedRef.current) {
+      showRequestProblem(ERRORS.UNSAFE_DEVICE, SIGNING_BLOCKED_TEXT);
       return;
     }
     try {
@@ -386,6 +405,7 @@ export default function App() {
             address={address}
             unlockInfo={unlockInfo}
             justCreated={justCreated}
+            signingBlocked={signingBlocked}
             onLock={() => setScreen('unlock')}
             onSignTest={() => setScreen('pasteTx')}
             onRemoved={afterRemoved}
@@ -405,6 +425,7 @@ export default function App() {
             reading={reading}
             requester={MANUAL_REQUESTER}
             deviceFindings={deviceFindings}
+            deviceChecked={deviceChecked}
             onSigned={(result) => { setReading(null); setSignResult(result); setScreen('signed'); }}
             onRejected={() => { setReading(null); setScreen('home'); }}
           />
@@ -428,6 +449,7 @@ export default function App() {
             reading={requestReading}
             requester={{ name: request.callerLabel, detail: request.callerPackage }}
             deviceFindings={deviceFindings}
+            deviceChecked={deviceChecked}
             onSigned={(result) => finishRequest(true, signedReply(request, address, requestReading, result))}
             onRejected={() => finishRequest(false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.'))}
           />

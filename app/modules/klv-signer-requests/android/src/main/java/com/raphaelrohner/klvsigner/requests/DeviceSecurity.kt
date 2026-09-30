@@ -17,6 +17,14 @@
  *     locked ("green"), locked to a custom system ("yellow"), or switched off
  *     ("orange", an unlocked bootloader).
  *   - Screen lock: whether a PIN, pattern, password or biometric lock is set.
+ *   - Keyboard: which keyboard app you're typing with, and whether it came with
+ *     the phone (or is a well-known one from the Play Store). A keyboard sees
+ *     every letter you type, including passwords.
+ *   - Accessibility apps: which apps have Android's accessibility access
+ *     switched on. That access lets an app read the screen and press buttons,
+ *     which is exactly what banking trojans misuse.
+ *   (Android shows keyboards and accessibility apps to every app, so no
+ *   special permission or <queries> entry is needed for these two.)
  *
  * AN HONEST LIMIT
  * Rooting tools can hide from apps (Magisk's "DenyList", for example). So a
@@ -29,10 +37,16 @@
  */
 package com.raphaelrohner.klvsigner.requests
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
+import android.view.inputmethod.InputMethodInfo
+import android.view.inputmethod.InputMethodManager
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -57,6 +71,18 @@ object DeviceSecurity {
     "com.thirdparty.superuser", "com.kingroot.kinguser",
   )
 
+  /**
+   * Well-known keyboards. Counted as trusted when they came with the phone OR
+   * were installed from the Play Store (so a look-alike from elsewhere isn't).
+   */
+  private val KNOWN_KEYBOARDS = listOf(
+    "com.google.android.inputmethod.latin",  // Gboard
+    "com.samsung.android.honeyboard",        // Samsung Keyboard
+    "com.touchtype.swiftkey",                // Microsoft SwiftKey
+  )
+
+  private const val PLAY_STORE = "com.android.vending"
+
   /** Runs all checks. Each value is a plain fact; deviceChecks.js turns them into words. */
   fun check(context: Context): Map<String, Any?> {
     val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
@@ -67,7 +93,73 @@ object DeviceSecurity {
       "verifiedBootState" to systemProperty("ro.boot.verifiedbootstate"),
       "flashLocked" to systemProperty("ro.boot.flash.locked"),
       "screenLockSet" to (keyguard?.isDeviceSecure ?: true),
+      "keyboard" to activeKeyboard(context),
+      "accessibilityApps" to accessibilityApps(context),
     )
+  }
+
+  /**
+   * The keyboard in use: { package, label, trusted } — or null if Android
+   * wouldn't say. trusted = came with the phone, or a known keyboard from Play.
+   */
+  private fun activeKeyboard(context: Context): Map<String, Any?>? = try {
+    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+    var info: InputMethodInfo? = null
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      info = imm?.currentInputMethodInfo
+    }
+    if (info == null) {
+      val id = Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
+      info = imm?.enabledInputMethodList?.firstOrNull { it.id == id }
+    }
+    if (info == null) {
+      null
+    } else {
+      val pm = context.packageManager
+      val app = info.serviceInfo.applicationInfo
+      val pkg = info.packageName
+      mapOf(
+        "package" to pkg,
+        "label" to info.loadLabel(pm).toString(),
+        "trusted" to (cameWithPhone(app) || (pkg in KNOWN_KEYBOARDS && installedFrom(pm, pkg) == PLAY_STORE)),
+      )
+    }
+  } catch (e: Exception) {
+    null
+  }
+
+  /**
+   * Apps with accessibility access switched on: [{ package, label, cameWithPhone, isTool }].
+   * isTool = the app declares itself a genuine accessibility tool (screen
+   * readers etc.); Android 16 only lets those read "sensitive" screens.
+   */
+  private fun accessibilityApps(context: Context): List<Map<String, Any?>> = try {
+    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+    val pm = context.packageManager
+    (am?.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK) ?: emptyList())
+      .mapNotNull { service ->
+        val serviceInfo = service.resolveInfo?.serviceInfo ?: return@mapNotNull null
+        mapOf(
+          "package" to serviceInfo.packageName,
+          "label" to (service.resolveInfo.loadLabel(pm)?.toString() ?: serviceInfo.packageName),
+          "cameWithPhone" to cameWithPhone(serviceInfo.applicationInfo),
+          "isTool" to service.isAccessibilityTool,
+        )
+      }
+      .distinctBy { it["package"] }
+  } catch (e: Exception) {
+    emptyList()
+  }
+
+  /** True for apps that are part of the phone's system (preinstalled, maybe updated since). */
+  private fun cameWithPhone(app: ApplicationInfo): Boolean =
+    (app.flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0
+
+  /** Which app store installed this app (package id), or null if unknown. */
+  private fun installedFrom(pm: PackageManager, pkg: String): String? = try {
+    pm.getInstallSourceInfo(pkg).installingPackageName
+  } catch (e: Exception) {
+    null
   }
 
   private fun safeExists(path: String): Boolean = try {
