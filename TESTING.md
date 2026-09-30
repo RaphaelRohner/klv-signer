@@ -289,21 +289,21 @@ through the Signer, and the second wallet received 0.8 test KLV.
 ## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [ ] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 60`),
+- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 60`),
       build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
-- [ ] Open the Signer. Your usual (not rooted, locked bootloader, with screen
+- [x] Open the Signer. Your usual (not rooted, locked bootloader, with screen
       lock) phone shows **no** "This phone may not be safe" box on Home.
 
 **F2. The screen-lock warning** (keep your recovery words at hand, just in case)
-- [ ] In Android's Settings, temporarily remove your screen lock.
-- [ ] Go back to the Signer (no restart needed) → the **Unlock screen**, before
+- [x] In Android's Settings, temporarily remove your screen lock.
+- [x] Go back to the Signer (no restart needed) → the **Unlock screen**, before
       you type the password, shows **"This phone may not be safe for a wallet ·
       No screen lock is set"** with an explanation. Home shows it again after unlocking.
-- [ ] Send a test from the Hub → the approval screen shows the short warning
+- [x] Send a test from the Hub → the approval screen shows the short warning
       line at the top. (Reject it.)
-- [ ] Set your screen lock again and go back to the Signer → the warning is gone.
+- [x] Set your screen lock again and go back to the Signer → the warning is gone.
 
 **F3. Android version**
 - [ ] Nothing to see on your phone (it's newer than Android 12). Phones older
@@ -314,6 +314,13 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [ ] With the floating thing showing, open the Signer → it disappears while
       the Signer is on screen, and comes back when you switch away.
 - [ ] Everything in the Signer still reacts normally to taps.
+- [ ] No floating app at hand? Ask Android instead (phone plugged in):
+      `~/Library/Android/sdk/platform-tools/adb shell dumpsys package com.raphaelrohner.klvsigner | grep HIDE_OVERLAY`
+      → `HIDE_OVERLAY_WINDOWS: granted=true`. Then, with the Signer open:
+      `~/Library/Android/sdk/platform-tools/adb shell dumpsys window windows | grep -o "HIDE_NON_SYSTEM_OVERLAY_WINDOWS" | head -1`
+      → prints `HIDE_NON_SYSTEM_OVERLAY_WINDOWS`. (Passed 30 Sep 2026. Note:
+      the Twilight app crashed on this phone for its own reasons, so it
+      couldn't be used for the visual test.)
 
 **F5. Keyboard warning** (optional: only if you want to try another keyboard)
 - [ ] With your normal keyboard (Gboard, Samsung or SwiftKey), there's no
