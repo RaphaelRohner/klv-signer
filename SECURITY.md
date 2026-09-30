@@ -76,7 +76,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
-| Harmful library | A dependency is taken over and ships malicious code in an update. | Few dependencies; crypto libraries pinned to exact versions and locked in package-lock.json. Planned: dependency review before release. | Partly |
+| Harmful library | A dependency is taken over and ships malicious code in an update. | Reviewed 30 Sep 2026 (DEPENDENCIES.md): all from the npm registry with integrity hashes, no high/critical audit findings, no install scripts in app packages. Crypto and native libraries pinned exactly; new ones saved exactly. And with no internet permission, a harmful library couldn't send anything out. Needs repeating before each release. | Partly |
 | Stolen signing key or build machine | Someone with the app-signing key or the build machine publishes a harmful "update". | Keep the signing keystore and its password offline and backed up; encrypt the build machine's disk. | Your side |
 | Tampered download | The APK people download differs from the source code here. | Planned: published checksums, build provenance from GitHub Actions, and ideally reproducible builds. | Your side |
 | Account takeover | Someone gets into the GitHub, Expo or Google Play account and replaces the app or code. | Two-factor authentication on every account involved. | Your side |
@@ -98,6 +98,7 @@ that affects a row above.
 | 30 Sep 2026 | Change password from Home (re-scrambles the key with a fresh salt; switches fingerprint/face off) | 15 / 8 / 6 |
 | 30 Sep 2026 | Stronger passwords: 4× heavier password check (scrypt 2^17), 12-character minimum, strength hint, older wallets upgraded automatically. Offline guessing closed | 16 / 7 / 6 |
 | 30 Sep 2026 | No internet permission (plus "display over other apps", storage, vibration removed); signing refused by any copy that has it; tests guard against it coming back. The Signer going online closed | 17 / 6 / 6 |
+| 30 Sep 2026 | Dependency review (DEPENDENCIES.md): nothing high or critical; crypto/native packages pinned exactly. Harmful library stays Partly: a review is a snapshot and must be repeated | 17 / 6 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -112,7 +113,7 @@ that affects a row above.
 - [x] Remove the internet permission (every build, not only release), plus other unneeded permissions
 - [x] Change password from the Home screen
 - [x] Optional fingerprint or face confirmation (the password always stays available as the choice)
-- [ ] Review all dependencies before the first release
+- [x] Review all dependencies (DEPENDENCIES.md; repeat before each release)
 - [ ] Independent review of the whole app (a separate reviewer, then a professional one before real money)
 - [ ] Release process: signing certificate fingerprint, checksums, build provenance, reproducible build
 - [ ] Two-factor authentication on GitHub, Expo and Google Play

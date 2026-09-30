@@ -103,3 +103,6 @@ From `app/`:
    one of its rows: update the row, the counts at the top, the Progress table
    and the "Planned fixes" checklist, and the Claude Docs copy "Attacks on
    Android Blockchain Apps" (same content, for the owner).
+10. Dependencies: see DEPENDENCIES.md. Crypto/native packages are pinned
+   exactly; app/.npmrc has save-exact=true. Re-run its release checklist after
+   any dependency change.
