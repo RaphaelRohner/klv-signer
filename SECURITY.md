@@ -52,7 +52,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | --- | --- | --- | --- |
 | Recovery phrase phishing | Fake support, fake websites or fake "wallet sync" forms ask for the recovery words. | The Signer only asks for the words when restoring a wallet. Nobody legitimate ever needs them. | Your side |
 | Blind signing | The user approves a request they can't understand, and it does something else. | The Signer reads every transaction itself, shows it in plain words, and refuses anything it can't explain. | Protected |
-| Look-alike addresses | Scammers send tiny amounts from an address that starts and ends like a familiar one. | The approval screen always shows the full receiver address. Compare all of it. | Partly |
+| Look-alike addresses | Scammers send tiny amounts from an address that starts and ends like a familiar one. | The approval screen always shows the full receiver address. With the (default) "new receiver" rule, a first transfer to any address needs the extra confirmation: password only and typing the address ending, so you stop and compare. Still: compare all of it. | Partly |
 | Scam tokens and fake airdrops | Worthless tokens or NFTs arrive with links to fake "claim" sites. | The Signer shows no token pictures or links and never goes online. | Protected |
 
 ## 4. The transaction and the cryptography
@@ -99,6 +99,7 @@ that affects a row above.
 | 30 Sep 2026 | Stronger passwords: 4× heavier password check (scrypt 2^17), 12-character minimum, strength hint, older wallets upgraded automatically. Offline guessing closed | 16 / 7 / 6 |
 | 30 Sep 2026 | No internet permission (plus "display over other apps", storage, vibration removed); signing refused by any copy that has it; tests guard against it coming back. The Signer going online closed | 17 / 6 / 6 |
 | 30 Sep 2026 | Dependency review (DEPENDENCIES.md): nothing high or critical; crypto/native packages pinned exactly. Harmful library stays Partly: a review is a snapshot and must be repeated | 17 / 6 / 6 |
+| 30 Sep 2026 | Extra confirmation settings (amount, new receivers, tokens/NFTs, an app's first request, several transfers, bursts; trusted receivers): password only, type the address ending, optional wait. Relaxing needs the password | 17 / 6 / 6 (look-alike addresses reduced, still Partly) |
 
 ## Planned fixes (Stage 4)
 

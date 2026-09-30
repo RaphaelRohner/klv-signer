@@ -68,6 +68,7 @@ import SetPasswordScreen from './src/screens/SetPasswordScreen.js';
 import UnlockScreen from './src/screens/UnlockScreen.js';
 import HomeScreen from './src/screens/HomeScreen.js';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen.js';
+import SigningRulesScreen from './src/screens/SigningRulesScreen.js';
 import PasteTransactionScreen from './src/screens/PasteTransactionScreen.js';
 import ApproveScreen from './src/screens/ApproveScreen.js';
 import SignedScreen from './src/screens/SignedScreen.js';
@@ -88,7 +89,7 @@ import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
  * The screens that are only reachable while the Signer is unlocked. Leaving
  * the app on any of them locks it (and forgets any transaction in progress).
  */
-const UNLOCKED_SCREENS = ['home', 'pasteTx', 'approve', 'signed', 'changePassword'];
+const UNLOCKED_SCREENS = ['home', 'pasteTx', 'approve', 'signed', 'changePassword', 'signingRules'];
 
 /** The screens used while answering a request from another app. */
 const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestProblem'];
@@ -410,12 +411,15 @@ export default function App() {
             justCreated={justCreated}
             notice={homeNotice}
             onChangePassword={() => { setHomeNotice(''); setScreen('changePassword'); }}
+            onSigningRules={() => { setHomeNotice(''); setScreen('signingRules'); }}
             signingBlocked={signingBlocked}
             onLock={() => { setHomeNotice(''); setScreen('unlock'); }}
             onSignTest={() => setScreen('pasteTx')}
             onRemoved={afterRemoved}
           />
         );
+      case 'signingRules':
+        return <SigningRulesScreen walletAddress={address} onDone={() => setScreen('home')} />;
       case 'changePassword':
         return (
           <ChangePasswordScreen
@@ -442,6 +446,7 @@ export default function App() {
           <ApproveScreen
             reading={reading}
             requester={MANUAL_REQUESTER}
+            appId={null}
             deviceFindings={deviceFindings}
             deviceChecked={deviceChecked}
             onSigned={(result) => { setReading(null); setSignResult(result); setScreen('signed'); }}
@@ -466,6 +471,7 @@ export default function App() {
             key={request.id}
             reading={requestReading}
             requester={{ name: request.callerLabel, detail: request.callerPackage }}
+            appId={request.callerPackage}
             deviceFindings={deviceFindings}
             deviceChecked={deviceChecked}
             onSigned={(result) => finishRequest(true, signedReply(request, address, requestReading, result))}

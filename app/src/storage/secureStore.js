@@ -29,6 +29,7 @@ import * as SecureStore from 'expo-secure-store';
 import { FRESH_STATE } from '../security/wrongPasswordPolicy.js';
 import { clearConnectedApps } from './connectedApps.js';
 import { removeBiometric } from './biometricStore.js';
+import { clearSigningData } from './signingRules.js';
 
 // The names ("keys") under which each item is saved. Never change these, or
 // the app won't find wallets that were saved under the old names.
@@ -69,7 +70,8 @@ export async function saveAttempts(state) {
 
 /**
  * removeWallet — deletes the vault, address, counter, the list of connected
- * apps and the fingerprint/face copy from this phone. After this, only the
+ * apps, the fingerprint/face copy, and the extra-confirmation rules and
+ * signing history from this phone. After this, only the
  * recovery phrase can bring the wallet back (and apps have to ask "Allow this
  * app?" again).
  */
@@ -80,4 +82,5 @@ export async function removeWallet() {
   await SecureStore.deleteItemAsync(ADDRESS);
   await SecureStore.deleteItemAsync(ATTEMPTS);
   await clearConnectedApps();
+  await clearSigningData(); // extra-confirmation rules and signing history
 }

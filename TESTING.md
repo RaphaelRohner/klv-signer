@@ -289,7 +289,7 @@ through the Signer, and the second wallet received 0.8 test KLV.
 ## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 79`),
+- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 92`),
       build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
@@ -417,6 +417,25 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       test from the Hub → approve → signed. (The Hub does the internet part.)
 - [x] No red "This copy of the Signer can use the internet" box anywhere.
 - Passed 30 Sep 2026 (password and fingerprint unlock, Hub test signed and arrived).
+
+**F12. Extra confirmation**
+- [ ] Home → **Extra confirmation settings**: the recommended rules are on
+      (new receivers, an app's first request, several transfers, many
+      requests quickly). Switch on **Large amounts** and set **1** KLV. Tap
+      **Save** → "Saved." (stricter: no password asked).
+- [ ] Send 0.1 KLV from the Hub to the usual address → normal approval
+      (fingerprint offered). The address isn't new, and 0.1 is below 1.
+- [ ] Send 2 KLV → the approval screen says **Extra confirmation needed**
+      ("more than your 1 KLV setting"), no fingerprint button, a box for the
+      **last 6 characters** of the address. Type a wrong ending → a hint;
+      the right one + password → signed.
+- [ ] Settings: choose **Wait 10 s**, save, send 2 KLV again → the button
+      counts down "Approve possible in 10 s".
+- [ ] Settings: switch **Large amounts** off → a note says it needs your
+      password; wrong password → refused; right password → saved.
+- [ ] Settings: add your own receiving test address as a **trusted
+      receiver** (needs the password) → sending 2 KLV to it is normal again.
+- [ ] Optional: send to an address you've never used → "never sent to … before".
 
 ---
 

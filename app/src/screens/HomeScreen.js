@@ -14,6 +14,8 @@
  *     or apps with accessibility access,
  *   - the "Fingerprint or face" switch (optional shortcut for the password),
  *   - the apps you've allowed to use the Signer ("Connected apps"),
+ *   - "Extra confirmation" settings (when a transaction needs a second, stricter
+ *     confirmation; see security/extraConfirmation.js),
  *   - "Change password", "Lock now" and "Remove wallet from this phone".
  *
  * From Stage 3 on, signing requests from other apps will open the approval
@@ -38,10 +40,11 @@ import BiometricSetting from '../components/BiometricSetting.js';
  * @param {() => void} props.onSignTest  opens the "sign a test transaction" screen
  * @param {string} [props.notice]  a one-off message (e.g. "Password changed")
  * @param {() => void} props.onChangePassword  opens the change-password screen
+ * @param {() => void} props.onSigningRules    opens the "Extra confirmation" settings
  * @param {boolean} props.signingBlocked  true on a rooted/unlocked phone: no signing
  * @param {() => void} props.onRemoved
  */
-export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings, signingBlocked, notice, onChangePassword }) {
+export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings, signingBlocked, notice, onChangePassword, onSigningRules }) {
   const [showRemove, setShowRemove] = useState(false);
 
   return (
@@ -79,6 +82,7 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
       <Gap />
       <Button title="Sign a test transaction" onPress={onSignTest} disabled={signingBlocked} />
       <Button title="Lock now" kind="secondary" onPress={onLock} />
+      <Button title="Extra confirmation settings" kind="secondary" onPress={onSigningRules} />
       <Button title="Change password" kind="secondary" onPress={onChangePassword} />
       <BiometricSetting />
       <ConnectedAppsList />
