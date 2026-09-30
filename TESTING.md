@@ -388,9 +388,9 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - Passed 30 Sep 2026 (0.4 KLV sent from the Hub with the new password, arrived).
 
 **F10. Stronger passwords**
-- [ ] Home → **Change password**: a new password under 12 characters → the
+- [x] Home → **Change password**: a new password under 12 characters → the
       box asks for at least 12, the button stays grey.
-- [ ] Type `password12345` as the new password → **Strength: Weak** (a very
+- [x] Type `password12345` as the new password → **Strength: Weak** (a very
       common word). Try `maple tunnel orbit ginger` → **Strength: Strong**.
       Something in between, like `violinrocket7` → **Fair** with a tip.
       (No need to actually change it; tap **Back**.)
@@ -400,6 +400,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       takes a little longer) → **Lock now** again → unlock with the password
       again → Home's test info now shows a longer check time than before
       (about 4×, e.g. 0.5 s instead of 0.15 s). That's the stronger setting.
+      (Measured 30 Sep 2026: 0.2 s before the upgrade, 0.5 s after, fast engine.)
 - [ ] Switch fingerprint on again → it works.
 - [ ] Send a test from the Hub → approve → signed.
 
