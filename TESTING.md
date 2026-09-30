@@ -289,7 +289,7 @@ through the Signer, and the second wallet received 0.8 test KLV.
 ## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 67`),
+- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 69`),
       build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
@@ -372,6 +372,19 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [x] **Switch off** on Home → the fingerprint buttons are gone.
 - Passed 30 Sep 2026 with fingerprint (face unlock not tried; it only
   appears if the phone's face unlock counts as "strong").
+
+**F9. Change password**
+- [ ] Home → **Change password**. Type a wrong current password → "Wrong
+      password." (it counts like on the lock screen).
+- [ ] New password shorter than the minimum, or the same as the current
+      one, or the two new boxes different → the button stays grey, with a hint.
+- [ ] Right current password + a new one twice → **Change password** →
+      back on Home with "Password changed…". If fingerprint was on, the
+      message says it was switched off.
+- [ ] **Lock now** → the OLD password is refused, the NEW one unlocks.
+      The address on Home is the same as before.
+- [ ] Send a test from the Hub → approve with the new password → signed.
+- [ ] Switch fingerprint on again with the new password → it works.
 
 ---
 

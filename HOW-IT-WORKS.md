@@ -137,7 +137,7 @@ signature and carries out the transaction.
 | **The signer** | Does the actual maths (the **signature**) with the key, then double-checks the signature before handing it out. | ✅ Stage 2 |
 | **Connected apps** | "Allow this app?" the first time an app asks, showing its name, id and certificate fingerprint. Remembers allowed apps by id AND certificate (a fake copy with the same id gets a warning), lists them on the Home screen with Remove. | ✅ Stage 3 |
 | **The reply** | Hands the signature (or "rejected", with the reason) back to the asking app through Android, then steps aside so you land back in that app. Leaving the Signer without deciding counts as "rejected". | ✅ Stage 3 |
-| **Settings** | Your wallet address, connected apps, fingerprint or face on/off, change password, remove wallet. | Stages 3–4 (fingerprint ✅) |
+| **Settings** | Your wallet address, connected apps, fingerprint or face on/off, change password, remove wallet. | Stages 3–4 (fingerprint ✅, change password ✅) |
 
 ### What the Signer deliberately does NOT do
 
@@ -246,7 +246,7 @@ We build in small stages. Each stage ends with something you can install and try
 | **1. Wallet + password** ✅ | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Tested on the phone. The address matches the Klever Extension, and a password check takes 0.1–0.2 s.)* |
 | **2. Reading and signing** ✅ | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. *(Tested: a real 0.5 KLV testnet transfer signed by the Signer arrived.)* |
 | **3. Talking to other apps** ✅ | The Signer accepts requests from other apps through Android, with "Allow this app?" and a connected-apps list. SIGNER-PROTOCOL.md describes how to ask. The Hub is the first client (menu → "KLV Signer (test)"): Connect → Send → Signer opens → approve → back in the Hub → sent on testnet. *(Tested: the Hub sent 0.5 + 0.3 test KLV through the Signer.)* |
-| **4. Safety polish** 🔨 | Make the password check heavier, the internet-permission check, and a careful review of everything. *(Done so far: Android 12 minimum, phone-safety warnings on the Unlock screen, signing switched off on rooted or unlocked phones, other apps' overlays hidden and covered taps ignored, Signer screens hidden from accessibility apps that aren't real accessibility tools, warnings about a keyboard you installed yourself and about apps with accessibility access, optional fingerprint or face instead of typing the password.)* |
+| **4. Safety polish** 🔨 | Make the password check heavier, the internet-permission check, and a careful review of everything. *(Done so far: Android 12 minimum, phone-safety warnings on the Unlock screen, signing switched off on rooted or unlocked phones, other apps' overlays hidden and covered taps ignored, Signer screens hidden from accessibility apps that aren't real accessibility tools, warnings about a keyboard you installed yourself and about apps with accessibility access, optional fingerprint or face instead of typing the password, change password from Home.)* |
 | **5. More kinds of requests** | More transaction types (each with its own plain-words display), and "sign a message" for logging in to apps with your wallet. |
 | **6. Mainnet** | Allow the real network, then one small real transfer. |
 | **Later** | If other people will use the Signer with real money: an independent security review, then publishing it (e.g. on Google Play). |

@@ -67,6 +67,7 @@ import RestoreScreen from './src/screens/RestoreScreen.js';
 import SetPasswordScreen from './src/screens/SetPasswordScreen.js';
 import UnlockScreen from './src/screens/UnlockScreen.js';
 import HomeScreen from './src/screens/HomeScreen.js';
+import ChangePasswordScreen from './src/screens/ChangePasswordScreen.js';
 import PasteTransactionScreen from './src/screens/PasteTransactionScreen.js';
 import ApproveScreen from './src/screens/ApproveScreen.js';
 import SignedScreen from './src/screens/SignedScreen.js';
@@ -87,7 +88,7 @@ import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
  * The screens that are only reachable while the Signer is unlocked. Leaving
  * the app on any of them locks it (and forgets any transaction in progress).
  */
-const UNLOCKED_SCREENS = ['home', 'pasteTx', 'approve', 'signed'];
+const UNLOCKED_SCREENS = ['home', 'pasteTx', 'approve', 'signed', 'changePassword'];
 
 /** The screens used while answering a request from another app. */
 const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestProblem'];
@@ -102,6 +103,8 @@ export default function App() {
   const [address, setAddress] = useState(null);
   const [unlockInfo, setUnlockInfo] = useState(null);
   const [justCreated, setJustCreated] = useState(false);
+  // A one-off message for Home, e.g. after changing the password ('' = none).
+  const [homeNotice, setHomeNotice] = useState('');
   const [reading, setReading] = useState(null);       // the transaction being approved (Stage 2)
   const [signResult, setSignResult] = useState(null); // the signed result, until you tap Done
 
@@ -405,10 +408,25 @@ export default function App() {
             address={address}
             unlockInfo={unlockInfo}
             justCreated={justCreated}
+            notice={homeNotice}
+            onChangePassword={() => { setHomeNotice(''); setScreen('changePassword'); }}
             signingBlocked={signingBlocked}
-            onLock={() => setScreen('unlock')}
+            onLock={() => { setHomeNotice(''); setScreen('unlock'); }}
             onSignTest={() => setScreen('pasteTx')}
             onRemoved={afterRemoved}
+          />
+        );
+      case 'changePassword':
+        return (
+          <ChangePasswordScreen
+            address={address}
+            onChanged={({ biometricWasOn }) => {
+              setHomeNotice(biometricWasOn
+                ? 'Password changed. Fingerprint or face was switched off: switch it on again below with the new password.'
+                : 'Password changed. Use the new password from now on.');
+              setScreen('home');
+            }}
+            onBack={() => setScreen('home')}
           />
         );
       case 'pasteTx':

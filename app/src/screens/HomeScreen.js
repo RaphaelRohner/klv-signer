@@ -14,7 +14,7 @@
  *     or apps with accessibility access,
  *   - the "Fingerprint or face" switch (optional shortcut for the password),
  *   - the apps you've allowed to use the Signer ("Connected apps"),
- *   - "Lock now" and "Remove wallet from this phone".
+ *   - "Change password", "Lock now" and "Remove wallet from this phone".
  *
  * From Stage 3 on, signing requests from other apps will open the approval
  * screen directly.
@@ -36,10 +36,12 @@ import BiometricSetting from '../components/BiometricSetting.js';
  * @param {() => void} props.onLock
  * @param {object[]} props.deviceFindings  phone-safety warnings (security/deviceChecks.js)
  * @param {() => void} props.onSignTest  opens the "sign a test transaction" screen
+ * @param {string} [props.notice]  a one-off message (e.g. "Password changed")
+ * @param {() => void} props.onChangePassword  opens the change-password screen
  * @param {boolean} props.signingBlocked  true on a rooted/unlocked phone: no signing
  * @param {() => void} props.onRemoved
  */
-export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings, signingBlocked }) {
+export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings, signingBlocked, notice, onChangePassword }) {
   const [showRemove, setShowRemove] = useState(false);
 
   return (
@@ -47,6 +49,7 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
       <NetworkBadge />
       <Title>Your wallet</Title>
       <DeviceWarning findings={deviceFindings} />
+      {notice ? <Notice kind="info">{notice}</Notice> : null}
 
       {justCreated ? (
         <Notice kind="info">
@@ -76,6 +79,7 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
       <Gap />
       <Button title="Sign a test transaction" onPress={onSignTest} disabled={signingBlocked} />
       <Button title="Lock now" kind="secondary" onPress={onLock} />
+      <Button title="Change password" kind="secondary" onPress={onChangePassword} />
       <BiometricSetting />
       <ConnectedAppsList />
       <Gap size={24} />

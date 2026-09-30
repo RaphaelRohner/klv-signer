@@ -95,6 +95,7 @@ that affects a row above.
 | 30 Sep 2026 | Phone-safety warnings (root, bootloader, screen lock), shown on the Unlock screen | 14 / 9 / 6 (rooted phones: still Partly, no app can fully fix that) |
 | 30 Sep 2026 | Overlays hidden and covered taps ignored: tapjacking closed. Also: signing off on rooted/unlocked phones, screens hidden from non-tool accessibility apps, keyboard and accessibility-app warnings | 15 / 8 / 6 (rooted phones, accessibility and keyboard stay Partly) |
 | 30 Sep 2026 | Optional fingerprint/face (strong biometrics only; copy destroyed if a fingerprint is added; password after restart and every 7 days): less typing for keyloggers and onlookers | 15 / 8 / 6 |
+| 30 Sep 2026 | Change password from Home (re-scrambles the key with a fresh salt; switches fingerprint/face off) | 15 / 8 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -107,7 +108,7 @@ that affects a row above.
 - [x] Warn when the phone looks insecure (signs of root, unlocked bootloader, no screen lock)
 - [x] Switch signing off on rooted or unlocked phones
 - [ ] Remove the internet permission in release builds
-- [ ] Change password from the Home screen
+- [x] Change password from the Home screen
 - [x] Optional fingerprint or face confirmation (the password always stays available as the choice)
 - [ ] Review all dependencies before the first release
 - [ ] Independent review of the whole app (a separate reviewer, then a professional one before real money)
