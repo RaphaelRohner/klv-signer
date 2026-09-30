@@ -113,3 +113,9 @@ From `app/`:
    when the owner decides, as part of the release work: LICENSE file,
    "license" in app/package.json, a short header note in code files, and
    making the repository public. Don't add a licence before that.
+12. Scope (owner's decision, 30 Sep 2026): the Signer stays a small, strict
+   tool for interacting with the Klever blockchain: hold the key, explain
+   exactly what's asked, refuse the unclear, no internet. Bigger features
+   (NFT renting, delayed/cancellable payments, alerts, smart contracts)
+   belong in the games and apps that call it. At most, the Signer may later
+   learn to explain specific, published contracts in plain words.
