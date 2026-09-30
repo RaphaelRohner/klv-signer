@@ -28,6 +28,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `README.md` | This file: the front page. |
 | `HOW-IT-WORKS.md` | The plain-English guide: what the Signer does, why, and the build plan. |
 | `TESTING.md` | Step-by-step: build the APK, then test each feature on your phone. |
+| `SECURITY.md` | The common attacks on Android wallet apps, where the Signer stands against each, the planned fixes, and how to report a vulnerability privately. |
 | `SIGNER-PROTOCOL.md` | **For developers:** exactly how any Android app asks the Signer for an address or a signature, with examples. |
 | `AGENTS.md` | Notes for AI helpers (like Claude) who work on this project later. |
 | `app/` | The actual Expo app. Everything below is inside it. |
