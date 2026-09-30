@@ -30,9 +30,10 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `TESTING.md` | Step-by-step: build the APK, then test each feature on your phone. |
 | `SECURITY.md` | The common attacks on Android wallet apps, where the Signer stands against each, the planned fixes, and how to report a vulnerability privately. |
 | `SIGNER-PROTOCOL.md` | **For developers:** exactly how any Android app asks the Signer for an address or a signature, with examples. |
+| `DEPENDENCIES.md` | What the app is built from: every important add-on package, the review findings, and the checks to repeat before each release. |
 | `AGENTS.md` | Notes for AI helpers (like Claude) who work on this project later. |
 | `app/` | The actual Expo app. Everything below is inside it. |
-| `app/app.json` | The app's settings: name, Android ID, link address (`klvsigner://`), cloud backup off. |
+| `app/app.json` | The app's settings: name, Android ID, link address (`klvsigner://`), cloud backup off, no internet and no other unneeded permissions. |
 | `app/package.json` | The list of building blocks (libraries) the app uses, and the `npm test` command. |
 | `app/index.js` | The first file that runs. Sets up secure randomness, then starts the app. |
 | `app/App.js` | The "traffic controller": decides which screen you see. Has a map of all screens at the top. |
@@ -42,7 +43,6 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/src/klever/` | Reading and signing Klever transactions: `readTransaction.js` (the strict reader and all safety checks), `signTransaction.js`, `protobuf.js` + `schema.js` (Klever's data format, from the node's official definitions), `format.js` (plain-words amounts), `networks.js`. |
 | `app/tools/` | Helper tools for your Mac (testnet only): `make-test-tx.mjs` prepares a test transaction, `send-signed-tx.mjs` checks and sends a signed one. |
 | `app/src/storage/` | `secureStore.js` (the wallet), `biometricStore.js` (the optional fingerprint/face copy of the vault key) and `connectedApps.js` (the apps you've allowed): the only files that save anything on the phone. |
-| `DEPENDENCIES.md` | What the app is built from: every important add-on package, the review findings, and the checks to repeat before each release. |
 | `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home, change password, paste transaction, approve, signed, allow this app, request refused). |
 | `app/src/components/` | Shared looks (`ui.js`), the "remove wallet" box (`RemoveWallet.js`), the phone-safety box (`DeviceWarning.js`), connected apps, and the fingerprint/face switch and button (`BiometricSetting.js`, `BiometricButton.js`). |
 | `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. Also the phone-safety checks (`DeviceSecurity.kt`) and the window protections against overlays and accessibility misuse (`WindowProtection.kt`). |
