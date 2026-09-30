@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_RULES, EMPTY_HISTORY, reasonsForExtraConfirmation, isRelaxing, parseKlv, formatKlv,
   endingMatches, receiversToConfirm, withRequest, withSigned, BURST_WINDOW_MS, receiverKey, checkRules, MAX_RECEIVERS,
+  klvCandidates,
 } from '../src/security/extraConfirmation.js';
 import { validAddressOrNull } from '../src/klever/address.js';
 
@@ -114,7 +115,15 @@ test('KLV amounts and address endings', () => {
   assert.equal(parseKlv('1.1234567'), null);
   assert.equal(parseKlv('abc'), null);
   assert.equal(parseKlv('12,5'), 12500000n); // comma = decimal point (European keyboards)
-  assert.equal(parseKlv('1,000.5'), null);   // no thousands separators
+  assert.equal(parseKlv('1,000.5'), 1000500000n); // English style, clear
+  assert.equal(parseKlv('1.000,5'), 1000500000n); // European style, clear
+  assert.equal(parseKlv('1,000,000'), 1000000000000n);
+  // Ambiguous: could be 1 KLV or 1000 KLV, so there's no single answer and the screen asks
+  assert.equal(parseKlv('1,000'), null);
+  assert.deepEqual(klvCandidates('1,000'), [1000000n, 1000000000n]);
+  assert.deepEqual(klvCandidates('1.000'), [1000000n, 1000000000n]);
+  assert.deepEqual(klvCandidates('12,50'), [12500000n]); // 2 decimals: clear
+  assert.deepEqual(klvCandidates('1,0,0'), []);
   assert.equal(formatKlv(12500000n), '12.5');
   assert.equal(endingMatches(A, 'v4a0cy'), true);
   assert.equal(endingMatches(A, ' V4A0CY '), true);

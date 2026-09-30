@@ -73,17 +73,47 @@ export function receiverKey(address) {
 
 const KLV_DECIMALS = 6;
 
-/**
- * "12.5" → 12500000n (KLV → smallest units). Null if not a valid positive amount.
- * A comma counts as the decimal point ("12,5" = 12.5), because many phones in
- * Europe type a comma on the number keyboard. Thousands separators aren't accepted.
- */
-export function parseKlv(text) {
-  const t = String(text || '').trim().replace(',', '.');
+/** "12.5" (plain: digits, optionally one "." and up to 6 decimals) → 12500000n, or null. */
+function plainToUnits(t) {
   if (!/^\d+(\.\d{1,6})?$/.test(t)) return null;
   const [whole, fraction = ''] = t.split('.');
   const units = BigInt(whole) * 10n ** BigInt(KLV_DECIMALS) + BigInt(fraction.padEnd(KLV_DECIMALS, '0'));
   return units > 0n ? units : null;
+}
+
+/**
+ * klvCandidates — every amount a typed KLV number could mean, in smallest units.
+ *   []        not a valid amount
+ *   [x]       clear: "12.5", "12,5" (comma = decimal point, as on many
+ *             European keyboards), "1,000,000", "1.000.000", "1,000.5", "1.000,5"
+ *   [x, y]    AMBIGUOUS: "1,000" or "1.000" (one comma or dot followed by
+ *             exactly 3 digits) could be 1 KLV or 1000 KLV. The settings
+ *             screen then asks which one you meant.
+ */
+export function klvCandidates(text) {
+  const t = String(text || '').trim().replace(/\s/g, '');
+  const found = [];
+  const add = (plain) => {
+    const u = plainToUnits(plain);
+    if (u !== null && !found.some((x) => x === u)) found.push(u);
+  };
+  if (/^\d{1,3}([.,])\d{3}$/.test(t)) {          // "1,000" / "1.000": two readings
+    add(t.replace(/[.,]/, '.'));
+    add(t.replace(/[.,]/, ''));
+  } else if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) { // "1,000,000" / "1,000.5" (English style)
+    add(t.replace(/,/g, ''));
+  } else if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) { // "1.000.000" / "1.000,5" (European style)
+    add(t.replace(/\./g, '').replace(',', '.'));
+  } else {
+    add(t.replace(',', '.'));                        // "12.5" / "12,5" / "100"
+  }
+  return found;
+}
+
+/** The amount, only if the text is clear (exactly one reading); otherwise null. */
+export function parseKlv(text) {
+  const c = klvCandidates(text);
+  return c.length === 1 ? c[0] : null;
 }
 
 /** 12500000n → "12.5" */

@@ -436,6 +436,9 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [ ] Settings: add your own receiving test address as a **trusted
       receiver** (needs the password) → sending 2 KLV to it is normal again.
 - [ ] Optional: send to an address you've never used → "never sent to … before".
+- [ ] Amount box: type `1,000` (or `1.000`) → "can be read two ways", with
+      buttons **1 KLV** and **1000 KLV**; Save stays grey until you pick one.
+      `12,5` → "= 12.5 KLV" (clear, no question).
 
 ---
 

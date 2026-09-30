@@ -22,7 +22,7 @@ import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import {
-  DEFAULT_RULES, WAIT_CHOICES, formatKlv, isRelaxing, parseKlv,
+  DEFAULT_RULES, WAIT_CHOICES, formatKlv, isRelaxing, klvCandidates, parseKlv,
 } from '../security/extraConfirmation.js';
 import { validAddressOrNull } from '../klever/address.js';
 import { loadRules, saveRules } from '../storage/signingRules.js';
@@ -85,7 +85,9 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
   const set = (patch) => { setDraft((prev) => ({ ...prev, ...patch })); setDone(''); };
   const busy = pw.busy;
   const amountOn = draft.klvThreshold !== null;
-  const amountBad = amountOn && parseKlv(amountText) === null;
+  const amountChoices = klvCandidates(amountText);           // what the typed number could mean
+  const amountAmbiguous = amountOn && amountChoices.length === 2;
+  const amountBad = amountOn && amountChoices.length !== 1;
 
   // The rules as they'd be saved (amount taken from its text box).
   const candidate = { ...draft, klvThreshold: amountOn && !amountBad ? parseKlv(amountText).toString() : draft.klvThreshold };
@@ -142,15 +144,27 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
       {amountOn ? (
         <>
           <Field
-          label="Ask extra above (KLV)"
+            label="Ask extra above (KLV)"
           value={amountText}
           keyboardType="decimal-pad"
           editable={!busy}
           onChangeText={(t) => { setAmountText(t); setDone(''); }}
           placeholder="100"
-          error={amountBad ? 'Please enter an amount like 100 or 12.5 (no thousands separators).' : ''}
-        />
+            error={amountBad && !amountAmbiguous ? 'Please enter an amount like 100 or 12.5.' : ''}
+          />
           {!amountBad ? <Text style={styles.small}>= {formatKlv(parseKlv(amountText))} KLV</Text> : null}
+          {amountAmbiguous ? (
+            <Notice kind="warning">
+              <Body>&quot;{amountText.trim()}&quot; can be read two ways. Which did you mean?</Body>
+              <View style={styles.choices}>
+                {amountChoices.map((units) => (
+                  <View key={units.toString()} style={styles.choice}>
+                    <Button title={`${formatKlv(units)} KLV`} kind="secondary" onPress={() => { setAmountText(formatKlv(units)); setDone(''); }} />
+                  </View>
+                ))}
+              </View>
+            </Notice>
+          ) : null}
         </>
       ) : null}
       <Rule disabled={busy} title="New receivers" text="An address you've never signed a transfer to." value={draft.newReceiver} onChange={(v) => set({ newReceiver: v })} />
