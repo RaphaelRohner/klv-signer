@@ -26,7 +26,10 @@ export function formatUnits(amount, decimals) {
   const base = 10n ** BigInt(decimals);
   const whole = abs / base;
   let fraction = (abs % base).toString().padStart(decimals, '0').replace(/0+$/, '');
-  const wholeText = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); // 1234567 → 1,234,567
+  // No thousands separators, on purpose (owner's decision, 30 Sep 2026): "1,234"
+  // means a thousand in English style but 1.234 in European style. Without
+  // separators, the only mark in an amount is the decimal point.
+  const wholeText = whole.toString(); // 1234567 → 1234567
   if (fraction) fraction = `.${fraction}`;
   return `${negative ? '-' : ''}${wholeText}${fraction}`;
 }

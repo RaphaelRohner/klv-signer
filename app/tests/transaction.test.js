@@ -184,8 +184,8 @@ test('broken input gets a friendly explanation', () => {
 test('amounts are shown in plain words without rounding', () => {
   assert.equal(formatUnits(1500000n, 6), '1.5');
   assert.equal(formatUnits(1n, 6), '0.000001');
-  assert.equal(formatUnits(1234567000000n, 6), '1,234,567');
-  assert.equal(formatUnits(9007199254740993123n, 6), '9,007,199,254,740.993123'); // beyond normal JS number precision
+  assert.equal(formatUnits(1234567000000n, 6), '1234567'); // no thousands separators
+  assert.equal(formatUnits(9007199254740993123n, 6), '9007199254740.993123'); // beyond normal JS number precision
   assert.equal(describeAmount(1n, 'DVKNFT-1SW5/4821').text, 'NFT DVKNFT-1SW5 #4821');
   const token = describeAmount(250n, 'ABC-1234');
   assert.equal(token.text, '250 units of ABC-1234');
