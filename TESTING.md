@@ -408,17 +408,15 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
   0.9 KLV sent from the Hub with fingerprint approval, arrived).
 
 **F11. No internet**
-- [ ] After installing, with the phone plugged in:
+- [x] After installing, with the phone plugged in:
       `~/Library/Android/sdk/platform-tools/adb shell dumpsys package com.raphaelrohner.klvsigner | grep -E "INTERNET|SYSTEM_ALERT|STORAGE|VIBRATE"`
       → prints **nothing** (the Signer has none of these permissions).
-      (Passed 30 Sep 2026: nothing printed.)
-- [ ] Android's Settings → Apps → KLV Signer → Permissions / "Mobile data &
+- [x] Android's Settings → Apps → KLV Signer → Permissions / "Mobile data &
       Wi-Fi": no internet or data usage listed.
-      (Passed 30 Sep 2026: "Permissions: No permissions requested",
-      mobile data 0 B.)
-- [ ] Everything still works: unlock (password and fingerprint), and send a
+- [x] Everything still works: unlock (password and fingerprint), and send a
       test from the Hub → approve → signed. (The Hub does the internet part.)
 - [ ] No red "This copy of the Signer can use the internet" box anywhere.
+- Passed 30 Sep 2026 (password and fingerprint unlock, Hub test signed and arrived).
 
 ---
 
