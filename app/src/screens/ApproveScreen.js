@@ -16,20 +16,23 @@
  *   - the network fee, any attached note, and the transaction number,
  *   - the transaction's fingerprint (so it can be compared if needed).
  *
- * Approving asks for your app password every time. The key is unlocked,
- * used for this one signature, and wiped (security/usePasswordCheck.js).
+ * Approving asks for your app password every time, or your fingerprint/face
+ * if you switched that on (Android's prompt then names the amount). The key
+ * is unlocked, used for this one signature, and wiped
+ * (security/usePasswordCheck.js).
  * Rejecting signs nothing.
  *
  * Screenshots are blocked here (the password can be shown with "Show").
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { signTransaction } from '../klever/signTransaction.js';
 import DeviceWarning from '../components/DeviceWarning.js';
+import BiometricButton from '../components/BiometricButton.js';
 import { isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
 import { NETWORKS } from '../klever/networks.js';
 
@@ -45,14 +48,25 @@ export default function ApproveScreen({ reading, requester, onSigned, onRejected
   // Rooted or unlocked phone: show the transaction, but no way to sign it.
   // Before the first phone check has finished, "Approve" waits for it.
   const blocked = isSigningBlocked(deviceFindings);
+  // The phone check re-runs whenever the Signer comes back to the front. A ref
+  // holds its LATEST result, so signing re-checks it at the very last moment
+  // (e.g. if the result changed while Android's fingerprint prompt was open).
+  const blockedRef = useRef(blocked);
+  useEffect(() => { blockedRef.current = blocked; }, [blocked]);
   usePreventScreenCapture('approve');
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
   const several = reading.transfers.length > 1;
 
+  /** Signs with the unlocked key, unless signing was switched off meanwhile. */
+  function signWithKey(privateKey) {
+    if (blockedRef.current) throw new Error(SIGNING_BLOCKED_TEXT);
+    return signTransaction(reading, privateKey);
+  }
+
   async function approve() {
     if (blocked || !deviceChecked) return; // the button is hidden/disabled then; this is a second guard
-    const result = await pw.check(password, (privateKey) => signTransaction(reading, privateKey));
+    const result = await pw.check(password, signWithKey);
     setPassword('');
     if (result.ok) onSigned(result.value);
   }
@@ -120,6 +134,14 @@ export default function ApproveScreen({ reading, requester, onSigned, onRejected
           {pw.wait > 0 ? (
             <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice>
           ) : null}
+          <BiometricButton
+            pw={pw}
+            title="Approve with fingerprint or face"
+            prompt={several ? `Sign ${reading.transfers.length} transfers` : `Sign: send ${reading.transfers[0].text}`}
+            withKey={signWithKey}
+            onDone={(result) => onSigned(result.value)}
+            disabled={!deviceChecked}
+          />
           <Field
             label="App password"
             value={password}

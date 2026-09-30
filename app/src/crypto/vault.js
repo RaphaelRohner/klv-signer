@@ -88,30 +88,51 @@ export async function lockKey(privateKey, password, address, stretching) {
 
 /**
  * unlockKey — unscrambles the private key with the password.
+ * Throws WrongPasswordError if the password is wrong (or the vault damaged).
+ * The caller must wipe the returned key (wipeBytes) as soon as it's done.
  *
- * @param {object} vault      a vault made by lockKey()
- * @param {string} password   what the user typed
- * @returns {Promise<Uint8Array>} the 32-byte private key. The caller must
- *   wipe it (wipeBytes) as soon as it's done with it.
- * @throws {WrongPasswordError} if the password is wrong or the vault is damaged
+ * It's two steps, also used separately by the fingerprint/face option:
+ *   1. scramblingKeyFromPassword: the slow password step (scrypt).
+ *   2. openVault: unscramble with the resulting 32-byte "scrambling key".
  */
 export async function unlockKey(vault, password) {
-  if (!vault || vault.version !== VAULT_VERSION || vault.kdf !== 'scrypt') {
-    throw new Error('This vault was made by a different version of the Signer.');
+  const scramblingKey = await scramblingKeyFromPassword(vault, password);
+  try {
+    return openVault(vault, scramblingKey);
+  } finally {
+    wipeBytes(scramblingKey);
   }
-  const salt = hexToBytes(vault.salt);
-  const nonce = hexToBytes(vault.nonce);
-  const scrambled = hexToBytes(vault.scrambledKey);
-  const scramblingKey = await keyFromPassword(password, salt, { N: vault.N, r: vault.r, p: vault.p });
+}
 
+/**
+ * scramblingKeyFromPassword — the slow password step on its own.
+ * Returns the vault's 32-byte scrambling key (NOT yet checked: openVault
+ * tells whether it's right). The caller must wipe it.
+ */
+export async function scramblingKeyFromPassword(vault, password) {
+  checkVaultFormat(vault);
+  return keyFromPassword(password, hexToBytes(vault.salt), { N: vault.N, r: vault.r, p: vault.p });
+}
+
+/**
+ * openVault — unscrambles the private key with the scrambling key.
+ *
+ * The fingerprint/face option keeps a copy of the scrambling key in Android's
+ * fingerprint-protected storage (see storage/biometricStore.js), so it can
+ * open the vault without the password. That copy opens only THIS vault: it
+ * doesn't reveal the password.
+ *
+ * Throws WrongPasswordError if the key doesn't fit. The caller must wipe the
+ * returned private key; the scrambling key stays the caller's to wipe.
+ */
+export function openVault(vault, scramblingKey) {
+  checkVaultFormat(vault);
   let privateKey;
   try {
-    privateKey = gcm(scramblingKey, nonce, sealLabel(vault.address)).decrypt(scrambled);
+    privateKey = gcm(scramblingKey, hexToBytes(vault.nonce), sealLabel(vault.address)).decrypt(hexToBytes(vault.scrambledKey));
   } catch {
     // The tamper seal didn't match: wrong password (or damaged vault).
     throw new WrongPasswordError();
-  } finally {
-    wipeBytes(scramblingKey);
   }
 
   // Double-check: does this key really belong to the stored address?
@@ -120,4 +141,10 @@ export async function unlockKey(vault, password) {
     throw new WrongPasswordError();
   }
   return privateKey;
+}
+
+function checkVaultFormat(vault) {
+  if (!vault || vault.version !== VAULT_VERSION || vault.kdf !== 'scrypt') {
+    throw new Error('This vault was made by a different version of the Signer.');
+  }
 }

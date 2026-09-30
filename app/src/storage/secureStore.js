@@ -18,15 +18,17 @@
  * Other apps can't read it, and (because cloud backup is switched off in
  * app.json) it's never copied off the phone by Android backups.
  *
- * Note: we deliberately do NOT use secure-store's own "require fingerprint"
- * option. Its documentation warns the data becomes unreadable forever if
- * you ever add a fingerprint or change your face unlock. And you chose a
- * password instead.
+ * The vault itself never needs a fingerprint: the password always opens it.
+ * The optional fingerprint/face shortcut keeps its own separate copy of the
+ * vault's key (see storage/biometricStore.js). If Android destroys that copy
+ * (e.g. when a fingerprint is added to the phone), nothing is lost: the
+ * password still works.
  */
 
 import * as SecureStore from 'expo-secure-store';
 import { FRESH_STATE } from '../security/wrongPasswordPolicy.js';
 import { clearConnectedApps } from './connectedApps.js';
+import { removeBiometric } from './biometricStore.js';
 
 // The names ("keys") under which each item is saved. Never change these, or
 // the app won't find wallets that were saved under the old names.
@@ -36,6 +38,8 @@ const ATTEMPTS = 'klvsigner.attempts.v1';
 
 /** Save the sealed vault (and its address) after wallet setup. */
 export async function saveVault(vault) {
+  // A new vault has a new scrambling key: any old fingerprint copy is useless.
+  await removeBiometric();
   await SecureStore.setItemAsync(VAULT, JSON.stringify(vault));
   await SecureStore.setItemAsync(ADDRESS, vault.address);
   await saveAttempts(FRESH_STATE);
@@ -64,11 +68,14 @@ export async function saveAttempts(state) {
 }
 
 /**
- * removeWallet — deletes the vault, address, counter and the list of connected
- * apps from this phone. After this, only the recovery phrase can bring the
- * wallet back (and apps have to ask "Allow this app?" again).
+ * removeWallet — deletes the vault, address, counter, the list of connected
+ * apps and the fingerprint/face copy from this phone. After this, only the
+ * recovery phrase can bring the wallet back (and apps have to ask "Allow this
+ * app?" again).
  */
 export async function removeWallet() {
+  // Fingerprint copy first, so it can't be left behind if a later step fails.
+  await removeBiometric();
   await SecureStore.deleteItemAsync(VAULT);
   await SecureStore.deleteItemAsync(ADDRESS);
   await SecureStore.deleteItemAsync(ATTEMPTS);

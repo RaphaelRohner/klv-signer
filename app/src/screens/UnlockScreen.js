@@ -18,6 +18,10 @@
  *      wait before trying again. The waiting time survives closing the app,
  *      because the counter is saved.
  *
+ * FINGERPRINT OR FACE (optional, switched on from the Home screen)
+ * If it's on, a "Unlock with fingerprint or face" button sits above the
+ * password box (components/BiometricButton.js). The password always works too.
+ *
  * PHONE-SAFETY WARNING
  * If the phone looks unsafe for a wallet (rooted, unlocked bootloader, no
  * screen lock …), the warning box is shown right here, BEFORE you unlock, so
@@ -31,6 +35,7 @@ import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, NetworkBadge, Notice, Screen, Title, colors } from '../components/ui.js';
 import RemoveWallet from '../components/RemoveWallet.js';
 import DeviceWarning from '../components/DeviceWarning.js';
+import BiometricButton from '../components/BiometricButton.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 
 /**
@@ -70,6 +75,14 @@ export default function UnlockScreen({ address, deviceFindings, onUnlocked, onRe
       {pw.wait > 0 ? (
         <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice>
       ) : null}
+
+      <BiometricButton
+        pw={pw}
+        title="Unlock with fingerprint or face"
+        prompt="Unlock KLV Signer"
+        withKey={() => null}
+        onDone={(result) => onUnlocked(result.info)}
+      />
 
       <Field
         label="App password"

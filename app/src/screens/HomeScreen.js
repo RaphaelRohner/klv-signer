@@ -12,6 +12,7 @@
  *   - a warning if the phone looks rooted or unlocked (then signing is
  *     switched off), has no screen lock, a keyboard you installed yourself,
  *     or apps with accessibility access,
+ *   - the "Fingerprint or face" switch (optional shortcut for the password),
  *   - the apps you've allowed to use the Signer ("Connected apps"),
  *   - "Lock now" and "Remove wallet from this phone".
  *
@@ -25,6 +26,7 @@ import { Body, Button, Gap, NetworkBadge, Notice, Screen, Strong, Title, colors 
 import RemoveWallet from '../components/RemoveWallet.js';
 import ConnectedAppsList from '../components/ConnectedAppsList.js';
 import DeviceWarning from '../components/DeviceWarning.js';
+import BiometricSetting from '../components/BiometricSetting.js';
 
 /**
  * @param {object} props
@@ -65,14 +67,16 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
 
       {unlockInfo ? (
         <Body muted>
-          Test info: the last password check took {unlockInfo.seconds.toFixed(1)} s using the{' '}
-          {unlockInfo.engine} engine.
+          {unlockInfo.engine === 'fingerprint or face'
+            ? 'Unlocked with fingerprint or face.'
+            : `Test info: the last password check took ${unlockInfo.seconds.toFixed(1)} s using the ${unlockInfo.engine} engine.`}
         </Body>
       ) : null}
 
       <Gap />
       <Button title="Sign a test transaction" onPress={onSignTest} disabled={signingBlocked} />
       <Button title="Lock now" kind="secondary" onPress={onLock} />
+      <BiometricSetting />
       <ConnectedAppsList />
       <Gap size={24} />
       {showRemove ? (

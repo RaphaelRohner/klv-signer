@@ -15,6 +15,9 @@
  *                                 (see WindowProtection.kt). Also done
  *                                 automatically each time the Signer comes
  *                                 to the front.
+ *   getBootCount()              → how many times the phone has started up.
+ *                                 The fingerprint/face option asks for the
+ *                                 password again after every phone restart.
  *
  * After answering, it moves the Signer to the background, so you land back
  * in the app that asked.
@@ -59,6 +62,21 @@ class KlvSignerRequestsModule : Module() {
     AsyncFunction("protectWindow") {
       applyWindowProtection()
       true
+    }
+
+    // Android's own counter of phone start-ups (Settings.Global.BOOT_COUNT).
+    // -1 if Android won't say.
+    Function("getBootCount") {
+      val context = appContext.reactContext
+      if (context == null) {
+        -1
+      } else {
+        try {
+          android.provider.Settings.Global.getInt(context.contentResolver, android.provider.Settings.Global.BOOT_COUNT)
+        } catch (e: Exception) {
+          -1
+        }
+      }
     }
 
     Function("completeRequest") { id: String, ok: Boolean, extras: Map<String, String> ->

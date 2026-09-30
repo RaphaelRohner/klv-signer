@@ -30,7 +30,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Accessibility abuse | Banking trojans misuse Android's accessibility access to read the screen and tap buttons. | Every signature needs the password. All Signer screens are marked sensitive, so only apps that declare themselves real accessibility tools can read or press them (Android 14+, stricter on 16). The Signer names any installed app with accessibility access. A harmful app that falsely claims to be a tool isn't stopped. | Partly |
 | Screen capture | Screenshots, screen recording or the app switcher preview capture recovery words or passwords. | Blocked on the recovery phrase, restore, password, unlock and approval screens. | Protected |
 | Clipboard theft and address swap | Malware reads copied secrets, or swaps a copied address for the attacker's. | The Signer never copies the phrase or key. The approval screen shows the receiver's full address from its own reading. | Protected |
-| Keyboard logging | A keyboard app learns or records what is typed. | Suggestions and learning are off for recovery words and passwords. The Signer warns, naming the keyboard, when you type with one that didn't come with the phone (Gboard, Samsung and SwiftKey from the Play Store count as fine). A malicious keyboard you keep using can't be stopped. | Partly |
+| Keyboard logging | A keyboard app learns or records what is typed. | Suggestions and learning are off for recovery words and passwords. With the optional fingerprint/face shortcut, there's nothing to type at all. The Signer warns, naming the keyboard, when you type with one that didn't come with the phone (Gboard, Samsung and SwiftKey from the Play Store count as fine). A malicious keyboard you keep using can't be stopped. | Partly |
 | Fake client app | A harmful app asks the Signer to sign something bad. | Android tells the Signer which app is asking (id + certificate). Each app must be allowed once, and every request shows the transaction as the Signer reads it. | Protected |
 | Fake Signer catching requests | A harmful app pretends to be the Signer to catch requests or answers. | Apps must name the Signer exactly (package + screen); answers go only to the asking app. | Protected |
 | Task hijacking (StrandHogg) | A harmful app puts a fake Signer screen in front, to catch the password. | Fixed in Android 11; the Signer requires Android 12 or newer. | Protected |
@@ -44,7 +44,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt + AES-256-GCM) inside Android Keystore-protected storage. Planned: a 4× heavier password check, 12-character minimum, strength warning. | Partly |
 | Rooted or hacked phone | Tools with full control of the phone read memory or change how the app runs. | The key is only unscrambled for a moment and wiped straight after. The Signer warns when it finds signs of root, an unlocked bootloader or no screen lock. Signing is switched off on signs of root, an unlocked bootloader or a failed startup check (address and wallet removal still work; the recovery words restore the funds elsewhere). The warning is on the Unlock screen every time you open the Signer. Rooting tools can hide, so no warning isn't proof. No app can fully protect itself on a compromised phone. | Partly |
 | Backup extraction | The wallet is copied out through Android or cloud backups. | Android backup is switched off; storage is tied to the phone's Keystore. | Protected |
-| Shoulder surfing | Someone watches the password being typed or reads the recovery words. | Passwords are hidden by default (Show/Hide). Keep the recovery words private. | Your side |
+| Shoulder surfing | Someone watches the password being typed or reads the recovery words. | Passwords are hidden by default (Show/Hide); the optional fingerprint/face shortcut avoids typing in public. Keep the recovery words private. | Your side |
 
 ## 3. Tricks aimed at the user
 
@@ -94,6 +94,7 @@ that affects a row above.
 | 30 Sep 2026 | Android 12 minimum: task hijacking closed | 14 / 9 / 6 |
 | 30 Sep 2026 | Phone-safety warnings (root, bootloader, screen lock), shown on the Unlock screen | 14 / 9 / 6 (rooted phones: still Partly, no app can fully fix that) |
 | 30 Sep 2026 | Overlays hidden and covered taps ignored: tapjacking closed. Also: signing off on rooted/unlocked phones, screens hidden from non-tool accessibility apps, keyboard and accessibility-app warnings | 15 / 8 / 6 (rooted phones, accessibility and keyboard stay Partly) |
+| 30 Sep 2026 | Optional fingerprint/face (strong biometrics only; copy destroyed if a fingerprint is added; password after restart and every 7 days): less typing for keyloggers and onlookers | 15 / 8 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -107,7 +108,7 @@ that affects a row above.
 - [x] Switch signing off on rooted or unlocked phones
 - [ ] Remove the internet permission in release builds
 - [ ] Change password from the Home screen
-- [ ] Optional fingerprint or face confirmation (the password always stays available as the choice)
+- [x] Optional fingerprint or face confirmation (the password always stays available as the choice)
 - [ ] Review all dependencies before the first release
 - [ ] Independent review of the whole app (a separate reviewer, then a professional one before real money)
 - [ ] Release process: signing certificate fingerprint, checksums, build provenance, reproducible build

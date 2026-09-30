@@ -53,6 +53,11 @@ export async function protectWindow() {
   return native ? native.protectWindow() : false;
 }
 
+/** How many times the phone has started up (-1 if unknown, e.g. in tests). */
+export function getBootCount() {
+  return native ? native.getBootCount() : -1;
+}
+
 export function addClosedListener(listener) {
   if (!native) return { remove() {} };
   return native.addListener('onRequestClosed', (event) => listener(event.id));

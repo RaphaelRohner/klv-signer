@@ -289,7 +289,7 @@ through the Signer, and the second wallet received 0.8 test KLV.
 ## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 60`),
+- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 67`),
       build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
@@ -346,6 +346,30 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [ ] Nothing changed for you: sending 0.1 KLV from the Hub still asks for
       approval and signs as before. (Passed 30 Sep 2026: 0.6 KLV sent from
       the Hub, signed and confirmed.)
+
+**F8. Fingerprint or face (optional shortcut)**
+- [ ] Home → **Fingerprint or face** says "Off" (or, if your phone has no
+      fingerprint set up, that only the password can be used).
+- [ ] Tap **Switch on**, type your password, tap **Continue** → Android's
+      fingerprint prompt appears → touch the sensor → it now says **On**.
+- [ ] Wrong password there → "Wrong password." and it stays off (and it
+      counts as a wrong try, like on the lock screen).
+- [ ] **Lock now** → the Unlock screen shows **Unlock with fingerprint or
+      face** above the password box → use it → you're in. Home says
+      "Unlocked with fingerprint or face." The password box still works too.
+- [ ] Cancel Android's prompt → nothing happens, no error; the password still works.
+- [ ] Send a test from the Hub → the approval screen shows **Approve with
+      fingerprint or face**; Android's prompt names the amount ("Sign: send
+      0.1 KLV") → touch the sensor → signed, back in the Hub.
+- [ ] Restart the phone, open the Signer → no fingerprint button, instead a
+      note that the phone was restarted → unlock with the password → the
+      next time, the fingerprint button is back.
+- [ ] Optional: add a new fingerprint in Android's settings, go back to the
+      Signer, try the fingerprint button → it says fingerprint/face was
+      switched off because the phone's fingerprints changed; the password
+      works; you can switch it on again on Home. (Delete the extra
+      fingerprint afterwards if you like.)
+- [ ] **Switch off** on Home → the fingerprint buttons are gone.
 
 ---
 
