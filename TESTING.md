@@ -236,50 +236,53 @@ npm run make-test-tx -- --from <your test address> --to <receiver> --nft <COLLEC
 Now the Hub asks the Signer directly. No more pasting codes.
 
 **E0. Build and install both apps**
-- [ ] **Signer**: in `KLV Signer App/app`: `npm install`, then `npm test`
+- [x] **Signer**: in `KLV Signer App/app`: `npm install`, then `npm test`
       (should say `# pass 49`), then build as usual and install with
       `adb install -r`. This build compiles the Signer's new native
       Android part for the first time. If it fails, send Claude the last
       ~50 lines.
-- [ ] **Hub**: in `Devikins Legacy Hub/app`: `npm install`, then build the
+- [x] **Hub**: in `Devikins Legacy Hub/app`: `npm install`, then build the
       Hub as usual and install with `adb install -r` (your wallets and NFTs
       stay). The Hub is now version **4.1.0**.
 
 **E1. Connecting the Hub**
-- [ ] In the Hub: ☰ menu → **KLV Signer (test)** → **Connect KLV Signer**.
-- [ ] The Signer opens with **"Allow this app?"**, showing the name **DLH**
+- [x] In the Hub: ☰ menu → **KLV Signer (test)** → **Connect KLV Signer**.
+- [x] The Signer opens with **"Allow this app?"**, showing the name **DLH**
       and the app id **com.raphaelrohner.devikinslegacyhub**.
-- [ ] Tap **Allow** → you're back in the Hub, which now shows your Signer
+- [x] Tap **Allow** → you're back in the Hub, which now shows your Signer
       wallet's address and its testnet balance.
-- [ ] In the Signer (open it normally, unlock): the Home screen lists **DLH**
+- [x] In the Signer (open it normally, unlock): the Home screen lists **DLH**
       under **Connected apps**.
 
 **E2. Sending from the Hub**
-- [ ] In the Hub's KLV Signer screen: enter your second test address as
+- [x] In the Hub's KLV Signer screen: enter your second test address as
       receiver (or **Scan** its QR code) and **0.3** as amount → **Send with
       KLV Signer**.
-- [ ] The Signer opens the approval screen: **Requested by DLH**
+- [x] The Signer opens the approval screen: **Requested by DLH**
       (com.raphaelrohner.devikinslegacyhub), **Send 0.3 KLV**, the receiver's
       full address, Testnet.
-- [ ] Enter your Signer password → **Approve and sign** → you land back in
+- [x] Enter your Signer password → **Approve and sign** → you land back in
       the Hub, which shows **✔ Sent to the testnet** and a link.
-- [ ] **View on Kleverscan** shows the transfer as successful; after a few
+- [x] **View on Kleverscan** shows the transfer as successful; after a few
       seconds **Refresh balance** shows the lower balance.
 
 **E3. Saying no**
-- [ ] Send again, but tap **Reject** in the Signer → back in the Hub:
+- [x] Send again, but tap **Reject** in the Signer → back in the Hub:
       "Cancelled in the KLV Signer - nothing was sent."
-- [ ] Send again, and while the Signer's approval screen is open, switch
+- [x] Send again, and while the Signer's approval screen is open, switch
       back to the Hub with the app switcher (without deciding) → the Hub
       says it was cancelled. Opening the Signer afterwards shows the lock
       screen, not the old request.
 
 **E4. Removing the connection**
-- [ ] In the Signer's Home screen, tap **Remove** next to DLH.
-- [ ] In the Hub, tap **Reconnect** → the Signer asks "Allow this app?" again.
+- [x] In the Signer's Home screen, tap **Remove** next to DLH.
+- [x] In the Hub, tap **Reconnect** → the Signer asks "Allow this app?" again.
       Tap **Don't allow** → the Hub shows "You did not allow this app to use
       the Signer."
-- [ ] Reconnect once more and **Allow**, so the Hub is connected for later.
+- [x] Reconnect once more and **Allow**, so the Hub is connected for later.
+
+**Result 30 Sep 2026: all Stage 3 tests passed.** The Hub connected, sent 0.5 + 0.3 KLV
+through the Signer, and the second wallet received 0.8 test KLV.
 
 ---
 

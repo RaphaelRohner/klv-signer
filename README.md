@@ -16,7 +16,7 @@ whole idea in plain English, with a build plan and a glossary.
 
 **Stage 1 — Wallet + password: done and tested on the phone (29 Sep 2026).**
 **Stage 2 — Reading and signing: done and tested (30 Sep 2026)**, including a real testnet transfer.
-**Stage 3 — Other apps asking: built, waiting for the phone test** (TESTING.md, Part E). The Hub (4.1.0) is the first app using it.
+**Stage 3 — Other apps asking: done and tested (30 Sep 2026).** The Hub (4.1.0) is the first app using it.
 The Signer can create a new wallet (or restore one from its recovery phrase),
 lock it with your app password, unlock it, and remove it. It can't sign
 anything yet (that's Stage 2). It's set to **testnet**.
