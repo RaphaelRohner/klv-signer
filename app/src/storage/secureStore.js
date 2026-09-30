@@ -26,6 +26,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 import { FRESH_STATE } from '../security/wrongPasswordPolicy.js';
+import { clearConnectedApps } from './connectedApps.js';
 
 // The names ("keys") under which each item is saved. Never change these, or
 // the app won't find wallets that were saved under the old names.
@@ -63,11 +64,13 @@ export async function saveAttempts(state) {
 }
 
 /**
- * removeWallet — deletes the vault, address and counter from this phone.
- * After this, only the recovery phrase can bring the wallet back.
+ * removeWallet — deletes the vault, address, counter and the list of connected
+ * apps from this phone. After this, only the recovery phrase can bring the
+ * wallet back (and apps have to ask "Allow this app?" again).
  */
 export async function removeWallet() {
   await SecureStore.deleteItemAsync(VAULT);
   await SecureStore.deleteItemAsync(ADDRESS);
   await SecureStore.deleteItemAsync(ATTEMPTS);
+  await clearConnectedApps();
 }

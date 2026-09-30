@@ -2,13 +2,14 @@
  * HomeScreen.js — shown after unlocking
  * =====================================
  *
- * Stage 2 version. It shows:
+ * Stage 3 version. It shows:
  *   - your wallet address (public, safe to share: long-press to copy it),
  *   - which network the Signer is set to (testnet),
  *   - test information: how long the last unlock took and which engine did
  *     the password work (see crypto/passwordKey.js). This helps us tune the
  *     speed on your phone.
  *   - "Sign a test transaction" (Stage 2: paste a transaction by hand),
+ *   - the apps you've allowed to use the Signer ("Connected apps"),
  *   - "Lock now" and "Remove wallet from this phone".
  *
  * From Stage 3 on, signing requests from other apps will open the approval
@@ -19,6 +20,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { Body, Button, Gap, NetworkBadge, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import RemoveWallet from '../components/RemoveWallet.js';
+import ConnectedAppsList from '../components/ConnectedAppsList.js';
 
 /**
  * @param {object} props
@@ -49,8 +51,8 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
 
       <Notice kind="info">
         <Body>
-          <Strong>Stage 2.</Strong> The Signer can read and sign transactions you paste in by hand. Other apps
-          will be able to send it requests in Stage 3.
+          <Strong>Stage 3.</Strong> Other apps can now ask the Signer to sign, and you approve each request here.
+          You can still paste a test transaction by hand.
         </Body>
       </Notice>
 
@@ -64,6 +66,7 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
       <Gap />
       <Button title="Sign a test transaction" onPress={onSignTest} />
       <Button title="Lock now" kind="secondary" onPress={onLock} />
+      <ConnectedAppsList />
       <Gap size={24} />
       {showRemove ? (
         <RemoveWallet onRemoved={onRemoved} onCancel={() => setShowRemove(false)} />

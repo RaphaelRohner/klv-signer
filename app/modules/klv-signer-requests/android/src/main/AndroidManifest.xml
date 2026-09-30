@@ -1,0 +1,30 @@
+<!--
+  AndroidManifest.xml (Signer request module)
+  ===========================================
+  Declares the Signer's "front door" screen for other apps (SignRequestActivity).
+  Expo merges this into the Signer's main Android manifest automatically.
+
+  - exported="true": other apps are allowed to open it (that's its purpose).
+  - The theme makes it invisible; the real screens are the Signer's normal ones.
+  - excludeFromRecents: it never shows up as a separate card in the app switcher.
+  - configChanges: turning the phone etc. must not restart it, or the waiting
+    request would be lost.
+  - The intent filter lists the two request types. Client apps should still
+    name this screen exactly (package + class), see SIGNER-PROTOCOL.md.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <activity
+      android:name="com.raphaelrohner.klvsigner.requests.SignRequestActivity"
+      android:exported="true"
+      android:excludeFromRecents="true"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale|locale|layoutDirection">
+      <intent-filter>
+        <action android:name="com.raphaelrohner.klvsigner.action.GET_ADDRESS" />
+        <action android:name="com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>
