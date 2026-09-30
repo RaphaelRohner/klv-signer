@@ -1,7 +1,7 @@
 # TESTING.md — how to build the Signer and test it on your phone
 
 This guide covers **Stage 1: wallet + password** (Parts A–C),
-**Stage 2: reading and signing** (Part D) and **Stage 3: other apps asking** (Part E). Follow the parts in order.
+**Stage 2: reading and signing** (Part D) **Stage 3: other apps asking** (Part E) and **Stage 4: safety polish** (Part F, growing). Follow the parts in order.
 Each test says what you should see. If something looks different, stop and
 tell Claude what happened (a photo of the screen helps. Just never
 photograph a recovery phrase you intend to keep).
@@ -283,6 +283,30 @@ Now the Hub asks the Signer directly. No more pasting codes.
 
 **Result 30 Sep 2026: all Stage 3 tests passed.** The Hub connected, sent 0.5 + 0.3 KLV
 through the Signer, and the second wallet received 0.8 test KLV.
+
+---
+
+## Part F — Stage 4 tests: phone-safety warnings and Android 12
+
+**F0. Build and install**
+- [ ] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 56`),
+      build, `adb install -r`. This build compiles the new native safety check.
+
+**F1. A normal phone shows no warning**
+- [ ] Open the Signer. Your usual (not rooted, locked bootloader, with screen
+      lock) phone shows **no** "This phone may not be safe" box on Home.
+
+**F2. The screen-lock warning** (keep your recovery words at hand, just in case)
+- [ ] In Android's Settings, temporarily remove your screen lock.
+- [ ] Close the Signer completely and open it again → Home shows **"This phone
+      may not be safe for a wallet · No screen lock is set"** with an explanation.
+- [ ] Send a test from the Hub → the approval screen shows the short warning
+      line at the top. (Reject it.)
+- [ ] Set your screen lock again, close and reopen the Signer → the warning is gone.
+
+**F3. Android version**
+- [ ] Nothing to see on your phone (it's newer than Android 12). Phones older
+      than Android 12 can't install the Signer anymore.
 
 ---
 

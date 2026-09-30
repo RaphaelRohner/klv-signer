@@ -9,6 +9,7 @@
  *     the password work (see crypto/passwordKey.js). This helps us tune the
  *     speed on your phone.
  *   - "Sign a test transaction" (Stage 2: paste a transaction by hand),
+ *   - a warning if the phone looks rooted, unlocked or has no screen lock,
  *   - the apps you've allowed to use the Signer ("Connected apps"),
  *   - "Lock now" and "Remove wallet from this phone".
  *
@@ -21,6 +22,7 @@ import { StyleSheet, Text } from 'react-native';
 import { Body, Button, Gap, NetworkBadge, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import RemoveWallet from '../components/RemoveWallet.js';
 import ConnectedAppsList from '../components/ConnectedAppsList.js';
+import DeviceWarning from '../components/DeviceWarning.js';
 
 /**
  * @param {object} props
@@ -28,16 +30,18 @@ import ConnectedAppsList from '../components/ConnectedAppsList.js';
  * @param {{seconds:number, engine:string}|null} props.unlockInfo  test info from the last unlock
  * @param {boolean} props.justCreated   true right after setup (shows a "saved" message)
  * @param {() => void} props.onLock
+ * @param {object[]} props.deviceFindings  phone-safety warnings (security/deviceChecks.js)
  * @param {() => void} props.onSignTest  opens the "sign a test transaction" screen
  * @param {() => void} props.onRemoved
  */
-export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved }) {
+export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings }) {
   const [showRemove, setShowRemove] = useState(false);
 
   return (
     <Screen>
       <NetworkBadge />
       <Title>Your wallet</Title>
+      <DeviceWarning findings={deviceFindings} />
 
       {justCreated ? (
         <Notice kind="info">

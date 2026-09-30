@@ -75,8 +75,9 @@ import RequestProblemScreen from './src/screens/RequestProblemScreen.js';
 
 // Requests from other apps (Stage 3)
 import {
-  addClosedListener, addRequestListener, completeRequest, getPendingRequest,
+  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest,
 } from './modules/klv-signer-requests/index.js';
+import { describeDeviceSecurity } from './src/security/deviceChecks.js';
 import { ACTIONS, ERRORS, addressReply, checkRequest, errorReply, signedReply } from './src/requests/protocol.js';
 import { trustStatus, withApp } from './src/requests/appTrust.js';
 import { loadConnectedApps, saveConnectedApps } from './src/storage/connectedApps.js';
@@ -113,6 +114,15 @@ export default function App() {
   const [requestProblem, setRequestProblem] = useState(null); // { code, message } if refused
   const requestRef = useRef(null);
   const addressRef = useRef(null);
+
+  // Phone-safety warnings (root, unlocked bootloader, no screen lock), checked
+  // once when the app starts. See src/security/deviceChecks.js.
+  const [deviceFindings, setDeviceFindings] = useState([]);
+  useEffect(() => {
+    getDeviceSecurity()
+      .then((report) => setDeviceFindings(describeDeviceSecurity(report).findings))
+      .catch(() => setDeviceFindings([]));
+  }, []);
   useEffect(() => { addressRef.current = address; }, [address]);
 
   // --- On start: is there a wallet on this phone? --------------------------
@@ -309,6 +319,7 @@ export default function App() {
       case 'welcome':
         return (
           <WelcomeScreen
+            deviceFindings={deviceFindings}
             onCreate={() => {
               setDraftPhrase(createRecoveryPhrase(RECOVERY_PHRASE_WORDS));
               setSetupOrigin('create');
@@ -362,6 +373,7 @@ export default function App() {
       case 'home':
         return (
           <HomeScreen
+            deviceFindings={deviceFindings}
             address={address}
             unlockInfo={unlockInfo}
             justCreated={justCreated}
@@ -383,6 +395,7 @@ export default function App() {
           <ApproveScreen
             reading={reading}
             requester={MANUAL_REQUESTER}
+            deviceFindings={deviceFindings}
             onSigned={(result) => { setReading(null); setSignResult(result); setScreen('signed'); }}
             onRejected={() => { setReading(null); setScreen('home'); }}
           />
@@ -405,6 +418,7 @@ export default function App() {
             key={request.id}
             reading={requestReading}
             requester={{ name: request.callerLabel, detail: request.callerPackage }}
+            deviceFindings={deviceFindings}
             onSigned={(result) => finishRequest(true, signedReply(request, address, requestReading, result))}
             onRejected={() => finishRequest(false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.'))}
           />

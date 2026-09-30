@@ -25,7 +25,15 @@
     },
     "plugins": [
       "expo-secure-store",
-      "react-native-quick-crypto"
+      "react-native-quick-crypto",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 31
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {

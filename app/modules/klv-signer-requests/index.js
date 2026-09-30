@@ -13,6 +13,9 @@
  *   addRequestListener(fn)            fn(id) when a new request arrives
  *   addClosedListener(fn)             fn(id) when a request goes away unanswered
  *                                     (e.g. you switched back to the calling app)
+ *   getDeviceSecurity()               (async) facts about the phone's own protections:
+ *        { suBinary, testKeys, rootApps, verifiedBootState, flashLocked, screenLockSet }
+ *        see DeviceSecurity.kt; turned into words by src/security/deviceChecks.js
  *
  * If the native part isn't there (e.g. in the automated tests on a computer),
  * everything quietly does nothing.
@@ -35,6 +38,10 @@ export function completeRequest(id, ok, extras) {
 export function addRequestListener(listener) {
   if (!native) return { remove() {} };
   return native.addListener('onRequest', (event) => listener(event.id));
+}
+
+export async function getDeviceSecurity() {
+  return native ? native.getDeviceSecurity() : null;
 }
 
 export function addClosedListener(listener) {

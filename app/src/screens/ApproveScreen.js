@@ -29,6 +29,7 @@ import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { signTransaction } from '../klever/signTransaction.js';
+import DeviceWarning from '../components/DeviceWarning.js';
 import { NETWORKS } from '../klever/networks.js';
 
 /**
@@ -37,8 +38,9 @@ import { NETWORKS } from '../klever/networks.js';
  * @param {{name: string, detail: string}} props.requester  who is asking
  * @param {(result: object) => void} props.onSigned   called with { signatureHex, signedTransactionHex }
  * @param {() => void} props.onRejected
+ * @param {object[]} [props.deviceFindings]  phone-safety warnings, shown in short form
  */
-export default function ApproveScreen({ reading, requester, onSigned, onRejected }) {
+export default function ApproveScreen({ reading, requester, onSigned, onRejected, deviceFindings }) {
   usePreventScreenCapture('approve');
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
@@ -53,6 +55,7 @@ export default function ApproveScreen({ reading, requester, onSigned, onRejected
   return (
     <Screen>
       <Title>Approve this transaction?</Title>
+      <DeviceWarning findings={deviceFindings} compact />
 
       {/* Who is asking */}
       <Row label="Requested by">

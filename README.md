@@ -38,7 +38,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/App.js` | The "traffic controller": decides which screen you see. Has a map of all screens at the top. |
 | `app/src/config.js` | All important settings in one place (network, password rules, waiting times…). |
 | `app/src/crypto/` | The security core: `wallet.js` (making/restoring wallets), `passwordKey.js` (turning your password into a key), `vault.js` (scrambling the private key), `setupRandom.js` (secure randomness), `phraseInput.js` (the numbered word boxes on the Restore screen). |
-| `app/src/security/` | `wrongPasswordPolicy.js`: the waiting-time rules after wrong passwords. `usePasswordCheck.js`: the one shared "check the password, use the key, wipe it" step. |
+| `app/src/security/` | `deviceChecks.js`: the phone-safety warnings (root, unlocked bootloader, no screen lock). `wrongPasswordPolicy.js`: the waiting-time rules after wrong passwords. `usePasswordCheck.js`: the one shared "check the password, use the key, wipe it" step. |
 | `app/src/klever/` | Reading and signing Klever transactions: `readTransaction.js` (the strict reader and all safety checks), `signTransaction.js`, `protobuf.js` + `schema.js` (Klever's data format, from the node's official definitions), `format.js` (plain-words amounts), `networks.js`. |
 | `app/tools/` | Helper tools for your Mac (testnet only): `make-test-tx.mjs` prepares a test transaction, `send-signed-tx.mjs` checks and sends a signed one. |
 | `app/src/storage/` | `secureStore.js` (the wallet) and `connectedApps.js` (the apps you've allowed): the only files that save anything on the phone. |
@@ -46,7 +46,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/src/components/` | Shared looks (`ui.js`) and the "remove wallet" box (`RemoveWallet.js`). |
 | `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. |
 | `app/src/requests/` | The rules for requests from other apps: `protocol.js` (request checks and answers) and `appTrust.js` (which apps you've allowed). |
-| `app/tests/` | Automatic checks for the security core and the transaction reader (49 checks). Run with `npm test`. |
+| `app/tests/` | Automatic checks for the security core and the transaction reader (56 checks). Run with `npm test`. |
 | `app/eas.json` | Build settings (same as the Hub's). |
 | `app/eslint.config.js` | Settings for the code checker (`npx expo lint`). |
 
@@ -60,6 +60,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | How apps ask | Android "ask another app for a result", screen `com.raphaelrohner.klvsigner.requests.SignRequestActivity` | Android tells the Signer which app is asking and returns the answer only to that app. See SIGNER-PROTOCOL.md. |
 | Cloud backup | Off | The scrambled key never leaves the phone through Android backups. |
 | Expo version | SDK 57 | Same as the Hub. |
+| Minimum Android | 12 (API 31) | Older versions lack protections the Signer relies on (task hijacking fix, overlay blocking). |
 
 ## Building libraries used (and why)
 

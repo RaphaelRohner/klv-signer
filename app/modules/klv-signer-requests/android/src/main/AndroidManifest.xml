@@ -1,7 +1,8 @@
 <!--
   AndroidManifest.xml (Signer request module)
   ===========================================
-  Declares the Signer's "front door" screen for other apps (SignRequestActivity).
+  Declares the Signer's "front door" screen for other apps (SignRequestActivity),
+  and the rooting apps the phone-safety check may look for (DeviceSecurity.kt).
   Expo merges this into the Signer's main Android manifest automatically.
 
   - exported="true": other apps are allowed to open it (that's its purpose).
@@ -13,6 +14,21 @@
     name this screen exactly (package + class), see SIGNER-PROTOCOL.md.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Rooting apps the phone-safety check looks for (DeviceSecurity.kt). Android 11+
+       hides other apps unless they're listed here. Keep in sync with ROOT_APPS. -->
+  <queries>
+    <package android:name="com.topjohnwu.magisk" />
+    <package android:name="io.github.huskydg.magisk" />
+    <package android:name="io.github.vvb2060.magisk" />
+    <package android:name="me.weishu.kernelsu" />
+    <package android:name="com.rifsxd.ksunext" />
+    <package android:name="me.bmax.apatch" />
+    <package android:name="eu.chainfire.supersu" />
+    <package android:name="com.koushikdutta.superuser" />
+    <package android:name="com.noshufou.android.su" />
+    <package android:name="com.thirdparty.superuser" />
+    <package android:name="com.kingroot.kinguser" />
+  </queries>
   <application>
     <activity
       android:name="com.raphaelrohner.klvsigner.requests.SignRequestActivity"

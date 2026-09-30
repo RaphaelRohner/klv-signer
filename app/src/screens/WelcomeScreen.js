@@ -11,13 +11,15 @@
 
 import React from 'react';
 import { Body, Button, Gap, NetworkBadge, Notice, Screen, Title } from '../components/ui.js';
+import DeviceWarning from '../components/DeviceWarning.js';
 
 /**
  * @param {object} props
  * @param {() => void} props.onCreate   called when "Create a new wallet" is tapped
  * @param {() => void} props.onRestore  called when "Restore a wallet" is tapped
+ * @param {object[]} props.deviceFindings phone-safety warnings (shown before you set up a wallet)
  */
-export default function WelcomeScreen({ onCreate, onRestore }) {
+export default function WelcomeScreen({ onCreate, onRestore, deviceFindings }) {
   return (
     <Screen>
       <NetworkBadge />
@@ -26,6 +28,7 @@ export default function WelcomeScreen({ onCreate, onRestore }) {
         This app keeps your Klever wallet's private key safe on this phone and signs transactions for
         other Klever apps, only when you approve. Those apps never see the key.
       </Body>
+      <DeviceWarning findings={deviceFindings} />
       <Notice kind="warning">
         Testing phase: please only use a brand-new wallet that has never held anything of real value.
       </Notice>
