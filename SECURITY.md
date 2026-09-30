@@ -27,10 +27,10 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
 | Overlay / tapjacking | A harmful app draws an invisible layer over the screen, so a tap on "OK" lands on **Approve**. | The Signer requires Android 12+, which blocks untrusted full-screen overlays by default. Planned: hide all overlays and ignore obscured taps on the approval screen. | Partly |
-| Accessibility abuse | Banking trojans misuse Android's accessibility access to read the screen and tap buttons. | Every signature needs the password, which such malware can't know unless it logs keys. Planned: mark sensitive screens as hidden from accessibility tools (Android 16+). | Partly |
+| Accessibility abuse | Banking trojans misuse Android's accessibility access to read the screen and tap buttons. | Every signature needs the password, which such malware can't know unless it logs keys. Planned: mark sensitive screens so accessibility apps can't read or press them (Android 14+), and name any installed apps that have accessibility access turned on. | Partly |
 | Screen capture | Screenshots, screen recording or the app switcher preview capture recovery words or passwords. | Blocked on the recovery phrase, restore, password, unlock and approval screens. | Protected |
 | Clipboard theft and address swap | Malware reads copied secrets, or swaps a copied address for the attacker's. | The Signer never copies the phrase or key. The approval screen shows the receiver's full address from its own reading. | Protected |
-| Keyboard logging | A keyboard app learns or records what is typed. | Suggestions and learning are off for recovery words and passwords. A malicious keyboard app itself can't be stopped by the Signer. | Partly |
+| Keyboard logging | A keyboard app learns or records what is typed. | Suggestions and learning are off for recovery words and passwords. A malicious keyboard app itself can't be stopped by the Signer. Planned: a note when you're typing with a keyboard you installed yourself rather than the phone's built-in one. | Partly |
 | Fake client app | A harmful app asks the Signer to sign something bad. | Android tells the Signer which app is asking (id + certificate). Each app must be allowed once, and every request shows the transaction as the Signer reads it. | Protected |
 | Fake Signer catching requests | A harmful app pretends to be the Signer to catch requests or answers. | Apps must name the Signer exactly (package + screen); answers go only to the asking app. | Protected |
 | Task hijacking (StrandHogg) | A harmful app puts a fake Signer screen in front, to catch the password. | Fixed in Android 11; the Signer requires Android 12 or newer. | Protected |
@@ -97,12 +97,15 @@ that affects a row above.
 ## Planned fixes (Stage 4)
 
 - [ ] Hide overlays and ignore obscured taps on the approval, password and recovery-phrase screens
-- [ ] Mark sensitive screens as hidden from accessibility tools (Android 16+)
+- [ ] Mark sensitive screens so accessibility apps can't read or press them (Android 14+)
+- [ ] Warn which installed apps have accessibility access turned on
+- [ ] Warn when the keyboard in use isn't the phone's built-in one
 - [x] Require Android 12 as the minimum version (closes task hijacking; overlays blocked by default)
 - [ ] Make the password check about 4× heavier; 12-character minimum with a strength warning
 - [x] Warn when the phone looks insecure (signs of root, unlocked bootloader, no screen lock)
 - [ ] Remove the internet permission in release builds
 - [ ] Change password from the Home screen
+- [ ] Optional fingerprint or face confirmation (the password always stays available as the choice)
 - [ ] Review all dependencies before the first release
 - [ ] Independent review of the whole app (a separate reviewer, then a professional one before real money)
 - [ ] Release process: signing certificate fingerprint, checksums, build provenance, reproducible build
