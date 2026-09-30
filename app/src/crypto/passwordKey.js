@@ -39,7 +39,7 @@
 import { scrypt as jsScrypt, scryptAsync as jsScryptAsync } from '@noble/hashes/scrypt';
 
 /*
- * scrypt needs some working memory: 128 × N × r bytes (32 MB for our
+ * scrypt needs some working memory: 128 × N × r bytes (128 MB for our
  * settings). Engines refuse by default above a limit, so we allow a bit more
  * than we need.
  */

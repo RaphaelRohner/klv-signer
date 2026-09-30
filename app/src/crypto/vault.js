@@ -143,6 +143,15 @@ export function openVault(vault, scramblingKey) {
   return privateKey;
 }
 
+/**
+ * isWeakerThan — true if this vault was made with lighter password settings
+ * than `stretching` (e.g. a Stage 1–3 wallet), so it's worth upgrading.
+ */
+export function isWeakerThan(vault, stretching) {
+  if (!vault) return false;
+  return vault.N < stretching.N || vault.r < stretching.r || vault.p < stretching.p;
+}
+
 function checkVaultFormat(vault) {
   if (!vault || vault.version !== VAULT_VERSION || vault.kdf !== 'scrypt') {
     throw new Error('This vault was made by a different version of the Signer.');

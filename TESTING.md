@@ -289,7 +289,7 @@ through the Signer, and the second wallet received 0.8 test KLV.
 ## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 69`),
+- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 76`),
       build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
@@ -386,6 +386,22 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [x] Send a test from the Hub → approve with the new password → signed.
 - [x] Switch fingerprint on again with the new password → it works.
 - Passed 30 Sep 2026 (0.4 KLV sent from the Hub with the new password, arrived).
+
+**F10. Stronger passwords**
+- [ ] Home → **Change password**: a new password under 12 characters → the
+      box asks for at least 12, the button stays grey.
+- [ ] Type `password12345` as the new password → **Strength: Weak** (a very
+      common word). Try `maple tunnel orbit ginger` → **Strength: Strong**.
+      Something in between, like `violinrocket7` → **Fair** with a tip.
+      (No need to actually change it; tap **Back**.)
+- [ ] The upgrade of your existing wallet (made with the old, lighter
+      setting): switch **Fingerprint or face** OFF on Home (it's skipped while
+      that's on) → **Lock now** → unlock with your password (this one unlock
+      takes a little longer) → **Lock now** again → unlock with the password
+      again → Home's test info now shows a longer check time than before
+      (about 4×, e.g. 0.5 s instead of 0.15 s). That's the stronger setting.
+- [ ] Switch fingerprint on again → it works.
+- [ ] Send a test from the Hub → approve → signed.
 
 ---
 

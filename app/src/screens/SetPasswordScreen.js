@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title } from '../components/ui.js';
 import { MIN_PASSWORD_LENGTH } from '../config.js';
+import PasswordStrength from '../components/PasswordStrength.js';
 
 /**
  * @param {object} props
@@ -66,6 +67,7 @@ export default function SetPasswordScreen({ onSubmit, onBack }) {
         onChangeText={setPassword}
         error={tooShort ? `Please use at least ${MIN_PASSWORD_LENGTH} characters.` : ''}
       />
+      <PasswordStrength password={password} />
       <Field
         label="Type it again"
         value={repeat}

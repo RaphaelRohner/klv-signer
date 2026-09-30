@@ -29,6 +29,7 @@ import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { lockKey } from '../crypto/vault.js';
 import { saveVault } from '../storage/secureStore.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_STRETCHING } from '../config.js';
+import PasswordStrength from '../components/PasswordStrength.js';
 
 /**
  * @param {object} props
@@ -91,6 +92,7 @@ export default function ChangePasswordScreen({ address, onChanged, onBack }) {
         onChangeText={setNext}
         error={tooShort ? `Please use at least ${MIN_PASSWORD_LENGTH} characters.` : same ? 'The new password is the same as the current one.' : ''}
       />
+      {same ? null : <PasswordStrength password={next} />}
       <Field
         label="Type the new password again"
         value={repeat}

@@ -78,7 +78,7 @@ From `app/`:
 3. Only transaction types the Signer can fully decode and explain get signed
    (start: transfers of KLV/KDA/NFTs). Refuse anything else, and refuse wrong
    network or wrong sender.
-4. Vault = scrypt(password NFKC, 16-byte salt; N=2^15,r=8,p=1) → AES-256-GCM
+4. Vault = scrypt(password NFKC, 16-byte salt; N=2^17,r=8,p=1 (Stage 1–3 vaults: 2^15; upgraded on the next password unlock)) → AES-256-GCM
    (12-byte nonce, AAD = "klv-signer-vault-v1:<address>"), stored as JSON in
    expo-secure-store (`klvsigner.vault.v1`). Password never stored. After
    decrypt, the address derived from the key must equal the vault's address.

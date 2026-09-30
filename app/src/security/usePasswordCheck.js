@@ -31,6 +31,14 @@
  *     ready:     fingerprint/face can be used right now
  *   pw.enableBiometric(password, prompt) / pw.disableBiometric()
  *
+ * UPGRADING OLDER WALLETS
+ * Wallets set up before Stage 4 use lighter password settings (config.js,
+ * PASSWORD_STRETCHING). After a successful PASSWORD check, the key is
+ * scrambled again with the current settings and the same password, once.
+ * That makes this one unlock take a bit longer. If fingerprint/face is on,
+ * this waits (its copy belongs to the current vault) and happens instead when
+ * you next switch fingerprint/face on, or change the password.
+ *
  * (A "hook", the "use…" name, is React's way of sharing logic between screens.)
  */
 
@@ -38,10 +46,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { getBootCount } from '../../modules/klv-signer-requests/index.js';
-import { openVault, scramblingKeyFromPassword, WrongPasswordError } from '../crypto/vault.js';
+import { isWeakerThan, lockKey, openVault, scramblingKeyFromPassword, WrongPasswordError } from '../crypto/vault.js';
+import { PASSWORD_STRETCHING } from '../config.js';
 import { engineName } from '../crypto/passwordKey.js';
 import { wipeBytes } from '../crypto/wallet.js';
-import { loadAttempts, loadVault, saveAttempts } from '../storage/secureStore.js';
+import { loadAttempts, loadVault, saveAttempts, saveVault } from '../storage/secureStore.js';
 import {
   canUseBiometrics, loadBiometricState, readBiometricKey, removeBiometric, saveBiometricKey, saveBiometricState,
 } from '../storage/biometricStore.js';
@@ -131,6 +140,26 @@ export function usePasswordCheck() {
     }
   }
 
+  /**
+   * upgradeIfOld — re-scrambles an older, lighter vault with the current
+   * settings (same password). Returns the vault now in use. Never fails the
+   * unlock: if anything goes wrong, the old vault simply stays.
+   */
+  async function upgradeIfOld(vault, privateKey, password) {
+    if (!isWeakerThan(vault, PASSWORD_STRETCHING)) return vault;
+    try {
+      // Only if the saved vault is still the one we opened. (Change password
+      // saves a new one inside withKey: that must never be overwritten here.)
+      const saved = await loadVault();
+      if (!saved || saved.salt !== vault.salt) return saved || vault;
+      const upgraded = await lockKey(privateKey, password, vault.address, PASSWORD_STRETCHING);
+      await saveVault(upgraded);
+      return upgraded;
+    } catch {
+      return vault;
+    }
+  }
+
   async function check(password, withKey) {
     if (running.current) return { ok: false };
     running.current = true;
@@ -154,6 +183,8 @@ export function usePasswordCheck() {
       await recordSuccess(true);
       const info = { seconds: (Date.now() - started) / 1000, engine: engineName() };
       const value = await withKey(privateKey, info);
+      // Older wallet? Upgrade it now (not while fingerprint/face is on, see top of file).
+      if (!(await loadBiometricState()).enabled) await upgradeIfOld(vault, privateKey, password);
       return { ok: true, value, info };
     } catch (error) {
       if (error instanceof WrongPasswordError) {
@@ -244,12 +275,18 @@ export function usePasswordCheck() {
     let scramblingKey = null;
     let privateKey = null;
     try {
-      const vault = await loadVault();
+      let vault = await loadVault();
       scramblingKey = await scramblingKeyFromPassword(vault, password);
       privateKey = openVault(vault, scramblingKey); // proves the password is right
+      await recordSuccess(false);
+      // Older wallet? Upgrade it first, so the fingerprint copy belongs to the new vault.
+      if (isWeakerThan(vault, PASSWORD_STRETCHING)) {
+        vault = await upgradeIfOld(vault, privateKey, password);
+        wipeBytes(scramblingKey);
+        scramblingKey = await scramblingKeyFromPassword(vault, password);
+      }
       wipeBytes(privateKey);
       privateKey = null;
-      await recordSuccess(false);
       // Note: the hex text copy can't be wiped from memory (JavaScript text
       // can't be overwritten); it's dropped straight after and cleaned up by
       // JavaScript's memory manager.

@@ -8,7 +8,7 @@ signer apps, and where the Signer stands against each.
 > **Status: in development, testnet only.** The Signer has not had an
 > independent security review yet. Don't use it with real funds.
 
-Of 29 common attacks, the Signer blocks **15** today, partly covers **8**, and
+Of 29 common attacks, the Signer blocks **16** today, partly covers **7**, and
 **6** depend on the user or on how releases are published.
 
 **Status:** **Protected** = the Signer blocks it today · **Partly** = reduced,
@@ -41,7 +41,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
 | Guessing the password in the app | A thief tries password after password on the lock screen. | 4 free tries, then waits of 30 s, 1 min, 2 min … up to 1 hour, kept even if the app is closed. | Protected |
-| Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt + AES-256-GCM) inside Android Keystore-protected storage. Planned: a 4× heavier password check, 12-character minimum, strength warning. | Partly |
+| Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt N=2^17, OWASP's recommended minimum, + AES-256-GCM) inside Android Keystore-protected storage. New passwords need 12+ characters, with a strength hint. Older wallets are upgraded automatically. A weak password is still the one way in, so pick a strong one. | Protected |
 | Rooted or hacked phone | Tools with full control of the phone read memory or change how the app runs. | The key is only unscrambled for a moment and wiped straight after. The Signer warns when it finds signs of root, an unlocked bootloader or no screen lock. Signing is switched off on signs of root, an unlocked bootloader or a failed startup check (address and wallet removal still work; the recovery words restore the funds elsewhere). The warning is on the Unlock screen every time you open the Signer. Rooting tools can hide, so no warning isn't proof. No app can fully protect itself on a compromised phone. | Partly |
 | Backup extraction | The wallet is copied out through Android or cloud backups. | Android backup is switched off; storage is tied to the phone's Keystore. | Protected |
 | Shoulder surfing | Someone watches the password being typed or reads the recovery words. | Passwords are hidden by default (Show/Hide); the optional fingerprint/face shortcut avoids typing in public. Keep the recovery words private. | Your side |
@@ -96,6 +96,7 @@ that affects a row above.
 | 30 Sep 2026 | Overlays hidden and covered taps ignored: tapjacking closed. Also: signing off on rooted/unlocked phones, screens hidden from non-tool accessibility apps, keyboard and accessibility-app warnings | 15 / 8 / 6 (rooted phones, accessibility and keyboard stay Partly) |
 | 30 Sep 2026 | Optional fingerprint/face (strong biometrics only; copy destroyed if a fingerprint is added; password after restart and every 7 days): less typing for keyloggers and onlookers | 15 / 8 / 6 |
 | 30 Sep 2026 | Change password from Home (re-scrambles the key with a fresh salt; switches fingerprint/face off) | 15 / 8 / 6 |
+| 30 Sep 2026 | Stronger passwords: 4× heavier password check (scrypt 2^17), 12-character minimum, strength hint, older wallets upgraded automatically. Offline guessing closed | 16 / 7 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -104,7 +105,7 @@ that affects a row above.
 - [x] Warn which installed apps have accessibility access turned on
 - [x] Warn when the keyboard in use isn't the phone's built-in one
 - [x] Require Android 12 as the minimum version (closes task hijacking; overlays blocked by default)
-- [ ] Make the password check about 4× heavier; 12-character minimum with a strength warning
+- [x] Make the password check about 4× heavier; 12-character minimum with a strength warning
 - [x] Warn when the phone looks insecure (signs of root, unlocked bootloader, no screen lock)
 - [x] Switch signing off on rooted or unlocked phones
 - [ ] Remove the internet permission in release builds

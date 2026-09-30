@@ -27,27 +27,32 @@ export const NETWORK = 'testnet';
 export const RECOVERY_PHRASE_WORDS = 24;
 
 /*
- * MIN_PASSWORD_LENGTH — the shortest app password we accept.
+ * MIN_PASSWORD_LENGTH — the shortest NEW app password we accept.
  * Longer is better. A few random words ("maple tunnel orbit ginger") is
- * both strong and memorable.
+ * both strong and memorable. security/passwordStrength.js adds a strength
+ * hint on top. (Raised from 8 to 12 in Stage 4. Existing shorter passwords
+ * keep working; the rule applies when choosing or changing one.)
  */
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 12;
 
 /*
  * PASSWORD_STRETCHING — settings for "key stretching" (see HOW-IT-WORKS.md,
  * section 5). This is the deliberately slow recipe that turns your password
  * into the key that scrambles your wallet.
  *
- *   N — how much work each password check takes. Doubling N doubles the time
- *       (for you AND for anyone trying to guess). 32768 (= 2^15) is a common,
- *       well-regarded choice for phones.
+ *   N — how much work each password check takes. Doubling N doubles both the
+ *       time and the memory (for you AND for anyone trying to guess).
+ *       131072 (= 2^17) is the minimum OWASP recommends for scrypt. It needs
+ *       128 MB of working memory and takes well under a second on a modern
+ *       phone with the fast engine. (Stage 1–3 used 2^15, 4× lighter.)
  *   r, p — standard companion settings for this recipe (scrypt). Leave them.
  *
- * These numbers are saved alongside each scrambled wallet, so changing them
- * here later only affects wallets set up after the change. Old ones still
- * unlock fine.
+ * These numbers are saved alongside each scrambled wallet, so older wallets
+ * still unlock fine. They're upgraded to these settings automatically the
+ * next time you unlock with your password (see security/usePasswordCheck.js),
+ * or when you change the password.
  */
-export const PASSWORD_STRETCHING = { N: 32768, r: 8, p: 1 };
+export const PASSWORD_STRETCHING = { N: 131072, r: 8, p: 1 };
 
 /*
  * WRONG_PASSWORD_POLICY — how the lock screen slows down guessing.
