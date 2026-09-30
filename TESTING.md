@@ -289,7 +289,7 @@ through the Signer, and the second wallet received 0.8 test KLV.
 ## Part F — Stage 4 tests: phone safety, overlays, keyboard, Android 12
 
 **F0. Build and install**
-- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 76`),
+- [x] In `KLV Signer App/app`: `npm install`, `npm test` (should say `# pass 79`),
       build, `adb install -r`. This build compiles the new native safety checks.
 
 **F1. A normal phone shows no warning**
@@ -406,6 +406,16 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 
 - Passed 30 Sep 2026 (after the upgrade: fingerprint switched on again,
   0.9 KLV sent from the Hub with fingerprint approval, arrived).
+
+**F11. No internet**
+- [ ] After installing, with the phone plugged in:
+      `~/Library/Android/sdk/platform-tools/adb shell dumpsys package com.raphaelrohner.klvsigner | grep -E "INTERNET|SYSTEM_ALERT|STORAGE|VIBRATE"`
+      → prints **nothing** (the Signer has none of these permissions).
+- [ ] Android's Settings → Apps → KLV Signer → Permissions / "Mobile data &
+      Wi-Fi": no internet or data usage listed.
+- [ ] Everything still works: unlock (password and fingerprint), and send a
+      test from the Hub → approve → signed. (The Hub does the internet part.)
+- [ ] No red "This copy of the Signer can use the internet" box anywhere.
 
 ---
 

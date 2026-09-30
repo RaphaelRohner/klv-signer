@@ -9,7 +9,8 @@
  *
  * TWO LEVELS
  *   - Signing switched off ("blocks": true): signs of root, an unlocked
- *     bootloader, or a failed Android startup check. On such a phone other
+ *     bootloader, a failed Android startup check, or a copy of the Signer
+ *     that is allowed to use the internet (it never should be). On such a phone other
  *     apps (or a changed Android) could take over the Signer, so it refuses to
  *     sign. You can still open it, see your address and remove the wallet, and
  *     your funds are safe on the blockchain: restore them anywhere else with
@@ -34,6 +35,7 @@ export const DEVICE_CHECK_LIMIT =
  *   { suBinary, testKeys, rootApps: string[], verifiedBootState, flashLocked, screenLockSet }
  *   plus keyboard: { package, label, trusted } | null
  *   and accessibilityApps: { package, label, cameWithPhone, isTool }[]
+ *   and internetPermission: boolean
  * @returns {{ checked: boolean, findings: { id: string, title: string, text: string, blocks?: boolean }[] }}
  *   checked = false when the check couldn't run (e.g. in the tests on a computer)
  */
@@ -89,7 +91,17 @@ export function describeDeviceSecurity(report) {
     });
   }
 
-  // 4. Keyboard: one you installed yourself sees every letter you type
+  // 4. This copy of the Signer can use the internet (it's built without it)
+  if (report.internetPermission === true) {
+    findings.push({
+      id: 'internet',
+      blocks: true,
+      title: 'This copy of the Signer can use the internet',
+      text: 'The Signer is built without internet access on purpose, so it can never send anything anywhere. This copy has it, so it was built wrongly or has been changed. Install the Signer from its official source.',
+    });
+  }
+
+  // 5. Keyboard: one you installed yourself sees every letter you type
   const kb = report.keyboard;
   if (kb && kb.trusted === false) {
     findings.push({
@@ -99,7 +111,7 @@ export function describeDeviceSecurity(report) {
     });
   }
 
-  // 5. Apps with accessibility access (can read the screen and press buttons)
+  // 6. Apps with accessibility access (can read the screen and press buttons)
   const watchers = (report.accessibilityApps || []).filter((a) => !a.cameWithPhone);
   if (watchers.length > 0) {
     const names = watchers.map((a) => `"${a.label}"`).join(', ');
@@ -121,4 +133,4 @@ export function isSigningBlocked(findings) {
 
 /** What the Signer says when signing is switched off. */
 export const SIGNING_BLOCKED_TEXT =
-  'Signing is switched off on this phone, because it looks rooted or its protections are switched off. You can still see your address and remove the wallet. Your funds are safe on the blockchain: your 24 recovery words restore them on any other phone or in the Klever app.';
+  'Signing is switched off on this phone, because it looks rooted, its protections are switched off, or this copy of the Signer isn\'t a proper one (details on the Signer\'s own screens). You can still see your address and remove the wallet. Your funds are safe on the blockchain: your 24 recovery words restore them on any other phone or in the Klever app.';

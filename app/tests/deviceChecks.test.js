@@ -65,6 +65,15 @@ test('root, unlocked bootloader and a failed startup check switch signing off', 
   assert.match(SIGNING_BLOCKED_TEXT, /recovery words/);
 });
 
+test('a copy of the Signer with internet access is refused', () => {
+  const f = findingsOf({ ...SAFE, internetPermission: true });
+  assert.deepEqual(f.map((x) => x.id), ['internet']);
+  assert.equal(isSigningBlocked(f), true);
+  assert.deepEqual(ids({ ...SAFE, internetPermission: false }), []);
+  // Unknown (older native check) is not treated as a problem
+  assert.deepEqual(ids({ ...SAFE }), []);
+});
+
 test('warnings only do NOT switch signing off', () => {
   assert.equal(isSigningBlocked([]), false);
   assert.equal(isSigningBlocked(undefined), false);

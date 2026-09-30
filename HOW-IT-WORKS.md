@@ -143,10 +143,12 @@ signature and carries out the transaction.
 
 - **It never shows or exports the private key.** There is no "copy key"
   button. If you need the wallet elsewhere, use your recovery phrase.
-- **It doesn't talk to the internet** for its job. Everything it needs arrives
-  with the request. (We'll check whether we can remove its internet
-  permission completely in the final version. That would mean it *can't*
-  leak anything online, even by mistake.)
+- **It can't talk to the internet at all.** Everything it needs arrives with
+  the request. The Signer is built without Android's internet permission, so
+  Android itself blocks any attempt to go online: it *can't* leak anything,
+  even by mistake or through a harmful library. Automated tests fail if that
+  permission or any network code ever comes back, and a copy of the Signer
+  that somehow has the permission refuses to sign.
 - **It only signs transaction types it understands.** If the Signer can't
   explain a transaction to you in plain words, it refuses to sign it. We start
   with plain transfers (KLV, tokens, NFTs) and add other types one at a time,
@@ -249,7 +251,7 @@ We build in small stages. Each stage ends with something you can install and try
 | **1. Wallet + password** ✅ | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Tested on the phone. The address matches the Klever Extension, and a password check takes 0.1–0.2 s.)* |
 | **2. Reading and signing** ✅ | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. *(Tested: a real 0.5 KLV testnet transfer signed by the Signer arrived.)* |
 | **3. Talking to other apps** ✅ | The Signer accepts requests from other apps through Android, with "Allow this app?" and a connected-apps list. SIGNER-PROTOCOL.md describes how to ask. The Hub is the first client (menu → "KLV Signer (test)"): Connect → Send → Signer opens → approve → back in the Hub → sent on testnet. *(Tested: the Hub sent 0.5 + 0.3 test KLV through the Signer.)* |
-| **4. Safety polish** 🔨 | Make the password check heavier, the internet-permission check, and a careful review of everything. *(Done so far: Android 12 minimum, phone-safety warnings on the Unlock screen, signing switched off on rooted or unlocked phones, other apps' overlays hidden and covered taps ignored, Signer screens hidden from accessibility apps that aren't real accessibility tools, warnings about a keyboard you installed yourself and about apps with accessibility access, optional fingerprint or face instead of typing the password, change password from Home, 4× heavier password check with a 12-character minimum and a strength hint.)* |
+| **4. Safety polish** 🔨 | Make the password check heavier, the internet-permission check, and a careful review of everything. *(Done so far: Android 12 minimum, phone-safety warnings on the Unlock screen, signing switched off on rooted or unlocked phones, other apps' overlays hidden and covered taps ignored, Signer screens hidden from accessibility apps that aren't real accessibility tools, warnings about a keyboard you installed yourself and about apps with accessibility access, optional fingerprint or face instead of typing the password, change password from Home, 4× heavier password check with a 12-character minimum and a strength hint, no internet permission at all.)* |
 | **5. More kinds of requests** | More transaction types (each with its own plain-words display), and "sign a message" for logging in to apps with your wallet. |
 | **6. Mainnet** | Allow the real network, then one small real transfer. |
 | **Later** | If other people will use the Signer with real money: an independent security review, then publishing it (e.g. on Google Play). |

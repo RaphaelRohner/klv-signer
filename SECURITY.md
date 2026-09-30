@@ -8,7 +8,7 @@ signer apps, and where the Signer stands against each.
 > **Status: in development, testnet only.** The Signer has not had an
 > independent security review yet. Don't use it with real funds.
 
-Of 29 common attacks, the Signer blocks **16** today, partly covers **7**, and
+Of 29 common attacks, the Signer blocks **17** today, partly covers **6**, and
 **6** depend on the user or on how releases are published.
 
 **Status:** **Protected** = the Signer blocks it today · **Partly** = reduced,
@@ -70,7 +70,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
 | Malicious node or man-in-the-middle | A fake or hacked server prepares a different transaction, or shows false balances. | Whatever the server prepared, the Signer shows what the transaction really does before signing. Client apps should use HTTPS. | Protected |
-| The Signer going online | A bug or a harmful library sends data out. | The Signer never needs the internet. Planned: remove the internet permission in release builds. | Partly |
+| The Signer going online | A bug or a harmful library sends data out. | The Signer has no internet permission at all (every build), so Android itself blocks any attempt to go online. Unneeded permissions ("display over other apps", storage, vibration) are removed too. Automated tests fail if the permission or any network code comes back, and a copy of the Signer that has the permission refuses to sign. | Protected |
 
 ## 6. Supply chain and releases
 
@@ -97,6 +97,7 @@ that affects a row above.
 | 30 Sep 2026 | Optional fingerprint/face (strong biometrics only; copy destroyed if a fingerprint is added; password after restart and every 7 days): less typing for keyloggers and onlookers | 15 / 8 / 6 |
 | 30 Sep 2026 | Change password from Home (re-scrambles the key with a fresh salt; switches fingerprint/face off) | 15 / 8 / 6 |
 | 30 Sep 2026 | Stronger passwords: 4× heavier password check (scrypt 2^17), 12-character minimum, strength hint, older wallets upgraded automatically. Offline guessing closed | 16 / 7 / 6 |
+| 30 Sep 2026 | No internet permission (plus "display over other apps", storage, vibration removed); signing refused by any copy that has it; tests guard against it coming back. The Signer going online closed | 17 / 6 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -108,7 +109,7 @@ that affects a row above.
 - [x] Make the password check about 4× heavier; 12-character minimum with a strength warning
 - [x] Warn when the phone looks insecure (signs of root, unlocked bootloader, no screen lock)
 - [x] Switch signing off on rooted or unlocked phones
-- [ ] Remove the internet permission in release builds
+- [x] Remove the internet permission (every build, not only release), plus other unneeded permissions
 - [x] Change password from the Home screen
 - [x] Optional fingerprint or face confirmation (the password always stays available as the choice)
 - [ ] Review all dependencies before the first release

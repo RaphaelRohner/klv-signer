@@ -25,6 +25,10 @@
  *     which is exactly what banking trojans misuse.
  *   (Android shows keyboards and accessibility apps to every app, so no
  *   special permission or <queries> entry is needed for these two.)
+ *   - Internet: whether THIS copy of the Signer is allowed to use the
+ *     internet. The Signer is built without that permission on purpose
+ *     (app.json, blockedPermissions), so Android itself stops it from ever
+ *     going online. A copy that has it was built wrongly or changed.
  *
  * AN HONEST LIMIT
  * Rooting tools can hide from apps (Magisk's "DenyList", for example). So a
@@ -95,6 +99,7 @@ object DeviceSecurity {
       "screenLockSet" to (keyguard?.isDeviceSecure ?: true),
       "keyboard" to activeKeyboard(context),
       "accessibilityApps" to accessibilityApps(context),
+      "internetPermission" to (context.checkSelfPermission(android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED),
     )
   }
 

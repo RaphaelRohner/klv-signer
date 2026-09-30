@@ -54,7 +54,7 @@ export default function DeviceWarning({ findings, compact }) {
       ))}
       <Body muted>
         {blocked
-          ? 'If you rooted or unlocked this phone on purpose, undoing that switches signing back on. If you didn\'t, something may be wrong with the phone.'
+          ? 'If you rooted or unlocked this phone on purpose, undoing that switches signing back on. If you didn\'t, something may be wrong with the phone (or with this copy of the Signer).'
           : 'The Signer still works, but please sort these out before keeping real funds on this phone.'}{' '}
         {DEVICE_CHECK_LIMIT}
       </Body>
