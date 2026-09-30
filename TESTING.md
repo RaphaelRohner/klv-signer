@@ -419,12 +419,17 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - Passed 30 Sep 2026 (password and fingerprint unlock, Hub test signed and arrived).
 
 **F12. Extra confirmation**
-- [ ] Home → **Extra confirmation settings**: the recommended rules are on
+- [x] Home → **Extra confirmation settings**: the recommended rules are on
       (new receivers, an app's first request, several transfers, many
       requests quickly). Switch on **Large amounts** and set **1** KLV. Tap
       **Save** → "Saved." (stricter: no password asked).
-- [ ] Send 0.1 KLV from the Hub to the usual address → normal approval
-      (fingerprint offered). The address isn't new, and 0.1 is below 1.
+- [ ] Send 0.1 KLV from the Hub to the usual address. The FIRST time after
+      installing this version it needs the extra confirmation anyway: the
+      Signer only starts remembering receivers and apps now, so the address
+      and the Hub both count as new (the yellow box says so). Type the ending
+      + password.
+- [ ] Send 0.1 KLV to the same address again → now normal approval
+      (fingerprint offered): the address and the Hub are known, 0.1 is below 1.
 - [ ] Send 2 KLV → the approval screen says **Extra confirmation needed**
       ("more than your 1 KLV setting"), no fingerprint button, a box for the
       **last 6 characters** of the address. Type a wrong ending → a hint;
