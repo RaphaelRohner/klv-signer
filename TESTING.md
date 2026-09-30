@@ -323,17 +323,19 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       couldn't be used for the visual test.)
 
 **F5. Keyboard warning** (optional: only if you want to try another keyboard)
-- [ ] With your normal keyboard (Gboard, Samsung or SwiftKey), there's no
+- [x] With your normal keyboard (Gboard, Samsung or SwiftKey), there's no
       keyboard warning.
-- [ ] Optional: install another keyboard from the Play Store, make it the
+- [x] Optional: install another keyboard from the Play Store, make it the
       active one, go back to the Signer → **"You're typing with …"** warning
-      naming it. Switch back to your normal keyboard → warning gone.
+      naming it. Switch back to your normal keyboard → warning gone. (checked with Typewise)
 
 **F6. Accessibility warning** (optional)
-- [ ] If an app you installed has accessibility access switched on (some
+- [x] If an app you installed has accessibility access switched on (some
       password managers, "button mapper" or "auto clicker" apps do), the
       Signer names it in an **"… can read and control the screen"** warning.
       Apps that came with the phone (like TalkBack) are not listed.
+      (Passed 30 Sep 2026 with Button Mapper: warning shown while its access
+      was on, gone after switching it off.)
 
 **F7. Signing switched off on a rooted phone**
 - [ ] Can't be tried on your normal phone (it isn't rooted). The automated
@@ -342,7 +344,8 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       screen shows the transaction but only **Reject**; apps asking to sign
       get the error `UNSAFE_DEVICE`, while asking for the address still works.
 - [ ] Nothing changed for you: sending 0.1 KLV from the Hub still asks for
-      approval and signs as before.
+      approval and signs as before. (Passed 30 Sep 2026: 0.6 KLV sent from
+      the Hub, signed and confirmed.)
 
 ---
 
