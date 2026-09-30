@@ -414,6 +414,8 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       (Passed 30 Sep 2026: nothing printed.)
 - [ ] Android's Settings → Apps → KLV Signer → Permissions / "Mobile data &
       Wi-Fi": no internet or data usage listed.
+      (Passed 30 Sep 2026: "Permissions: No permissions requested",
+      mobile data 0 B.)
 - [ ] Everything still works: unlock (password and fingerprint), and send a
       test from the Hub → approve → signed. (The Hub does the internet part.)
 - [ ] No red "This copy of the Signer can use the internet" box anywhere.
