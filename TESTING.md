@@ -370,6 +370,8 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       works; you can switch it on again on Home. (Delete the extra
       fingerprint afterwards if you like.)
 - [x] **Switch off** on Home → the fingerprint buttons are gone.
+- Passed 30 Sep 2026 with fingerprint (face unlock not tried; it only
+  appears if the phone's face unlock counts as "strong").
 
 ---
 
