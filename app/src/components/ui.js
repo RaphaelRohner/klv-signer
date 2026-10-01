@@ -157,7 +157,8 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy, style
  * Field — a labelled text box.
  *
  * `secret` hides what you type (for passwords) and adds a "Show"/"Hide"
- * button, so you can check what you typed. `noLearning` (recovery words,
+ * button: "Show" displays what you typed under the box (the box itself
+ * stays a password box, so keyboards and autofill keep their hands off). `noLearning` (recovery words,
  * addresses) also switches off the keyboard's word suggestions, so the
  * keyboard app doesn't "learn" them. Every box has autofill switched off.
  * Any other TextInput settings can be passed through (`...rest`).
@@ -178,10 +179,8 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
       ? {
         autoCapitalize: 'none',
         // On Android, 'visible-password' turns off suggestions and learning
-        // while still showing the letters (used for recovery words, and for a
-        // password while "Show" is on: otherwise some keyboards start learning
-        // the password as soon as it's visible; second review).
-        keyboardType: (noLearning && !secret) || (secret && revealed) ? 'visible-password' : 'default',
+        // while still showing the letters (used for recovery words and addresses).
+        keyboardType: noLearning && !secret ? 'visible-password' : 'default',
       }
       : {}),
   };
@@ -196,7 +195,11 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
           ]}
           placeholderTextColor={colors.muted}
           accessibilityLabel={label || rest.placeholder}
-          secureTextEntry={!!secret && !revealed}
+          // A password box stays a password box, even with "Show" on: switching
+          // it to a normal text box made keyboards and autofill offer
+          // suggestions (found 1 Oct 2026). "Show" displays the password
+          // underneath instead (see below).
+          secureTextEntry={!!secret}
           {...privacy}
           {...rest}
         />
@@ -212,6 +215,13 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
           </Pressable>
         ) : null}
       </View>
+      {secret && revealed ? (
+        // What you typed, shown as plain text under the box (not editable, so
+        // the keyboard and autofill never see a "normal" text box).
+        <Text style={styles.revealed} importantForAccessibility="no-hide-descendants">
+          {rest.value ? rest.value : '(nothing typed yet)'}
+        </Text>
+      ) : null}
       {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : null}
     </View>
   );
@@ -361,6 +371,10 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10,
   },
   revealText: { color: colors.accent, fontSize: 14, fontWeight: '600' },
+  revealed: {
+    color: colors.text, fontSize: 16, fontFamily: 'monospace', marginTop: 6, paddingHorizontal: 14,
+    paddingVertical: 8, borderRadius: 10, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,
+  },
   label: { color: colors.muted, fontSize: 13, marginBottom: 6 },
   input: {
     backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12,
