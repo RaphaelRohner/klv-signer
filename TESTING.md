@@ -430,7 +430,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       + password.
 - [x] Send 0.1 KLV to the same address again → now normal approval
       (fingerprint offered): the address and the Hub are known, 0.1 is below 1.
-- [ ] Send 2 KLV → the approval screen says **Extra confirmation needed**
+- [x] Send 2 KLV → the approval screen says **Extra confirmation needed**
       ("more than your 1 KLV setting"), no fingerprint button, a box for the
       **last 6 characters** of the address. Type a wrong ending → a hint;
       the right one + password → signed.
@@ -438,6 +438,8 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
   normal with fingerprint, 2 KLV extra with ending + password. Continue here.)
 - [ ] Settings: choose **Wait 10 s**, save, send 2 KLV again → the button
       counts down "Approve possible in 10 s".
+      (Passed 1 Oct 2026 with 30 s. The countdown is on the Approve button at
+      the bottom: scroll down to see it.)
 - [ ] Settings: switch **Large amounts** off → a note says it needs your
       password; wrong password → refused; right password → saved.
 - [ ] Settings: add your own receiving test address as a **trusted
