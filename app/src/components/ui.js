@@ -202,11 +202,11 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
 }
 
 /** NetworkBadge — a small label saying which network the Signer is set to. */
-export function NetworkBadge() {
+export function NetworkBadge({ style }) {
   const isTest = NETWORK === 'testnet';
   return (
     <View
-      style={[styles.badge, { backgroundColor: isTest ? colors.warning : colors.danger }]}
+      style={[styles.badge, { backgroundColor: isTest ? colors.warning : colors.danger }, style]}
       accessibilityLabel={isTest ? 'Testnet, the practice network' : 'Mainnet, the real network'}
     >
       <Text style={styles.badgeText}>{isTest ? 'TESTNET' : 'MAINNET'}</Text>

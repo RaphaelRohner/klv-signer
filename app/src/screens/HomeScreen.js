@@ -46,16 +46,21 @@ export default function HomeScreen({
   return (
     <Screen>
       <View style={styles.top}>
-        <Text style={styles.appName} accessibilityRole="header">KLV Signer</Text>
-        <NetworkBadge />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-          onPress={onSettings}
-          style={({ pressed }) => [styles.settings, pressed && styles.pressed]}
-        >
-          <Text style={styles.settingsText}>Settings</Text>
-        </Pressable>
+        {/* Three equal parts: name left, network badge exactly in the middle, Settings right. */}
+        <View style={styles.side}>
+          <Text style={styles.appName} accessibilityRole="header" numberOfLines={1}>KLV Signer</Text>
+        </View>
+        <NetworkBadge style={styles.badge} />
+        <View style={[styles.side, styles.sideRight]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            onPress={onSettings}
+            style={({ pressed }) => [styles.settings, pressed && styles.pressed]}
+          >
+            <Text style={styles.settingsText}>Settings</Text>
+          </Pressable>
+        </View>
       </View>
 
       {notice ? <Notice kind="info">{notice}</Notice> : null}
@@ -180,9 +185,12 @@ function describeWhen(time) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, minHeight: 48 },
-  appName: { flex: 1, color: colors.text, fontSize: 18, fontWeight: '600' },
+  side: { flex: 1 },
+  sideRight: { alignItems: 'flex-end' },
+  badge: { alignSelf: 'center' },
+  appName: { color: colors.text, fontSize: 18, fontWeight: '600' },
   settings: {
-    marginLeft: 10, minHeight: 44, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+    minHeight: 44, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
     alignItems: 'center', justifyContent: 'center',
   },
   settingsText: { color: colors.text, fontSize: 14 },
