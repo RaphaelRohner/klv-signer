@@ -134,7 +134,9 @@ async function pickEngine() {
 
   if (native) {
     try {
-      const tinyParams = { N: 16, r: 1, p: 1 };
+      // r=8 like the real settings (second review): a fast engine with a bug that
+      // only shows with r>1 would otherwise pass the check. Still takes only a moment.
+      const tinyParams = { N: 1024, r: 8, p: 1 };
       const testPassword = new TextEncoder().encode('self-check');
       const testSalt = new TextEncoder().encode('klv-signer-salt!');
       const expected = jsScrypt(testPassword, testSalt, { ...tinyParams, dkLen: 32 });

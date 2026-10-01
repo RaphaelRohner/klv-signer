@@ -26,6 +26,8 @@ test('app.json blocks the internet permission and adds no extra permissions', ()
     'android.permission.INTERNET',
     'android.permission.ACCESS_NETWORK_STATE',
     'android.permission.SYSTEM_ALERT_WINDOW',
+    'android.permission.READ_MEDIA_IMAGES',
+    'android.permission.READ_MEDIA_VIDEO',
   ]) {
     assert.ok(android.blockedPermissions.includes(p), `${p} must be blocked`);
   }

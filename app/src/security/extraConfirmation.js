@@ -52,7 +52,7 @@ export const DEFAULT_RULES = Object.freeze({
   version: 1,
   klvThreshold: null,      // smallest units as text, e.g. "100000000" = 100 KLV; null = off
   newReceiver: true,
-  otherTokens: false,
+  otherTokens: true,       // on since the second review: token amounts can't always be shown in whole tokens
   nfts: false,
   firstAppRequest: true,
   multiTransfer: true,
@@ -147,10 +147,16 @@ export function reasonsForExtraConfirmation(reading, rules, history, { appId, no
 
   // Amount: total KLV to receivers that aren't trusted
   if (r.klvThreshold) {
-    const total = watched.filter((t) => t.assetId === 'KLV').reduce((sum, t) => sum + BigInt(t.amount), 0n);
+    // The network fee counts too (second review): it's KLV leaving your wallet.
+    // It's only added when something goes to a receiver that isn't trusted.
+    const fee = watched.length > 0 ? BigInt(reading.feeUnits || 0n) : 0n;
+    const total = watched.filter((t) => t.assetId === 'KLV').reduce((sum, t) => sum + BigInt(t.amount), 0n) + fee;
     const limit = BigInt(r.klvThreshold);
     if (total > limit) {
-      reasons.push({ id: 'amount', text: `It sends ${formatKlv(total)} KLV, more than your ${formatKlv(limit)} KLV setting.` });
+      reasons.push({
+        id: 'amount',
+        text: `It sends ${formatKlv(total)} KLV${fee > 0n ? ' (network fee included)' : ''}, more than your ${formatKlv(limit)} KLV setting.`,
+      });
     }
   }
 

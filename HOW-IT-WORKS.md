@@ -75,6 +75,11 @@ itself provides two guarantees:
 - **The answer goes back only to the app that asked.** No other app can
   catch it on the way.
 
+One gap remains: a fake app installed under the Signer's own name (from an
+unofficial source) would be asked instead. Once the Signer is published, its
+certificate fingerprint lets client apps check they're talking to the real
+one (SIGNER-PROTOCOL.md, 2c).
+
 Other developers will get a short, public description of how to ask the
 Signer (the **Signer protocol**), so they can add "Sign with KLV Signer" to
 their own apps.
@@ -131,7 +136,7 @@ signature and carries out the transaction.
 |---|---|---|
 | **Wallet setup** | Create a brand-new wallet (the Signer shows you its 24-word recovery phrase **once**, checks you wrote it down, and never stores it) or restore one from its recovery phrase, one box per word. Klever's own official code does the wallet maths, so the same words give the same address as in Klever's own apps. You also choose your app password here. | ✅ Stage 1 |
 | **The vault** | Scrambles the key with your password and stores the scrambled result on the phone. Unscrambles it only for the moment of signing. | ✅ Stage 1 |
-| **The lock screen** | Asks for your password (with Show/Hide). The first 4 wrong tries in a row are free, then you wait 30 s, 1 min, 2 min… up to 1 hour, even if you close the app. "I forgot my password" removes the wallet from the phone so you can restore it with a new password. The Signer also locks itself whenever you leave it. | ✅ Stage 1 |
+| **The lock screen** | Asks for your password (with Show/Hide). The first 4 wrong tries in a row are free, then you wait 30 s, 1 min, 2 min… up to 1 hour, even if you close the app or change the phone's clock. "I forgot my password" removes the wallet from the phone so you can restore it with a new password. The Signer also locks itself whenever you leave it. | ✅ Stage 1 |
 | **The request reader** | Unpacks the transaction and checks it: is it well-formed and written the standard way? Does it contain anything the Signer doesn't understand (then it refuses)? Is it from *our* wallet? For the right network? A kind of transaction we allow? It uses its own strict reader built from the Klever node's official definitions, because Klever's JavaScript library reads transfers wrongly (amount and token swapped). | ✅ Stage 2 |
 | **The approval screen** | Shows who's asking and the request in plain words (amount, full receiver address, fee, any note, fingerprint), asks for your password, with **Approve and sign** and **Reject**. | ✅ Stage 2 |
 | **The signer** | Does the actual maths (the **signature**) with the key, then double-checks the signature before handing it out. | ✅ Stage 2 |
@@ -251,7 +256,7 @@ We build in small stages. Each stage ends with something you can install and try
 | **1. Wallet + password** ✅ | Create a new wallet or restore one, set a password, lock and unlock the app, see your address. *(Tested on the phone. The address matches the Klever Extension, and a password check takes 0.1–0.2 s.)* |
 | **2. Reading and signing** ✅ | Paste a test transaction into the Signer by hand, see it explained in plain words, approve it with your password, and see the signature. *(Tested: a real 0.5 KLV testnet transfer signed by the Signer arrived.)* |
 | **3. Talking to other apps** ✅ | The Signer accepts requests from other apps through Android, with "Allow this app?" and a connected-apps list. SIGNER-PROTOCOL.md describes how to ask. The Hub is the first client (menu → "KLV Signer (test)"): Connect → Send → Signer opens → approve → back in the Hub → sent on testnet. *(Tested: the Hub sent 0.5 + 0.3 test KLV through the Signer.)* |
-| **4. Safety polish** 🔨 | Make the password check heavier, the internet-permission check, and a careful review of everything. *(Done so far: Android 12 minimum, phone-safety warnings on the Unlock screen, signing switched off on rooted or unlocked phones, other apps' overlays hidden and covered taps ignored, Signer screens hidden from accessibility apps that aren't real accessibility tools, warnings about a keyboard you installed yourself and about apps with accessibility access, optional fingerprint or face instead of typing the password, change password from Home, 4× heavier password check with a 12-character minimum and a strength hint, no internet permission at all, extra confirmation rules for unusual transactions.)* |
+| **4. Safety polish** 🔨 | Make the password check heavier, the internet-permission check, and a careful review of everything. *(Done so far: Android 12 minimum, phone-safety warnings on the Unlock screen, signing switched off on rooted or unlocked phones, other apps' overlays hidden and covered taps ignored, Signer screens hidden from accessibility apps that aren't real accessibility tools, warnings about a keyboard you installed yourself and about apps with accessibility access, optional fingerprint or face instead of typing the password, change password from Home, 4× heavier password check with a 12-character minimum and a strength hint, no internet permission at all, extra confirmation rules for unusual transactions, and a second AI review of everything with its fixes (REVIEW-2026-10.md).)* |
 | **5. More kinds of requests** | More transaction types (each with its own plain-words display), and "sign a message" for logging in to apps with your wallet. |
 | **6. Mainnet** | Allow the real network, then one small real transfer. |
 | **Later** | If other people will use the Signer with real money: an independent security review, then publishing it (e.g. on Google Play). |

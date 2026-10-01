@@ -126,6 +126,17 @@ export function describeDeviceSecurity(report) {
   return { checked: true, findings };
 }
 
+/**
+ * Shown when the phone check itself couldn't run (an error). Signing is
+ * switched off until it works: an unknown phone isn't treated as a safe one.
+ */
+export const DEVICE_CHECK_FAILED = Object.freeze({
+  id: 'checkFailed',
+  blocks: true,
+  title: 'The phone-safety check couldn\'t run',
+  text: 'The Signer couldn\'t check whether this phone is rooted or unlocked, so signing is switched off for now. Close the Signer completely and open it again.',
+});
+
 /** True if any finding switches signing off (root, unlocked bootloader, failed startup check). */
 export function isSigningBlocked(findings) {
   return (findings || []).some((f) => f.blocks);

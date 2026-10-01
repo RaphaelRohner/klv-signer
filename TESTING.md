@@ -32,7 +32,8 @@ That's expected and harmless (it's in Expo's build tools, not in the app).
 npm test
 ```
 
-At the end you should see `# pass 17` and `# fail 0`. These check the
+At the end you should see `# fail 0` (the `# pass` number grows over time:
+103 on 1 Oct 2026). These check the
 security code: that wallets match Klever's recipe, that wrong passwords are
 refused, that a tampered vault is refused, and so on. If anything fails,
 stop here.
@@ -451,6 +452,35 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       buttons **1 KLV** and **1000 KLV**; Save stays grey until you pick one.
       `12,5` → "= 12.5 KLV" (clear, no question).
 - F12 passed completely on 1 Oct 2026.
+
+**F13. After the second review (fixes from REVIEW-2026-10.md)**
+
+No `npm install` needed. Build and install the new APK as usual.
+
+- [ ] Everyday use still works: unlock with fingerprint, send 0.1 KLV from
+      the Hub to the usual address → approve with fingerprint → signed, and it
+      arrives. (This also checks that the Hub still finds the Signer: the
+      Signer now only accepts requests addressed to it by exact name.)
+- [ ] On the approval screen, the receiver address is shown in groups of
+      4 characters (`klv1 abcd efgh …`).
+- [ ] Changing the phone's clock doesn't skip a wait: **Lock now** → type a
+      wrong password 5 times → "try again in 30 s". Leave the Signer, Android
+      Settings → Date & time → switch **automatic** off and set the time 1 hour
+      later → back to the Signer → still waiting (about the same seconds as
+      before, not zero). Then switch **automatic** time on again, and unlock
+      with the right password once the wait is over.
+- [ ] **Show** on a password box: the letters appear, and the keyboard
+      shows no word suggestions while they're visible (on some keyboards it
+      looks slightly different, e.g. no suggestion bar).
+- [ ] Network fee in the amount rule: Settings → **Large amounts** on, **1**
+      KLV, Save. Send an amount from the Hub that's just under 1 KLV, so
+      amount + network fee (shown on the approval screen) is over 1 → the
+      yellow box says "… KLV (network fee included), more than your 1 KLV
+      setting". Reject it. Then set Large amounts back as you like.
+- [ ] Leaving mid-request: start a send from the Hub, and when the approval
+      screen shows, press the phone's Home button. Open the Hub again → it
+      says you left without deciding (nothing signed). Open the Signer → it's
+      locked or on the Unlock screen, not on the old approval.
 
 ---
 

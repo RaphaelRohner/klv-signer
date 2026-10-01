@@ -44,11 +44,29 @@ const MAX_BYTES = 32 * 1024;
 const MAX_TRANSFERS = 20;
 /** The transaction format version we understand. */
 const SUPPORTED_VERSION = 1n;
+/** Most attached notes we accept in one transaction. */
+const MAX_NOTES = 5;
+/** Highest total network fee we accept (in smallest units): 100 KLV. Real fees are tiny. */
+const MAX_FEE = 100n * 1000000n;
 /**
- * What a token name may look like: e.g. KLV, DVKNFT-1SW5, DVKNFT-1SW5/4821.
- * Only capital letters, digits and dashes, optionally "/" and an NFT number.
+ * What a token name may look like (Klever's own format):
+ *   KLV or KFI                       the two native tokens
+ *   TICKER-XXXX                      a token: 3–10 capitals/digits, "-", 4 capitals/digits
+ *   TICKER-XXXX/123                  an NFT: the collection, "/", its number (no leading zero)
+ * Checked on the raw BYTES before anything is turned into text, so invisible
+ * characters (like a hidden "byte order mark") can't make a name look like "KLV".
  */
-const ASSET_ID_PATTERN = /^[A-Z0-9][A-Z0-9-]{1,31}(\/[0-9]{1,20})?$/;
+const TOKEN_PATTERN = /^(KLV|KFI|[A-Z0-9]{3,10}-[A-Z0-9]{4})$/;
+const NFT_PATTERN = /^[A-Z0-9]{3,10}-[A-Z0-9]{4}\/[1-9][0-9]{0,19}$/;
+
+/** Bytes → text, only if every byte is a plain ASCII letter, digit, "-" or "/". Otherwise null. */
+function plainAscii(bytes) {
+  for (const b of bytes) {
+    const ok = (b >= 0x30 && b <= 0x39) || (b >= 0x41 && b <= 0x5a) || b === 0x2d || b === 0x2f;
+    if (!ok) return null;
+  }
+  return String.fromCharCode(...bytes);
+}
 
 /** A 32-byte public key → its "klv1…" address. */
 function addressOf(publicKeyBytes, what) {
@@ -69,15 +87,24 @@ function addressOf(publicKeyBytes, what) {
  * @throws {ReadProblem} with a plain-words reason if it can't or mustn't be signed
  */
 export function readTransaction(hex, { network, walletAddress }) {
-  // 1. Turn the hex code into bytes, and read them strictly.
+  // 1. Turn the hex code into bytes, and read them strictly. (Size checked
+  //    first, so a huge input is refused before any work is done.)
+  if (typeof hex !== 'string' || hex.length > 2 * MAX_BYTES + 2) {
+    throw new ReadProblem('This transaction is far too large to be a normal transaction.');
+  }
   const bytes = hexToBytes(hex);
   if (bytes.length > MAX_BYTES) throw new ReadProblem('This transaction is far too large to be a normal transaction.');
   const outer = decodeMessage(bytes, UnsignedTransactionSchema);
   const raw = outer.RawData;
   if (!raw) throw new ReadProblem('This transaction is empty.');
 
-  // 2. The right network?
-  const chainId = new TextDecoder().decode(raw.ChainID);
+  // 2. The right network? The chain ID must be plain digits, compared exactly
+  //    (no invisible characters, no turning odd bytes into text first).
+  const chainBytes = raw.ChainID;
+  if (chainBytes.length === 0 || chainBytes.length > 10 || chainBytes.some((b) => b < 0x30 || b > 0x39)) {
+    throw new ReadProblem('This transaction has an unusual network ID, so the Signer won\'t sign it.');
+  }
+  const chainId = String.fromCharCode(...chainBytes);
   const txNetwork = networkForChainId(chainId);
   if (!txNetwork) throw new ReadProblem(`This transaction is for an unknown Klever network (chain ID "${chainId}").`);
   if (txNetwork !== network) {
@@ -103,6 +130,9 @@ export function readTransaction(hex, { network, walletAddress }) {
     throw new ReadProblem('This transaction pays its fee in a token other than KLV. The Signer doesn\'t support that yet.');
   }
   if (raw.KAppFee < 0n || raw.BandwidthFee < 0n) throw new ReadProblem('This transaction has an invalid fee.');
+  if (raw.KAppFee + raw.BandwidthFee > MAX_FEE) {
+    throw new ReadProblem('This transaction has an unusually high network fee (over 100 KLV). Real Klever fees are tiny, so the Signer won\'t sign it.');
+  }
 
   // 6. Every instruction must be a plain transfer the Signer can explain.
   if (raw.Contract.length === 0) throw new ReadProblem('This transaction contains no instructions.');
@@ -124,17 +154,19 @@ export function readTransaction(hex, { network, walletAddress }) {
     }
     let assetId = 'KLV';
     if (t.AssetID.length > 0) {
-      try {
-        assetId = new TextDecoder('utf-8', { fatal: true }).decode(t.AssetID);
-      } catch {
-        throw new ReadProblem(`A transfer${position} has an unreadable token name.`);
+      const name = plainAscii(t.AssetID);
+      if (name === null || !(TOKEN_PATTERN.test(name) || NFT_PATTERN.test(name))) {
+        throw new ReadProblem(`A transfer${position} has an unusual token name${name ? ` ("${name}")` : ''}, so the Signer won't sign it.`);
       }
-      if (!ASSET_ID_PATTERN.test(assetId)) throw new ReadProblem(`A transfer${position} has an unusual token name ("${assetId}").`);
+      assetId = name;
     }
     return { to, assetId, amount: t.Amount, ...describeAmount(t.Amount, assetId) };
   });
 
-  // 7. Optional attached notes.
+  // 7. Optional attached notes (at most a few; see describeNote for how they're shown).
+  if (raw.Data.length > MAX_NOTES) {
+    throw new ReadProblem(`This transaction has more than ${MAX_NOTES} attached notes, so the Signer won't sign it.`);
+  }
   const notes = raw.Data.map(describeNote);
 
   // 8. The fingerprint: blake2b-256 of the RawData, exactly as the Klever node computes it.
@@ -148,6 +180,7 @@ export function readTransaction(hex, { network, walletAddress }) {
     sender,
     nonce: raw.Nonce,
     fee: describeFee(raw.KAppFee, raw.BandwidthFee),
+    feeUnits: raw.KAppFee + raw.BandwidthFee, // same, in smallest KLV units (for the amount rule)
     transfers,
     notes,
     hash,                       // Uint8Array(32): what gets signed

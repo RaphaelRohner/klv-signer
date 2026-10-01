@@ -73,14 +73,23 @@ class SignRequestActivity : Activity() {
     }
 
     // 2. Copy the text extras we understand (and nothing else), with size limits.
+    //    Reading extras unpacks the whole bundle Android received, and a
+    //    harmful app could put something in it that can't be unpacked. That
+    //    must not crash the Signer (and with it another app's request), so
+    //    any problem here is answered as an invalid request.
     val extras = mutableMapOf<String, String>()
-    for ((key, maxLength) in SignerProtocol.ACCEPTED_EXTRAS) {
-      val value = intent?.getStringExtra(key) ?: continue
-      if (value.length > maxLength) {
-        answer(false, errorExtras(SignerProtocol.ERROR_INVALID_REQUEST, "The '$key' value is too long."))
-        return
+    try {
+      for ((key, maxLength) in SignerProtocol.ACCEPTED_EXTRAS) {
+        val value = intent?.getStringExtra(key) ?: continue
+        if (value.length > maxLength) {
+          answer(false, errorExtras(SignerProtocol.ERROR_INVALID_REQUEST, "The '$key' value is too long."))
+          return
+        }
+        extras[key] = value
       }
-      extras[key] = value
+    } catch (e: Throwable) {
+      answer(false, errorExtras(SignerProtocol.ERROR_INVALID_REQUEST, "The request couldn't be read."))
+      return
     }
 
     val request = SignerRequests.Request(

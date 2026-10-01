@@ -17,9 +17,9 @@ whole idea in plain English, with a build plan and a glossary.
 **Stage 1 — Wallet + password: done and tested on the phone (29 Sep 2026).**
 **Stage 2 — Reading and signing: done and tested (30 Sep 2026)**, including a real testnet transfer.
 **Stage 3 — Other apps asking: done and tested (30 Sep 2026).** The Hub (4.1.0) is the first app using it.
-The Signer can create a new wallet (or restore one from its recovery phrase),
-lock it with your app password, unlock it, and remove it. It can't sign
-anything yet (that's Stage 2). It's set to **testnet**.
+**Stage 4 — Safety polish: in progress.** Most protections are done and tested; a second
+AI review was done on 1 Oct 2026 ([REVIEW-2026-10.md](REVIEW-2026-10.md)).
+The Signer is set to **testnet** and hasn't had an independent human review yet.
 
 ## What's in this folder
 
@@ -28,6 +28,7 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `README.md` | This file: the front page. |
 | `HOW-IT-WORKS.md` | The plain-English guide: what the Signer does, why, and the build plan. |
 | `TESTING.md` | Step-by-step: build the APK, then test each feature on your phone. |
+| `REVIEW-2026-10.md` | The second (AI) review: what was checked, what was found, what was fixed and what's still open. |
 | `SECURITY.md` | The common attacks on Android wallet apps, where the Signer stands against each, the planned fixes, and how to report a vulnerability privately. |
 | `SIGNER-PROTOCOL.md` | **For developers:** exactly how any Android app asks the Signer for an address or a signature, with examples. |
 | `DEPENDENCIES.md` | What the app is built from: every important add-on package, the review findings, and the checks to repeat before each release. |
@@ -43,11 +44,11 @@ anything yet (that's Stage 2). It's set to **testnet**.
 | `app/src/klever/` | Reading and signing Klever transactions: `readTransaction.js` (the strict reader and all safety checks), `signTransaction.js`, `protobuf.js` + `schema.js` (Klever's data format, from the node's official definitions), `format.js` (plain-words amounts), `networks.js`. |
 | `app/tools/` | Helper tools for your Mac (testnet only): `make-test-tx.mjs` prepares a test transaction, `send-signed-tx.mjs` checks and sends a signed one. |
 | `app/src/storage/` | `secureStore.js` (the wallet), `biometricStore.js` (the optional fingerprint/face copy of the vault key) and `connectedApps.js` (the apps you've allowed): the only files that save anything on the phone. |
-| `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home, extra confirmation settings, change password, paste transaction, approve, signed, allow this app, request refused). |
+| `app/src/screens/` | One file per screen (Welcome, recovery phrase, check, restore, password, unlock, home, extra confirmation settings, change password, paste transaction, approve, signed, allow this app, request refused, storage problem). |
 | `app/src/components/` | Shared looks (`ui.js`), the "remove wallet" box (`RemoveWallet.js`), the phone-safety box (`DeviceWarning.js`), connected apps, and the fingerprint/face switch and button (`BiometricSetting.js`, `BiometricButton.js`). |
 | `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. Also the phone-safety checks (`DeviceSecurity.kt`) and the window protections against overlays and accessibility misuse (`WindowProtection.kt`). |
 | `app/src/requests/` | The rules for requests from other apps: `protocol.js` (request checks and answers) and `appTrust.js` (which apps you've allowed). |
-| `app/tests/` | Automatic checks for the security core and the transaction reader (56 checks). Run with `npm test`. |
+| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (103 checks). Run with `npm test`. |
 | `app/eas.json` | Build settings (same as the Hub's). |
 | `app/eslint.config.js` | Settings for the code checker (`npx expo lint`). |
 

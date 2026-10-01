@@ -53,6 +53,28 @@ export async function protectWindow() {
   return native ? native.protectWindow() : false;
 }
 
+/**
+ * hasSigningCertificate — was this app ever signed with this certificate
+ * (SHA-256, hex)? Android keeps an app's key history when it legitimately
+ * changes its signing key ("key rotation"). False if unknown.
+ */
+export function hasSigningCertificate(packageName, certSha256Hex) {
+  try {
+    return native ? native.hasSigningCertificate(packageName, certSha256Hex) : false;
+  } catch {
+    return false;
+  }
+}
+
+/** Milliseconds since the phone started (a stopwatch the user can't change). -1 if unknown. */
+export function getElapsedRealtime() {
+  try {
+    return native ? native.getElapsedRealtime() : -1;
+  } catch {
+    return -1;
+  }
+}
+
 /** How many times the phone has started up (-1 if unknown, e.g. in tests). */
 export function getBootCount() {
   return native ? native.getBootCount() : -1;

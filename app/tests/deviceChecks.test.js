@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  describeDeviceSecurity, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT,
+  describeDeviceSecurity, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED,
 } from '../src/security/deviceChecks.js';
 
 const SAFE = {
@@ -107,4 +107,8 @@ test('apps with accessibility access are named, apps that came with the phone ar
   assert.match(f[0].text, /Super Cleaner/);
   assert.doesNotMatch(f[0].text, /TalkBack/);
   assert.deepEqual(ids({ ...SAFE, accessibilityApps: [{ package: 'a', label: 'A', cameWithPhone: true, isTool: true }] }), []);
+});
+
+test('if the phone check itself fails, signing is switched off (fails closed; second review)', () => {
+  assert.equal(isSigningBlocked([DEVICE_CHECK_FAILED]), true);
 });

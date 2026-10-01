@@ -44,7 +44,7 @@ import BiometricButton from '../components/BiometricButton.js';
 import { isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
 import { NETWORKS } from '../klever/networks.js';
 import {
-  ADDRESS_ENDING_LENGTH, endingMatches, reasonsForExtraConfirmation, receiversToConfirm, withRequest, withSigned,
+  ADDRESS_ENDING_LENGTH, WAIT_CHOICES, endingMatches, reasonsForExtraConfirmation, receiversToConfirm, withRequest, withSigned,
 } from '../security/extraConfirmation.js';
 import { loadHistory, loadRules, saveHistory } from '../storage/signingRules.js';
 
@@ -52,7 +52,8 @@ import { loadHistory, loadRules, saveHistory } from '../storage/signingRules.js'
  * @param {object} props
  * @param {object} props.reading    result of readTransaction()
  * @param {{name: string, detail: string}} props.requester  who is asking
- * @param {(result: object) => void} props.onSigned   called with { signatureHex, signedTransactionHex }
+ * @param {(result: object) => boolean|Promise<boolean>} props.onSigned   called with { signatureHex, signedTransactionHex };
+ *        returns true if the signature reached the app
  * @param {() => void} props.onRejected
  * @param {object[]} [props.deviceFindings]  phone-safety warnings, shown in short form
  * @param {string|null} [props.appId]  the asking app's ID (null = pasted by hand), for the extra-confirmation rules
@@ -108,7 +109,11 @@ export default function ApproveScreen({
       }
     })().catch(() => {
       // Couldn't read the settings: be careful rather than relaxed.
-      if (!cancelled) setExtra([{ id: 'unknown', text: 'The Signer couldn\'t read your extra-confirmation settings, so it asks for it to be safe.' }]);
+      // The longest wait is used, since the chosen wait can't be read either.
+      if (!cancelled) {
+        setExtra([{ id: 'unknown', text: 'The Signer couldn\'t read your extra-confirmation settings, so it asks for it to be safe.' }]);
+        setWaitLeft(Math.max(...WAIT_CHOICES));
+      }
     });
     return () => { cancelled = true; };
   }, [reading, appId]);
@@ -133,14 +138,20 @@ export default function ApproveScreen({
     return signWithKey(privateKey);
   }
 
-  /** After a signature: remember the receivers and the app (on this phone), then hand over. */
+  /**
+   * After a signature: hand it over, then remember the receivers and the app
+   * (on this phone). Only remembered if the signature really reached the app
+   * (onSigned returns true); otherwise a receiver you never actually sent to
+   * would count as "known" next time (second review).
+   */
   async function finish(value) {
+    const delivered = await onSigned(value);
+    if (delivered !== true) return;
     try {
       await saveHistory(withSigned(await loadHistory(), reading, appId, Date.now()));
     } catch {
       // Not remembering only means "new receiver" may be asked again next time.
     }
-    onSigned(value);
   }
 
   async function approve() {
@@ -178,7 +189,8 @@ export default function ApproveScreen({
           <Text style={styles.amount}>{t.text}</Text>
           {t.note ? <Text style={styles.small}>{t.note}</Text> : null}
           <Text style={[styles.cardLabel, { marginTop: 10 }]}>To</Text>
-          <Text selectable style={styles.address}>{t.to}</Text>
+          {/* In groups of 4 characters, easier to compare by eye. */}
+          <Text style={styles.address}>{groupAddress(t.to)}</Text>
         </View>
       ))}
 
@@ -186,10 +198,13 @@ export default function ApproveScreen({
         <Text style={styles.value}>{reading.fee}</Text>
       </Row>
 
+      {/* Notes are text the requesting app wrote. Boxed and labelled, so a
+          note can't pass itself off as part of the Signer's own screen. */}
       {reading.notes.map((n, i) => (
-        <Row key={i} label="Attached note">
-          <Text style={[styles.value, !n.readable && { color: colors.muted }]}>{n.text}</Text>
-        </Row>
+        <View key={i} style={styles.noteBox}>
+          <Text style={styles.cardLabel}>Attached note · written by the app, not checked</Text>
+          <Text numberOfLines={8} style={[styles.noteText, !n.readable && { color: colors.muted }]}>{n.text}</Text>
+        </View>
       ))}
 
       <Row label="From">
@@ -296,4 +311,14 @@ const styles = StyleSheet.create({
   value: { color: colors.text, fontSize: 17, fontWeight: '600' },
   address: { color: colors.accent, fontSize: 15, fontFamily: 'monospace' },
   small: { color: colors.muted, fontSize: 13, fontFamily: 'monospace' },
+  noteBox: {
+    borderColor: colors.border, borderWidth: 1, borderStyle: 'dashed', borderRadius: 8,
+    padding: 10, marginVertical: 8,
+  },
+  noteText: { color: colors.text, fontSize: 15 },
 });
+
+/** "klv1abcd…" → "klv1 abcd efgh …": groups of 4 characters, for comparing by eye. */
+export function groupAddress(address) {
+  return String(address).match(/.{1,4}/g).join(' ');
+}

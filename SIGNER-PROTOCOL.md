@@ -72,6 +72,27 @@ catch your request:
 | Package | `com.raphaelrohner.klvsigner` |
 | Class | `com.raphaelrohner.klvsigner.requests.SignRequestActivity` |
 
+The Signer has no public "intent filter" (since 1 Oct 2026): it can **only**
+be called this way, by exact name. Requests without the class name don't
+reach it.
+
+### 2c. Check that it's the real Signer (recommended)
+
+A fake app installed under the Signer's package name (from an unofficial
+source) would receive your requests. Before the first request, check the
+installed Signer's signing certificate against the official fingerprint:
+
+```kotlin
+val official = hexToBytes("<official SHA-256 certificate fingerprint>")
+val genuine = context.packageManager.hasSigningCertificate(
+    "com.raphaelrohner.klvsigner", official, PackageManager.CERT_INPUT_SHA256)
+if (!genuine) { /* don't send requests; tell the user the Signer isn't the official one */ }
+```
+
+The official fingerprint will be published with the first public release
+(README and release notes). Until then, test builds are signed with a
+development key and this check can't be relied on.
+
 ---
 
 ## 3. Requests
@@ -153,12 +174,12 @@ was closed by the system), treat it as "rejected".
 | `USER_REJECTED` | The user tapped Reject (or went back to your app without deciding). |
 | `USER_LEFT` | The user left the Signer without deciding. |
 | `NOT_ALLOWED` | The user didn't allow your app to use the Signer. |
-| `NO_WALLET` | No wallet is set up in the Signer yet. |
-| `INVALID_TRANSACTION` | The Signer refused the transaction; `message` says why. |
+| `NO_WALLET` | No wallet is set up in the Signer yet. Only sent to apps the user has allowed; others get `NOT_ALLOWED` first. |
+| `INVALID_TRANSACTION` | The Signer refused the transaction; `message` says why. Among the reasons: a fee over 100 KLV, more than 5 notes, token names that aren't plain capital letters and digits. |
 | `INVALID_REQUEST` | Required values missing or too long. |
 | `UNSUPPORTED_PROTOCOL` | `protocolVersion` missing or unknown. |
 | `UNKNOWN_ACTION` | Unknown action. |
-| `UNSAFE_DEVICE` | Signing is switched off because the phone looks rooted, its bootloader is unlocked, or its startup check failed. `GET_ADDRESS` still works. Tell the user to check the Signer. |
+| `UNSAFE_DEVICE` | Signing is switched off because the phone looks rooted, its bootloader is unlocked, its startup check failed, or the Signer couldn't run its phone check. `GET_ADDRESS` still works. Tell the user to check the Signer. |
 | `NOT_FOR_RESULT` | You opened the Signer without "for result". Use `startActivityForResult`. |
 | `BUSY` | The Signer is already handling another request. Try again. |
 | `INTERRUPTED`, `INTERNAL` | Something went wrong in the Signer. Try again. |

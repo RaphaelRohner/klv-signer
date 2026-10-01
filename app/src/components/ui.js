@@ -70,7 +70,12 @@ export function Strong({ children }) {
 export function Notice({ kind = 'info', children }) {
   const edge = kind === 'danger' ? colors.danger : kind === 'warning' ? colors.warning : colors.accent;
   return (
-    <View style={[styles.notice, { borderLeftColor: edge }]}>
+    // accessibilityLiveRegion: screen readers (TalkBack) read the message out
+    // when it appears, e.g. "Wrong password." ('assertive' for problems).
+    <View
+      style={[styles.notice, { borderLeftColor: edge }]}
+      accessibilityLiveRegion={kind === 'danger' ? 'assertive' : 'polite'}
+    >
       {typeof children === 'string' ? <Text style={styles.body}>{children}</Text> : children}
     </View>
   );
@@ -87,6 +92,8 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!inactive, busy: !!busy }}
       onPress={inactive ? undefined : onPress}
       style={({ pressed }) => [
         styles.button,
@@ -134,8 +141,10 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
       importantForAutofill: 'no',
       spellCheck: false,
       // On Android, 'visible-password' turns off suggestions and learning
-      // while still showing the letters (used for recovery words).
-      keyboardType: noLearning && !secret ? 'visible-password' : 'default',
+      // while still showing the letters (used for recovery words, and for a
+      // password while "Show" is on: otherwise some keyboards start learning
+      // the password as soon as it's visible; second review).
+      keyboardType: (noLearning && !secret) || (secret && revealed) ? 'visible-password' : 'default',
     }
     : {};
   return (
@@ -148,6 +157,7 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
             error && { borderColor: colors.danger },
           ]}
           placeholderTextColor={colors.muted}
+          accessibilityLabel={label || rest.placeholder}
           secureTextEntry={!!secret && !revealed}
           {...privacy}
           {...rest}
@@ -164,7 +174,7 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
           </Pressable>
         ) : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : null}
     </View>
   );
 }

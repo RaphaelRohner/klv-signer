@@ -37,13 +37,30 @@ const VAULT = 'klvsigner.vault.v1';
 const ADDRESS = 'klvsigner.address.v1';
 const ATTEMPTS = 'klvsigner.attempts.v1';
 
-/** Save the sealed vault (and its address) after wallet setup. */
-export async function saveVault(vault) {
+/**
+ * saveVault — save the sealed vault (and its address).
+ *
+ * Order matters (second review, 1 Oct 2026): the address first, the vault
+ * LAST. So if anything fails, the old vault (and old password) stays in
+ * place; and if the vault write succeeds, everything is done. Resetting the
+ * wrong-password counter afterwards is a bonus that may fail without harm.
+ *
+ * { isNewWallet: true } (wallet setup) refuses to replace an existing
+ * wallet: that only ever happens through "Remove wallet" first.
+ */
+export async function saveVault(vault, { isNewWallet = false } = {}) {
+  if (isNewWallet && (await SecureStore.getItemAsync(VAULT))) {
+    throw new Error('A wallet is already saved on this phone. Remove it first (Home or Unlock screen).');
+  }
   // A new vault has a new scrambling key: any old fingerprint copy is useless.
   await removeBiometric();
-  await SecureStore.setItemAsync(VAULT, JSON.stringify(vault));
   await SecureStore.setItemAsync(ADDRESS, vault.address);
-  await saveAttempts(FRESH_STATE);
+  await SecureStore.setItemAsync(VAULT, JSON.stringify(vault));
+  try {
+    await saveAttempts(FRESH_STATE);
+  } catch {
+    // Not critical: the counter resets at the next correct password anyway.
+  }
 }
 
 /** Read the sealed vault, or null if no wallet is set up. */

@@ -5,10 +5,11 @@ signs transactions for other apps, only after the user approves each one
 with their password. This file lists the common attacks on Android wallet and
 signer apps, and where the Signer stands against each.
 
-> **Status: in development, testnet only.** The Signer has not had an
-> independent security review yet. Don't use it with real funds.
+> **Status: in development, testnet only.** The Signer has had two AI
+> reviews (the second one: REVIEW-2026-10.md), but no independent human
+> security review yet. Don't use it with real funds.
 
-Of 29 common attacks, the Signer blocks **17** today, partly covers **6**, and
+Of 29 common attacks, the Signer blocks **16** today, partly covers **7**, and
 **6** depend on the user or on how releases are published.
 
 **Status:** **Protected** = the Signer blocks it today · **Partly** = reduced,
@@ -32,15 +33,15 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Clipboard theft and address swap | Malware reads copied secrets, or swaps a copied address for the attacker's. | The Signer never copies the phrase or key. The approval screen shows the receiver's full address from its own reading. | Protected |
 | Keyboard logging | A keyboard app learns or records what is typed. | Suggestions and learning are off for recovery words and passwords. With the optional fingerprint/face shortcut, there's nothing to type at all. The Signer warns, naming the keyboard, when you type with one that didn't come with the phone (Gboard, Samsung and SwiftKey from the Play Store count as fine). A malicious keyboard you keep using can't be stopped. | Partly |
 | Fake client app | A harmful app asks the Signer to sign something bad. | Android tells the Signer which app is asking (id + certificate). Each app must be allowed once, and every request shows the transaction as the Signer reads it. | Protected |
-| Fake Signer catching requests | A harmful app pretends to be the Signer to catch requests or answers. | Apps must name the Signer exactly (package + screen); answers go only to the asking app. | Protected |
-| Task hijacking (StrandHogg) | A harmful app puts a fake Signer screen in front, to catch the password. | Fixed in Android 11; the Signer requires Android 12 or newer. | Protected |
+| Fake Signer catching requests | A harmful app pretends to be the Signer to catch requests or answers. | Apps must call the Signer exactly by name (package + screen); since the second review the Signer has no public "intent filter" other apps could also claim. Answers go only to the asking app. But a fake app installed under the Signer's name (from an unofficial source) would be called instead. Planned: publish the Signer's certificate fingerprint, so client apps can check they're talking to the real Signer before sending anything. | Partly |
+| Task hijacking (StrandHogg) | A harmful app puts a fake Signer screen in front, to catch the password. | The known StrandHogg tricks were fixed by Android (StrandHogg 2.0 in Android 11, plus later hardening); the Signer requires Android 12 or newer. Not every variant can be ruled out on every phone maker's Android. | Protected |
 | Fake copy of the Signer | A look-alike app from an unofficial source steals the recovery phrase. | Only install the Signer from its official source. Planned: publish the signing certificate fingerprint and file checksums. | Your side |
 
 ## 2. Someone with the phone in hand
 
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
-| Guessing the password in the app | A thief tries password after password on the lock screen. | 4 free tries, then waits of 30 s, 1 min, 2 min … up to 1 hour, kept even if the app is closed. | Protected |
+| Guessing the password in the app | A thief tries password after password on the lock screen. | 4 free tries, then waits of 30 s, 1 min, 2 min … up to 1 hour, kept even if the app is closed. Since the second review: waits are timed with a stopwatch that changing the phone's clock doesn't affect, each try is counted before it's checked (so killing the app mid-check doesn't help), and only one check runs at a time. | Protected |
 | Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt N=2^17, OWASP's recommended minimum, + AES-256-GCM) inside Android Keystore-protected storage. New passwords need 12+ characters, with a strength hint. Older wallets are upgraded automatically. A weak password is still the one way in, so pick a strong one. | Protected |
 | Rooted or hacked phone | Tools with full control of the phone read memory or change how the app runs. | The key is only unscrambled for a moment and wiped straight after. The Signer warns when it finds signs of root, an unlocked bootloader or no screen lock. Signing is switched off on signs of root, an unlocked bootloader or a failed startup check (address and wallet removal still work; the recovery words restore the funds elsewhere). The warning is on the Unlock screen every time you open the Signer. Rooting tools can hide, so no warning isn't proof. No app can fully protect itself on a compromised phone. | Partly |
 | Backup extraction | The wallet is copied out through Android or cloud backups. | Android backup is switched off; storage is tied to the phone's Keystore. | Protected |
@@ -52,17 +53,17 @@ this repository's **Security** tab → **Report a vulnerability**.
 | --- | --- | --- | --- |
 | Recovery phrase phishing | Fake support, fake websites or fake "wallet sync" forms ask for the recovery words. | The Signer only asks for the words when restoring a wallet. Nobody legitimate ever needs them. | Your side |
 | Blind signing | The user approves a request they can't understand, and it does something else. | The Signer reads every transaction itself, shows it in plain words, and refuses anything it can't explain. | Protected |
-| Look-alike addresses | Scammers send tiny amounts from an address that starts and ends like a familiar one. | The approval screen always shows the full receiver address. With the (default) "new receiver" rule, a first transfer to any address needs the extra confirmation: password only and typing the address ending, so you stop and compare. Still: compare all of it. | Partly |
+| Look-alike addresses | Scammers send tiny amounts from an address that starts and ends like a familiar one. | The approval screen always shows the full receiver address, in groups of 4 characters for easier comparing. With the (default) "new receiver" rule, a first transfer to any address needs the extra confirmation: password only and typing the address ending. Typing the ending makes you look at the address; it doesn't prove it's the right one, because a look-alike has the same ending. Compare all of it. | Partly |
 | Scam tokens and fake airdrops | Worthless tokens or NFTs arrive with links to fake "claim" sites. | The Signer shows no token pictures or links and never goes online. | Protected |
 
 ## 4. The transaction and the cryptography
 
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
-| Show one thing, sign another | Hidden extra instructions, or the screen shows different values than the bytes signed. | Strict reader built from the Klever node's own definitions: unknown parts are refused, and the transaction must re-encode byte for byte. Fingerprints match the node. | Protected |
+| Show one thing, sign another | Hidden extra instructions, or the screen shows different values than the bytes signed. | Strict reader built from the Klever node's own definitions: unknown parts are refused, and the transaction must re-encode byte for byte. Fingerprints match the node. Since the second review: token names and the network ID must be plain letters and digits (no invisible characters), fees over 100 KLV and more than 5 notes are refused, and notes are shown in a separate box marked "written by the app, not checked", with invisible or direction-changing characters refused. | Protected |
 | Replay on another network | A testnet transaction is resent on mainnet, or the other way round. | The network ID is part of what's signed and is checked (108 = mainnet, 109 = testnet); each transaction has a one-time number. | Protected |
 | Weak randomness | Predictable "random" numbers make new wallets guessable. | New wallets use the phone's secure random generator; tested. | Protected |
-| Bugs in the crypto code | A mistake in encoding or signing leaks keys or signs the wrong thing. | Audited libraries (noble) and Klever's own code, with an independent check of the wallet recipe. A bug in Klever's JS library (transfer fields swapped) was found and worked around. Needs an expert review. | Partly |
+| Bugs in the crypto code | A mistake in encoding or signing leaks keys or signs the wrong thing. | Audited libraries (noble) and Klever's own code, with an independent check of the wallet recipe. A bug in Klever's JS library (transfer fields swapped) was found and worked around. The second AI review (REVIEW-2026-10.md) found no way to make it sign something other than what's shown, including 500,000 random damaged transactions. Needs an expert review. | Partly |
 | Secrets in logs | Keys or phrases end up in logs or crash reports. | No secrets are logged; no analytics or crash reporting. | Protected |
 
 ## 5. Network and servers
@@ -100,6 +101,7 @@ that affects a row above.
 | 30 Sep 2026 | No internet permission (plus "display over other apps", storage, vibration removed); signing refused by any copy that has it; tests guard against it coming back. The Signer going online closed | 17 / 6 / 6 |
 | 30 Sep 2026 | Dependency review (DEPENDENCIES.md): nothing high or critical; crypto/native packages pinned exactly. Harmful library stays Partly: a review is a snapshot and must be repeated | 17 / 6 / 6 |
 | 30 Sep 2026 | Extra confirmation settings (amount, new receivers, tokens/NFTs, an app's first request, several transfers, bursts; trusted receivers): password only, type the address ending, optional wait. Relaxing needs the password | 17 / 6 / 6 (look-alike addresses reduced, still Partly) |
+| 1 Oct 2026 | Second AI review (REVIEW-2026-10.md): no signing bypass found; 30+ smaller problems fixed (see the report). "Fake Signer" moved to Partly: honest rating until client apps can check the Signer's certificate | 16 / 7 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -115,8 +117,9 @@ that affects a row above.
 - [x] Change password from the Home screen
 - [x] Optional fingerprint or face confirmation (the password always stays available as the choice)
 - [x] Review all dependencies (DEPENDENCIES.md; repeat before each release)
-- [ ] Independent review of the whole app (a separate reviewer, then a professional one before real money)
-- [ ] Release process: signing certificate fingerprint, checksums, build provenance, reproducible build
+- [x] Second AI review of the whole app (REVIEW-2026-10.md)
+- [ ] Independent human review (community feedback after publishing; a professional one before real money)
+- [ ] Release process: signing certificate fingerprint (also lets client apps verify the Signer), checksums, build provenance, reproducible build
 - [ ] Two-factor authentication on GitHub, Expo and Google Play
 
 ## Sources

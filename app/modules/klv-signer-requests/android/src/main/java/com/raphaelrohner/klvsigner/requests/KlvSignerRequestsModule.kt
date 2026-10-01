@@ -15,6 +15,9 @@
  *                                 (see WindowProtection.kt). Also done
  *                                 automatically each time the Signer comes
  *                                 to the front.
+ *   getElapsedRealtime()        → milliseconds since the phone started (can't
+ *                                 be changed by the user; for waiting times).
+ *   hasSigningCertificate(p, c) → was app p ever signed with certificate c?
  *   getBootCount()              → how many times the phone has started up.
  *                                 The fingerprint/face option asks for the
  *                                 password again after every phone restart.
@@ -75,6 +78,28 @@ class KlvSignerRequestsModule : Module() {
           android.provider.Settings.Global.getInt(context.contentResolver, android.provider.Settings.Global.BOOT_COUNT)
         } catch (e: Exception) {
           -1
+        }
+      }
+    }
+
+    // A stopwatch since the phone started (ms). Unlike the clock, it can't be
+    // changed in Settings, so wrong-password waiting times can't be skipped.
+    Function("getElapsedRealtime") {
+      android.os.SystemClock.elapsedRealtime().toDouble()
+    }
+
+    // Was this app ever signed with this certificate (SHA-256 hex)? Covers
+    // legitimate signing-key changes, where Android keeps the key history.
+    Function("hasSigningCertificate") { packageName: String, certSha256Hex: String ->
+      val context = appContext.reactContext
+      if (context == null || !certSha256Hex.matches(Regex("^[0-9a-fA-F]{64}$"))) {
+        false
+      } else {
+        try {
+          val bytes = ByteArray(32) { i -> certSha256Hex.substring(i * 2, i * 2 + 2).toInt(16).toByte() }
+          context.packageManager.hasSigningCertificate(packageName, bytes, android.content.pm.PackageManager.CERT_INPUT_SHA256)
+        } catch (e: Exception) {
+          false
         }
       }
     }

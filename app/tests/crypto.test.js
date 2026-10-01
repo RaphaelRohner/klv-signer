@@ -1,3 +1,4 @@
+/* global Buffer */
 /*
  * crypto.test.js — automatic checks for the wallet and vault code
  * ===============================================================
@@ -24,7 +25,7 @@ import {
 } from '../src/crypto/wallet.js';
 import { lockKey, unlockKey, WrongPasswordError } from '../src/crypto/vault.js';
 import { useEngineForTests, engineName, keyFromPassword } from '../src/crypto/passwordKey.js';
-import { waitSecondsAfter, recordFailure, secondsLeft, FRESH_STATE } from '../src/security/wrongPasswordPolicy.js';
+import { waitSecondsAfter, recordFailure, secondsLeft, FRESH_STATE, restartIfRebooted } from '../src/security/wrongPasswordPolicy.js';
 import { PASSWORD_STRETCHING } from '../src/config.js';
 
 // A famous PUBLIC test phrase from the BIP-39 standard. Everyone knows it,
@@ -198,4 +199,26 @@ test('waiting times are shown in plain words', async () => {
   assert.equal(formatWait(30), '30 s');
   assert.equal(formatWait(75), '1 min 15 s');
   assert.equal(formatWait(3600), '60 min 0 s');
+});
+
+test('waiting times use the stopwatch: changing the phone clock does not help (second review)', () => {
+  const at = (now, elapsed, boot = 7) => ({ now, elapsed, boot });
+  let state = FRESH_STATE;
+  for (let i = 0; i < 5; i += 1) state = recordFailure(state, at(1_000_000, 50_000));
+  assert.equal(secondsLeft(state, at(1_000_000, 50_000)), 30);
+  // Clock moved a day FORWARD, only 10 s really passed: still 20 s to wait.
+  assert.equal(secondsLeft(state, at(1_000_000 + 86_400_000, 60_000)), 20);
+  // Clock moved BACK: the wait doesn't get longer than it was.
+  assert.equal(secondsLeft(state, at(0, 60_000)), 20);
+  assert.equal(secondsLeft(state, at(1_000_000, 80_000)), 0);
+});
+
+test('after a phone restart a running wait starts again; without a stopwatch it is capped', () => {
+  let state = FRESH_STATE;
+  for (let i = 0; i < 5; i += 1) state = recordFailure(state, { now: 1_000_000, elapsed: 50_000, boot: 7 });
+  const after = restartIfRebooted(state, { now: 2_000_000, elapsed: 1_000, boot: 8 });
+  assert.equal(secondsLeft(after, { now: 2_000_000, elapsed: 1_000, boot: 8 }), 30);
+  assert.equal(restartIfRebooted(state, { now: 1_000_000, elapsed: 55_000, boot: 7 }), state); // same start-up: unchanged
+  // Wall clock only: moving it back an hour can't make the wait longer than 30 s.
+  assert.equal(secondsLeft(state, 1_000_000 - 3_600_000), 30);
 });

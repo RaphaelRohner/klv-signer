@@ -45,7 +45,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
-import { getBootCount } from '../../modules/klv-signer-requests/index.js';
+import { getBootCount, getElapsedRealtime } from '../../modules/klv-signer-requests/index.js';
 import { isWeakerThan, lockKey, openVault, scramblingKeyFromPassword, WrongPasswordError } from '../crypto/vault.js';
 import { PASSWORD_STRETCHING } from '../config.js';
 import { engineName } from '../crypto/passwordKey.js';
@@ -54,8 +54,21 @@ import { loadAttempts, loadVault, saveAttempts, saveVault } from '../storage/sec
 import {
   canUseBiometrics, loadBiometricState, readBiometricKey, removeBiometric, saveBiometricKey, saveBiometricState,
 } from '../storage/biometricStore.js';
-import { FRESH_STATE, formatWait, recordFailure, secondsLeft } from './wrongPasswordPolicy.js';
+import { FRESH_STATE, formatWait, recordFailure, restartIfRebooted, secondsLeft } from './wrongPasswordPolicy.js';
 import { afterPasswordUsed, BIOMETRIC_OFF, biometricBlockedReason } from './biometricPolicy.js';
+
+/** Now, by the wall clock AND the stopwatch the user can't change (see wrongPasswordPolicy.js). */
+function clock() {
+  return { now: Date.now(), elapsed: getElapsedRealtime(), boot: getBootCount() };
+}
+
+/**
+ * Only ONE password or fingerprint check at a time, across all screens
+ * (second review, 1 Oct 2026). A screen that opens while another screen's
+ * check is still running can't start a second one in parallel; otherwise
+ * several guesses could run at once and be counted as one.
+ */
+let checkRunning = false;
 
 const KEY_CHANGED_MESSAGE =
   'Fingerprint or face was switched off, because the fingerprints or face data on this phone changed. ' +
@@ -96,7 +109,7 @@ export function usePasswordCheck() {
 
   // Load the saved wrong-password counter and fingerprint setting when the screen opens.
   useEffect(() => {
-    loadAttempts().then(setAttempts).catch(() => setAttempts(FRESH_STATE));
+    loadAttempts().then((a) => setAttempts(restartIfRebooted(a, clock()))).catch(() => setAttempts(FRESH_STATE));
     loadBiometricState().then(setBioState);
   }, []);
 
@@ -106,7 +119,7 @@ export function usePasswordCheck() {
     return () => clearInterval(timer);
   }, []);
 
-  const wait = secondsLeft(attempts, now);
+  const wait = secondsLeft(attempts, { now, elapsed: getElapsedRealtime(), boot: bootCount });
   const blockedReason = biometricBlockedReason(bioState, { now, bootCount });
   const biometric = {
     supported,
@@ -115,15 +128,38 @@ export function usePasswordCheck() {
     ready: supported && blockedReason === null,
   };
 
-  /** A wrong password: count it, maybe start a waiting period. */
-  async function countWrongPassword(current) {
-    const next = recordFailure(current, Date.now());
-    await saveAttempts(next);
+  /**
+   * beginPasswordTry — before a password is checked: refuse during a waiting
+   * time, and COUNT THE TRY AS WRONG IN ADVANCE ("pessimistic"). A correct
+   * password resets the counter afterwards. So a check that's interrupted
+   * (app closed mid-check) still counts, and nothing can be guessed for free.
+   * @returns {Promise<{ allowed: boolean, before?: object, assumed?: object }>}
+   */
+  async function beginPasswordTry() {
+    const c = clock();
+    const before = restartIfRebooted(await loadAttempts(), c);
+    if (secondsLeft(before, c) > 0) {
+      await saveAttempts(before).catch(() => {});
+      setAttempts(before);
+      return { allowed: false };
+    }
+    const assumed = recordFailure(before, c);
+    await saveAttempts(assumed);
+    return { allowed: true, before, assumed };
+  }
+
+  /** A wrong password: it's already counted (beginPasswordTry); show it. */
+  function showWrongPassword(state) {
     // If a waiting period just started, close the keyboard so the
     // "try again in …" message isn't hidden behind it.
-    if (secondsLeft(next, Date.now()) > 0) Keyboard.dismiss();
-    setAttempts(next);
+    if (secondsLeft(state, clock()) > 0) Keyboard.dismiss();
+    setAttempts(state);
     setMessage('Wrong password.');
+  }
+
+  /** Something other than a wrong password went wrong before the password was checked: undo the advance count. */
+  async function undoTry(attempt, verified) {
+    if (!verified && attempt && attempt.before) await saveAttempts(attempt.before).catch(() => {});
   }
 
   /** Right password or fingerprint: reset the counter; remember when the password was used. */
@@ -161,25 +197,24 @@ export function usePasswordCheck() {
   }
 
   async function check(password, withKey) {
-    if (running.current) return { ok: false };
+    if (running.current || checkRunning) return { ok: false };
     running.current = true;
-    // Re-read the counter from storage, in case this screen's copy is stale.
-    const current = await loadAttempts();
-    if (secondsLeft(current, Date.now()) > 0) {
-      setAttempts(current);
-      running.current = false;
-      return { ok: false };
-    }
-
+    checkRunning = true;
     setBusy(true);
     setMessage('');
     const started = Date.now();
     let privateKey = null;
     let scramblingKey = null;
+    let attempt = null;
+    let verified = false;
     try {
+      // Re-read the counter from storage (this screen's copy may be stale).
+      attempt = await beginPasswordTry();
+      if (!attempt.allowed) return { ok: false };
       const vault = await loadVault();
       scramblingKey = await scramblingKeyFromPassword(vault, password);
       privateKey = openVault(vault, scramblingKey);
+      verified = true;
       await recordSuccess(true);
       const info = { seconds: (Date.now() - started) / 1000, engine: engineName() };
       const value = await withKey(privateKey, info);
@@ -188,8 +223,9 @@ export function usePasswordCheck() {
       return { ok: true, value, info };
     } catch (error) {
       if (error instanceof WrongPasswordError) {
-        await countWrongPassword(current);
+        showWrongPassword(attempt.assumed);
       } else {
+        await undoTry(attempt, verified);
         setMessage(`Something went wrong: ${error.message}`);
       }
       return { ok: false };
@@ -198,6 +234,7 @@ export function usePasswordCheck() {
       wipeBytes(scramblingKey);
       setBusy(false);
       running.current = false;
+      checkRunning = false;
     }
   }
 
@@ -206,8 +243,9 @@ export function usePasswordCheck() {
    * face instead of the password. `prompt` is the title Android shows.
    */
   async function checkBiometric(prompt, withKey) {
-    if (!biometric.ready || running.current) return { ok: false };
+    if (!biometric.ready || running.current || checkRunning) return { ok: false };
     running.current = true;
+    checkRunning = true;
     setBusy(true);
     setMessage('');
     const started = Date.now();
@@ -253,6 +291,7 @@ export function usePasswordCheck() {
       wipeBytes(scramblingKey);
       setBusy(false);
       running.current = false;
+      checkRunning = false;
     }
   }
 
@@ -262,22 +301,22 @@ export function usePasswordCheck() {
    * @returns {Promise<boolean>} true if it's now on
    */
   async function enableBiometric(password, prompt) {
-    if (running.current) return false;
+    if (running.current || checkRunning) return false;
     running.current = true;
-    const current = await loadAttempts();
-    if (secondsLeft(current, Date.now()) > 0) {
-      setAttempts(current);
-      running.current = false;
-      return false;
-    }
+    checkRunning = true;
     setBusy(true);
     setMessage('');
     let scramblingKey = null;
     let privateKey = null;
+    let attempt = null;
+    let verified = false;
     try {
+      attempt = await beginPasswordTry();
+      if (!attempt.allowed) return false;
       let vault = await loadVault();
       scramblingKey = await scramblingKeyFromPassword(vault, password);
       privateKey = openVault(vault, scramblingKey); // proves the password is right
+      verified = true;
       await recordSuccess(false);
       // Older wallet? Upgrade it first, so the fingerprint copy belongs to the new vault.
       if (isWeakerThan(vault, PASSWORD_STRETCHING)) {
@@ -296,10 +335,11 @@ export function usePasswordCheck() {
       setBioState(next);
       return true;
     } catch (error) {
-      if (error instanceof WrongPasswordError) {
-        await countWrongPassword(current);
-      } else if (!wasCancelled(error)) {
-        setMessage(`Couldn't switch on fingerprint or face: ${error.message}`);
+      if (error instanceof WrongPasswordError && !verified) {
+        showWrongPassword(attempt.assumed);
+      } else {
+        await undoTry(attempt, verified);
+        if (!wasCancelled(error)) setMessage(`Couldn't switch on fingerprint or face: ${error.message}`);
       }
       return false;
     } finally {
@@ -307,6 +347,7 @@ export function usePasswordCheck() {
       wipeBytes(scramblingKey);
       setBusy(false);
       running.current = false;
+      checkRunning = false;
     }
   }
 

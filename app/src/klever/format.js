@@ -65,21 +65,41 @@ export function describeFee(kAppFee, bandwidthFee) {
   return `${formatUnits(kAppFee + bandwidthFee, 6)} KLV`;
 }
 
+/** Longest note shown as text (characters). Longer ones are only described. */
+const MAX_NOTE_CHARS = 256;
 /**
- * describeNote — shows an attached note ("Data") as text if it's readable,
- * otherwise says it's unreadable data and how big it is.
+ * Characters a note may contain to be shown as text: letters, digits,
+ * punctuation, symbols and plain spaces (an ALLOW-list). Not allowed:
+ * line breaks, tabs, invisible or direction-changing characters, special
+ * spaces, the blank-looking Hangul fillers, and more than 2 accent marks
+ * on one letter (stacked marks can draw over other text on screen).
+ */
+const NOTE_CHAR = /^[\p{L}\p{N}\p{P}\p{S}\p{M} ]$/u;
+const BLANK_LOOKING = /[\u115F\u1160\u3164\uFFA0]/u;
+const TOO_MANY_MARKS = /\p{M}{3,}/u;
+
+/**
+ * describeNote — shows an attached note ("Data") as text only if it's short
+ * and contains nothing that could hide or fake screen content. Otherwise it
+ * says what it is (e.g. "data the Signer can't show as text (300 bytes)").
+ * Notes are written by the asking app and aren't checked; the approval
+ * screen labels them so.
  */
 export function describeNote(bytes) {
+  let text = null;
   try {
-    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-    // Refuse invisible control characters (except line breaks and tabs), which could hide content.
-    if (!/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/.test(text)) {
-      return { text, readable: true };
-    }
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
   } catch {
-    // fall through
+    text = null;
   }
-  return { text: `unreadable data (${bytes.length} bytes)`, readable: false };
+  const ok = text !== null
+    && text.length > 0
+    && [...text].length <= MAX_NOTE_CHARS
+    && [...text].every((ch) => NOTE_CHAR.test(ch))
+    && !BLANK_LOOKING.test(text)
+    && !TOO_MANY_MARKS.test(text);
+  if (ok) return { text, readable: true };
+  return { text: `data the Signer can't show as text (${bytes.length} bytes)`, readable: false };
 }
 
 /** shortAddress — "klv1usdny…ujlazy", for tight spaces. Full addresses are shown elsewhere. */

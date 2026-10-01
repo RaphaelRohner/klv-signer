@@ -40,6 +40,22 @@ export function withApp(apps, request, now = Date.now()) {
   };
 }
 
+/**
+ * cleanLabel — an app's name as Android reports it, made safe to show. The
+ * name is chosen by the app itself, so a harmful app could put invisible or
+ * direction-changing characters or line breaks in it to fake screen content.
+ * Those are removed, spaces collapsed, and it's cut to 40 characters.
+ */
+export function cleanLabel(label) {
+  const text = String(label || '')
+    .replace(/[\p{C}\u2028\u2029\u115F\u1160\u3164\uFFA0]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '(no name)';
+  const chars = [...text];
+  return chars.length > 40 ? `${chars.slice(0, 40).join('')}…` : text;
+}
+
 /** withoutApp — the list with this package removed. */
 export function withoutApp(apps, packageName) {
   const copy = { ...(apps || {}) };

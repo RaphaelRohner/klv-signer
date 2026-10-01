@@ -74,14 +74,17 @@ import ApproveScreen from './src/screens/ApproveScreen.js';
 import SignedScreen from './src/screens/SignedScreen.js';
 import ConnectAppScreen from './src/screens/ConnectAppScreen.js';
 import RequestProblemScreen from './src/screens/RequestProblemScreen.js';
+import StorageProblemScreen from './src/screens/StorageProblemScreen.js';
 
 // Requests from other apps (Stage 3)
 import {
-  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest, protectWindow,
+  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest, hasSigningCertificate, protectWindow,
 } from './modules/klv-signer-requests/index.js';
-import { describeDeviceSecurity, isSigningBlocked, SIGNING_BLOCKED_TEXT } from './src/security/deviceChecks.js';
+import {
+  DEVICE_CHECK_FAILED, describeDeviceSecurity, isSigningBlocked, SIGNING_BLOCKED_TEXT,
+} from './src/security/deviceChecks.js';
 import { ACTIONS, ERRORS, addressReply, checkRequest, errorReply, signedReply } from './src/requests/protocol.js';
-import { trustStatus, withApp } from './src/requests/appTrust.js';
+import { cleanLabel, trustStatus, withApp } from './src/requests/appTrust.js';
 import { loadConnectedApps, saveConnectedApps } from './src/storage/connectedApps.js';
 import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
 
@@ -93,9 +96,25 @@ const UNLOCKED_SCREENS = ['home', 'pasteTx', 'approve', 'signed', 'changePasswor
 
 /** The screens used while answering a request from another app. */
 const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestProblem'];
+/** Wallet setup screens: leaving the Signer here forgets the recovery words. */
+const SETUP_SCREENS = ['showPhrase', 'confirmPhrase', 'restore', 'setPassword'];
+
+/**
+ * previousCertStillValid — the app's stored certificate isn't its current one,
+ * but Android confirms the app was signed with it before (a legitimate key
+ * change, "signing key rotation"). Then it's still the same app.
+ */
+function previousCertStillValid(apps, req) {
+  const known = apps && apps[req.callerPackage];
+  if (!known || !known.certSha256) return false;
+  return known.certSha256.split(',').some((cert) => hasSigningCertificate(req.callerPackage, cert));
+}
 
 /** Who is asking, for requests pasted by hand (Stage 2). */
 const MANUAL_REQUESTER = { name: 'You (pasted by hand)', detail: 'Test request, not from another app' };
+
+/** The current "session" number (see `live` in App). Only one App exists. */
+let latestSession = 0;
 
 export default function App() {
   const [screen, setScreen] = useState('loading');
@@ -118,6 +137,22 @@ export default function App() {
   const [requestProblem, setRequestProblem] = useState(null); // { code, message } if refused
   const requestRef = useRef(null);
   const addressRef = useRef(null);
+
+  // --- "Sessions": no late surprises ------------------------------------------
+  // Password checks and signing take a moment. If you leave the Signer, lock
+  // it, or a new request arrives in the meantime, the slow step must NOT
+  // change anything afterwards (e.g. open Home after you left, or hand a
+  // signature to a request you never saw). Each of those events starts a new
+  // "session"; `live(fn)` makes a callback that only runs if its session is
+  // still the current one when it fires.
+  // `latestSession` (outside App, below the imports) is read when a callback
+  // FIRES; the state copy `session` is the number each screen was drawn with.
+  const [session, setSession] = useState(latestSession);
+  const newSession = useCallback(() => {
+    latestSession += 1;
+    setSession(latestSession);
+  }, []);
+  const live = (fn) => (...args) => (latestSession === session ? fn(...args) : undefined);
 
   // Phone-safety checks (root, unlocked bootloader, no screen lock, keyboard,
   // accessibility apps). Checked when the app starts AND every time it comes
@@ -142,7 +177,11 @@ export default function App() {
           signingBlockedRef.current = isSigningBlocked(findings);
           setDeviceFindings(findings);
         })
-        .catch(() => setDeviceFindings([]))
+        .catch(() => {
+          // The check itself failed: be careful, not relaxed (signing off until it works).
+          signingBlockedRef.current = true;
+          setDeviceFindings([DEVICE_CHECK_FAILED]);
+        })
         .finally(() => setDeviceChecked(true));
     };
     refresh();
@@ -161,11 +200,15 @@ export default function App() {
         if (savedAddress && vault) {
           setAddress(savedAddress);
           setScreen((current) => (current === 'loading' ? 'unlock' : current));
+        } else if (savedAddress || vault) {
+          // Half a wallet: something went wrong with the phone's storage. Don't
+          // offer a fresh start that could replace it; explain instead.
+          setScreen((current) => (current === 'loading' ? 'storageProblem' : current));
         } else {
           setScreen((current) => (current === 'loading' ? 'welcome' : current));
         }
       } catch {
-        setScreen((current) => (current === 'loading' ? 'welcome' : current));
+        setScreen((current) => (current === 'loading' ? 'storageProblem' : current));
       }
     })();
   }, []);
@@ -179,20 +222,28 @@ export default function App() {
 
   /** Clears all request state and returns to the locked Signer. */
   const clearRequest = useCallback(() => {
+    newSession();
     requestRef.current = null;
+    setDraftPhrase(null); // never keep half-finished setup words around
     setRequest(null);
     setRequestTrust(null);
     setRequestReading(null);
     setRequestProblem(null);
     setScreen(addressRef.current ? 'unlock' : 'welcome');
-  }, []);
+  }, [newSession]);
 
-  /** Sends the answer to the waiting app, then clears everything. */
-  const finishRequest = useCallback((ok, extras) => {
+  /**
+   * Sends the answer for THIS request (`req`) to the waiting app, then clears
+   * everything. If `req` is no longer the current request (it was closed, or
+   * another one replaced it), nothing is sent: an answer can never reach the
+   * wrong app. Returns true if the answer was delivered.
+   */
+  const finishRequest = useCallback((req, ok, extras) => {
     const current = requestRef.current;
-    if (!current) return;
-    completeRequest(current.id, ok, extras); // also moves the Signer to the background
+    if (!req || !current || current.id !== req.id) return false;
+    const delivered = completeRequest(current.id, ok, extras); // also moves the Signer to the background
     clearRequest();
+    return delivered !== false;
   }, [clearRequest]);
 
   const showRequestProblem = useCallback((code, message) => {
@@ -203,7 +254,7 @@ export default function App() {
   /** Carries out a request from an app that's allowed. */
   const proceedWithRequest = useCallback((req, walletAddress) => {
     if (req.action === ACTIONS.GET_ADDRESS) {
-      finishRequest(true, addressReply(req, walletAddress, NETWORK));
+      finishRequest(req, true, addressReply(req, walletAddress, NETWORK));
       return;
     }
     // Rooted or unlocked phone: sharing the address is fine, signing is not.
@@ -221,33 +272,56 @@ export default function App() {
     }
   }, [finishRequest, showRequestProblem]);
 
+  /** Is `req` still the request being handled? (Checked after every wait.) */
+  const stillCurrent = (req) => requestRef.current?.id === req.id;
+
+  /** An allowed app: load the wallet, then answer or show the transaction. */
+  const continueAllowedRequest = useCallback(async (req) => {
+    const [walletAddress, vault] = await Promise.all([loadAddress(), loadVault()]);
+    if (!stillCurrent(req)) return;
+    if (!walletAddress || !vault) {
+      showRequestProblem(ERRORS.NO_WALLET, 'No wallet is set up in the Signer yet. Open the Signer, create or restore a wallet, then try again.');
+      return;
+    }
+    setAddress(walletAddress);
+    proceedWithRequest(req, walletAddress);
+  }, [proceedWithRequest, showRequestProblem]);
+
   /** A new request arrived: check it, then decide which screen to show. */
   const beginRequest = useCallback(async (req) => {
     if (!req || requestRef.current?.id === req.id) return;
+    newSession();          // anything still running from before can't act any more
     requestRef.current = req;
+    setScreen('loading');  // leave whatever was on screen at once
     setRequest(req);
     setReading(null);      // abandon any manual test in progress
     setSignResult(null);
+    setDraftPhrase(null);
 
     const problem = checkRequest(req);
     if (problem) {
       showRequestProblem(problem.code, problem.message);
       return;
     }
-    const [walletAddress, vault] = await Promise.all([loadAddress(), loadVault()]);
-    if (!walletAddress || !vault) {
-      showRequestProblem(ERRORS.NO_WALLET, 'No wallet is set up in the Signer yet. Open the Signer, create or restore a wallet, then try again.');
-      return;
+    // Is this app allowed? Checked BEFORE anything about the wallet is revealed
+    // (an unknown app doesn't even learn whether a wallet exists).
+    const apps = await loadConnectedApps();
+    if (!stillCurrent(req)) return;
+    let trust = trustStatus(apps, req);
+    if (trust === 'certChanged' && previousCertStillValid(apps, req)) {
+      // The app legitimately moved to a new signing key (Android keeps the
+      // history, and the old key is in it): accept and remember the new one.
+      await saveConnectedApps(withApp(apps, req));
+      if (!stillCurrent(req)) return;
+      trust = 'allowed';
     }
-    setAddress(walletAddress);
-    const trust = trustStatus(await loadConnectedApps(), req);
     if (trust !== 'allowed') {
       setRequestTrust(trust);
       setScreen('connectApp');
       return;
     }
-    proceedWithRequest(req, walletAddress);
-  }, [proceedWithRequest, showRequestProblem]);
+    continueAllowedRequest(req);
+  }, [continueAllowedRequest, newSession, showRequestProblem]);
 
   // Listen for requests: when one arrives, when the app comes to the front, and at start.
   useEffect(() => {
@@ -272,17 +346,27 @@ export default function App() {
     if (!LOCK_WHEN_LEFT) return undefined;
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'background') {
+        newSession(); // a password check or signature still running must not act later
         // Leaving the Signer while an app is waiting = no decision: tell the app.
         if (requestRef.current) {
-          finishRequest(false, errorReply(requestRef.current, ERRORS.USER_LEFT, 'You left the Signer without deciding.'));
+          finishRequest(requestRef.current, false, errorReply(requestRef.current, ERRORS.USER_LEFT, 'You left the Signer without deciding.'));
         }
         setReading(null);    // forget any transaction in progress
         setSignResult(null);
-        setScreen((current) => (UNLOCKED_SCREENS.includes(current) || REQUEST_SCREENS.includes(current) ? 'unlock' : current));
+        setScreen((current) => {
+          if (UNLOCKED_SCREENS.includes(current) || REQUEST_SCREENS.includes(current)) return 'unlock';
+          // Mid-setup: forget the recovery words, so nobody sees them on return.
+          if (SETUP_SCREENS.includes(current)) {
+            setDraftPhrase(null);
+            setSetupOrigin(null);
+            return 'welcome';
+          }
+          return current;
+        });
       }
     });
     return () => subscription.remove();
-  }, [finishRequest]);
+  }, [finishRequest, newSession]);
 
   // --- Starting over: back to the welcome screen, forget the draft -----------
   const backToWelcome = useCallback(() => {
@@ -301,12 +385,12 @@ export default function App() {
       confirmPhrase: () => setScreen('showPhrase'),
       setPassword: () => setScreen(setupOrigin === 'create' ? 'confirmPhrase' : 'restore'),
       pasteTx: () => setScreen('home'),
-      approve: () => { setReading(null); setScreen('home'); },  // back = reject
+      approve: () => { newSession(); setReading(null); setScreen('home'); },  // back = reject
       signed: () => { setSignResult(null); setScreen('home'); },
       // For requests from other apps, "back" means "no".
-      connectApp: () => finishRequest(false, errorReply(request, ERRORS.NOT_ALLOWED, 'You did not allow this app to use the Signer.')),
-      requestApprove: () => finishRequest(false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.')),
-      requestProblem: () => requestProblem && finishRequest(false, errorReply(request, requestProblem.code, requestProblem.message)),
+      connectApp: () => finishRequest(request, false, errorReply(request, ERRORS.NOT_ALLOWED, 'You did not allow this app to use the Signer.')),
+      requestApprove: () => finishRequest(request, false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.')),
+      requestProblem: () => requestProblem && finishRequest(request, false, errorReply(request, requestProblem.code, requestProblem.message)),
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       if (previous[screen]) {
@@ -316,17 +400,27 @@ export default function App() {
       return false; // default behaviour (leave the app)
     });
     return () => subscription.remove();
-  }, [screen, setupOrigin, backToWelcome, finishRequest, request, requestProblem]);
+  }, [screen, setupOrigin, backToWelcome, finishRequest, request, requestProblem, newSession]);
 
   // --- The final setup step: scramble the key and save it ----------------------
   async function finishSetup(password) {
+    const session = latestSession;
     const { privateKey, address: newAddress } = walletFromPhrase(draftPhrase);
     const started = Date.now();
     try {
       const vault = await lockKey(privateKey, password, newAddress, PASSWORD_STRETCHING);
-      await saveVault(vault);
+      await saveVault(vault, { isNewWallet: true }); // refuses to replace an existing wallet
     } finally {
       wipeBytes(privateKey); // the key only lives on in scrambled form
+    }
+    if (latestSession !== session) {
+      // You left while it was saving: the wallet is saved, but the Signer
+      // stays locked (unlock it with the new password).
+      setDraftPhrase(null);
+      setSetupOrigin(null);
+      setAddress(newAddress);
+      setScreen('unlock');
+      return;
     }
     setUnlockInfo({ seconds: (Date.now() - started) / 1000, engine: engineName() });
     setDraftPhrase(null);
@@ -394,11 +488,11 @@ export default function App() {
           <UnlockScreen
             address={address}
             deviceFindings={deviceFindings}
-            onUnlocked={(info) => {
+            onUnlocked={live((info) => {
               setUnlockInfo(info);
               setJustCreated(false);
               setScreen('home');
-            }}
+            })}
             onRemoved={afterRemoved}
           />
         );
@@ -413,7 +507,7 @@ export default function App() {
             onChangePassword={() => { setHomeNotice(''); setScreen('changePassword'); }}
             onSigningRules={() => { setHomeNotice(''); setScreen('signingRules'); }}
             signingBlocked={signingBlocked}
-            onLock={() => { setHomeNotice(''); setScreen('unlock'); }}
+            onLock={() => { newSession(); setHomeNotice(''); setScreen('unlock'); }}
             onSignTest={() => setScreen('pasteTx')}
             onRemoved={afterRemoved}
           />
@@ -424,12 +518,12 @@ export default function App() {
         return (
           <ChangePasswordScreen
             address={address}
-            onChanged={({ biometricWasOn }) => {
+            onChanged={live(({ biometricWasOn }) => {
               setHomeNotice(biometricWasOn
                 ? 'Password changed. Fingerprint or face was switched off: switch it on again below with the new password.'
                 : 'Password changed. Use the new password from now on.');
               setScreen('home');
-            }}
+            })}
             onBack={() => setScreen('home')}
           />
         );
@@ -449,8 +543,8 @@ export default function App() {
             appId={null}
             deviceFindings={deviceFindings}
             deviceChecked={deviceChecked}
-            onSigned={(result) => { setReading(null); setSignResult(result); setScreen('signed'); }}
-            onRejected={() => { setReading(null); setScreen('home'); }}
+            onSigned={live((result) => { setReading(null); setSignResult(result); setScreen('signed'); return true; })}
+            onRejected={() => { newSession(); setReading(null); setScreen('home'); }}
           />
         );
       case 'connectApp':
@@ -459,10 +553,11 @@ export default function App() {
             request={request}
             trust={requestTrust}
             onAllow={async () => {
-              await saveConnectedApps(withApp(await loadConnectedApps(), request));
-              proceedWithRequest(request, address);
+              const req = request;
+              await saveConnectedApps(withApp(await loadConnectedApps(), req));
+              if (stillCurrent(req)) continueAllowedRequest(req);
             }}
-            onDeny={() => finishRequest(false, errorReply(request, ERRORS.NOT_ALLOWED, 'You did not allow this app to use the Signer.'))}
+            onDeny={() => finishRequest(request, false, errorReply(request, ERRORS.NOT_ALLOWED, 'You did not allow this app to use the Signer.'))}
           />
         );
       case 'requestApprove':
@@ -470,12 +565,15 @@ export default function App() {
           <ApproveScreen
             key={request.id}
             reading={requestReading}
-            requester={{ name: request.callerLabel, detail: request.callerPackage }}
+            requester={{ name: cleanLabel(request.callerLabel), detail: request.callerPackage }}
             appId={request.callerPackage}
             deviceFindings={deviceFindings}
             deviceChecked={deviceChecked}
-            onSigned={(result) => finishRequest(true, signedReply(request, address, requestReading, result))}
-            onRejected={() => finishRequest(false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.'))}
+            // Same as live(…), written out: only if this screen's session is still current.
+            onSigned={(result) => (latestSession === session
+              ? finishRequest(request, true, signedReply(request, address, requestReading, result))
+              : false)}
+            onRejected={() => finishRequest(request, false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.'))}
           />
         );
       case 'requestProblem':
@@ -483,9 +581,11 @@ export default function App() {
           <RequestProblemScreen
             request={request}
             message={requestProblem.message}
-            onBack={() => finishRequest(false, errorReply(request, requestProblem.code, requestProblem.message))}
+            onBack={() => finishRequest(request, false, errorReply(request, requestProblem.code, requestProblem.message))}
           />
         );
+      case 'storageProblem':
+        return <StorageProblemScreen onRemoved={afterRemoved} />;
       case 'signed':
         return <SignedScreen result={signResult} onDone={() => { setSignResult(null); setScreen('home'); }} />;
       default: // 'loading'
@@ -505,3 +605,4 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+

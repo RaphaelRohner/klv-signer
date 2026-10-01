@@ -188,9 +188,14 @@ object DeviceSecurity {
   /** Reads one Android system value with `getprop`. Null if empty or unreadable. */
   private fun systemProperty(key: String): String? = try {
     val process = ProcessBuilder("getprop", key).redirectErrorStream(true).start()
-    val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
-    process.waitFor(2, TimeUnit.SECONDS)
-    output.ifEmpty { null }
+    // Wait at most 2 seconds FIRST (the answer is one short line), so a stuck
+    // getprop can never hang the check; then read what it printed.
+    if (!process.waitFor(2, TimeUnit.SECONDS)) {
+      process.destroyForcibly()
+      null
+    } else {
+      process.inputStream.bufferedReader().use { it.readText() }.trim().ifEmpty { null }
+    }
   } catch (e: Exception) {
     null
   }

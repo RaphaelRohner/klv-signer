@@ -12,6 +12,7 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { Body, Button, Notice, Screen, Title, colors } from '../components/ui.js';
+import { cleanLabel } from '../requests/appTrust.js';
 
 /**
  * @param {object} props
@@ -24,7 +25,7 @@ export default function RequestProblemScreen({ request, message, onBack }) {
     <Screen>
       <Title>Request refused</Title>
       <Body muted>From</Body>
-      <Text style={styles.name}>{request.callerLabel}</Text>
+      <Text style={styles.name}>{cleanLabel(request.callerLabel)}</Text>
       <Text style={styles.mono}>{request.callerPackage}</Text>
       <Notice kind="danger">{message}</Notice>
       <Body muted>Nothing was signed. The app will be told why.</Body>

@@ -66,7 +66,7 @@ export default function RemoveWallet({ onRemoved, onCancel }) {
       {failure ? <Body style={{ color: '#FF6B5E' }}>{failure}</Body> : null}
       <Button title="Remove wallet from this phone" kind="danger" onPress={remove} busy={busy}
         disabled={typed.trim() !== CONFIRM_WORD} />
-      <Button title="Cancel" kind="secondary" onPress={onCancel} disabled={busy} />
+      {onCancel ? <Button title="Cancel" kind="secondary" onPress={onCancel} disabled={busy} /> : null}
     </Notice>
   );
 }

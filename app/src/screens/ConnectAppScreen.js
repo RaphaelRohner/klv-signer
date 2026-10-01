@@ -18,7 +18,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Body, Button, NetworkBadge, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
-import { shortFingerprint } from '../requests/appTrust.js';
+import { shortFingerprint, cleanLabel } from '../requests/appTrust.js';
 import { describeAction } from '../requests/protocol.js';
 
 /**
@@ -47,7 +47,7 @@ export default function ConnectAppScreen({ request, trust, onAllow, onDeny }) {
 
       <View style={styles.card}>
         <Text style={styles.label}>App name</Text>
-        <Text style={styles.name}>{request.callerLabel}</Text>
+        <Text style={styles.name}>{cleanLabel(request.callerLabel)}</Text>
         <Text style={[styles.label, { marginTop: 10 }]}>App id (check this)</Text>
         <Text selectable style={styles.mono}>{request.callerPackage}</Text>
         <Text style={[styles.label, { marginTop: 10 }]}>Certificate fingerprint</Text>

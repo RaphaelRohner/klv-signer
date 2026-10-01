@@ -119,3 +119,20 @@ From `app/`:
    (NFT renting, delayed/cancellable payments, alerts, smart contracts)
    belong in the games and apps that call it. At most, the Signer may later
    learn to explain specific, published contracts in plain words.
+13. Second review (1 Oct 2026, REVIEW-2026-10.md). Patterns to keep:
+   - Async work in App.js that can outlive its screen (password checks,
+     saving, request handling) must go through `live(fn)` / the session
+     number, and answers through `finishRequest(req, …)`, which only answers
+     the request it was made for. Never answer "the current request" blindly.
+   - Anything that fails while checking safety fails CLOSED (e.g. the phone
+     check failing → DEVICE_CHECK_FAILED, signing off; unreadable rules → the
+     extra confirmation with the longest wait).
+   - Waits are timed with the stopwatch (elapsed realtime + boot count), not
+     the wall clock. Wrong-password tries are counted BEFORE checking, and
+     only one check runs at a time across all screens.
+   - Text from apps (names, notes) is never shown raw: `cleanLabel` for
+     names, the allow-list in `describeNote` for notes, and notes stay in
+     their "written by the app, not checked" box.
+   - No intent filter on SignRequestActivity: explicit calls only.
+   - Open items from the review are listed in REVIEW-2026-10.md; tick them
+     off there when done.

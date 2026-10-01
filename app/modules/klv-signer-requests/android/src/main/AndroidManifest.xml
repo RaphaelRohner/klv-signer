@@ -11,8 +11,8 @@
   - excludeFromRecents: it never shows up as a separate card in the app switcher.
   - configChanges: turning the phone etc. must not restart it, or the waiting
     request would be lost.
-  - The intent filter lists the two request types. Client apps should still
-    name this screen exactly (package + class), see SIGNER-PROTOCOL.md.
+  - No intent filter: client apps name this screen exactly (package + class),
+    see SIGNER-PROTOCOL.md. The action they set says what they want.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <!-- Lets the Signer hide other apps' floating windows while its screens are
@@ -40,11 +40,9 @@
       android:excludeFromRecents="true"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale|locale|layoutDirection">
-      <intent-filter>
-        <action android:name="com.raphaelrohner.klvsigner.action.GET_ADDRESS" />
-        <action android:name="com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION" />
-        <category android:name="android.intent.category.DEFAULT" />
-      </intent-filter>
+      <!-- No intent-filter on purpose (second review, 1 Oct 2026): apps must
+           name this screen exactly (package + class), so a request can never
+           be routed to a look-alike app that declares the same actions. -->
     </activity>
   </application>
 </manifest>

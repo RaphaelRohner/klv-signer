@@ -204,3 +204,55 @@ test('a readable note attached to a transaction is shown', () => {
   assert.equal(r.notes[0].text, 'order 42');
   assert.notEqual(r.hashHex, KLV_TX_NODE_HASH); // the note is part of what gets signed
 });
+
+// ---- Second review (1 Oct 2026): attacks found by fuzzing --------------------
+
+const enc = (s) => new TextEncoder().encode(s);
+
+test('an invisible "byte order mark" in front of a token name is refused (not shown as KLV)', () => {
+  // From the reviewer: AssetID = EF BB BF "KLV" was shown as "1.5 KLV".
+  const bomKlv = '0a910108071220e41b323a571fd955e09cd41660ff4465c3f44693c87f2faea4a0fc408727c8ea325e125c0a2a747970652e676f6f676c65617069732e636f6d2f70726f746f2e5472616e73666572436f6e7472616374122e0a20bcd44a5eac57514181de63d268525801414b2ee4308562a6c396427ccc9b88031206efbbbf4b4c5618e0c65b680170fa017801820103313039';
+  assert.throws(() => readTransaction(bomKlv, EXPECT), /unusual token name/);
+});
+
+test('an invisible character in the network ID is refused', () => {
+  const bomChain = '0a8c0108071220e41b323a571fd955e09cd41660ff4465c3f44693c87f2faea4a0fc408727c8ea325612540a2a747970652e676f6f676c65617069732e636f6d2f70726f746f2e5472616e73666572436f6e747261637412260a20bcd44a5eac57514181de63d268525801414b2ee4308562a6c396427ccc9b880318e0c65b680170fa017801820106efbbbf313039';
+  assert.throws(() => readTransaction(bomChain, EXPECT), /unusual network ID/);
+});
+
+test('token names must follow Klever\'s format', () => {
+  const withAsset = (name) => modifiedTransfer(KLV_TX, (t) => { t.AssetID = enc(name); });
+  for (const bad of ['KLV/1', 'KFI/7', 'DVKNFT-1SW5/0004821', 'KLV-XX', 'AB-1234', 'TOOLONGTICKER-1234', 'abc-1234', 'ABC_1234']) {
+    assert.throws(() => readTransaction(withAsset(bad), EXPECT), /unusual token name/, bad);
+  }
+  for (const good of ['KLV', 'KFI', 'ABC-1234', 'DVKNFT-1SW5/4821', 'KLVX-AB12']) {
+    assert.equal(readTransaction(withAsset(good), EXPECT).transfers[0].assetId, good);
+  }
+});
+
+test('a huge network fee is refused', () => {
+  assert.throws(() => readTransaction(modified(KLV_TX, (raw) => { raw.KAppFee = 1000000000000000n; }), EXPECT), /unusually high network fee/);
+  assert.equal(readTransaction(modified(KLV_TX, (raw) => { raw.KAppFee = 2000000n; }), EXPECT).fee, '2.00025 KLV');
+});
+
+test('more than 5 notes are refused', () => {
+  assert.throws(() => readTransaction(modified(KLV_TX, (raw) => { raw.Data = Array.from({ length: 6 }, () => enc('hi')); }), EXPECT), /attached notes/);
+  assert.equal(readTransaction(modified(KLV_TX, (raw) => { raw.Data = [enc('hi'), enc('there')]; }), EXPECT).notes.length, 2);
+});
+
+test('notes that could fake or hide screen content are not shown as text', () => {
+  const shown = (s) => describeNote(enc(s)).readable;
+  assert.equal(shown('Thanks for the Devikin! 🙂 Grüße, ¿qué tal? 5% off'), true);
+  for (const bad of [
+    'line\nbreak', 'tab\there', 'soft­hyphen', 'zero​width', 'rtl‮override', 'line sep',
+    'bom﻿inside', 'word⁠joiner', 'arabic؜mark', 'fillerㅤhere', 'tag\u{E0041}char',
+    `a${'́'.repeat(5)}`, 'x'.repeat(257), 'wide　space',
+  ]) {
+    assert.equal(shown(bad), false, JSON.stringify(bad));
+  }
+  assert.match(describeNote(enc('a\nb')).text, /can't show as text \(3 bytes\)/);
+});
+
+test('an oversized input is refused before it is even converted', () => {
+  assert.throws(() => readTransaction('00'.repeat(40000), EXPECT), /far too large/);
+});

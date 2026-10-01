@@ -46,10 +46,11 @@ test('trusted receivers skip the per-transfer rules', () => {
   assert.deepEqual(ids(tx({ to: A, assetId: 'DVKNFT-1SW5/4821', amount: 1n, isNft: true }), rules, EMPTY_HISTORY, null), []);
 });
 
-test('tokens and NFTs (off by default)', () => {
+test('other tokens (on by default since the second review) and NFTs (off by default)', () => {
   const token = tx({ to: A, assetId: 'ABC-1234', amount: 5n, isNft: false });
   const nft = tx({ to: A, assetId: 'DVKNFT-1SW5/4821', amount: 1n, isNft: true });
-  assert.deepEqual(ids(token), []);
+  assert.deepEqual(ids(token), ['otherTokens']);
+  assert.deepEqual(ids(token, { ...DEFAULT_RULES, otherTokens: false }), []);
   assert.deepEqual(ids(nft), []);
   const strict = { ...DEFAULT_RULES, otherTokens: true, nfts: true };
   assert.deepEqual(ids(token, strict), ['otherTokens']);
@@ -145,4 +146,15 @@ test('damaged saved rules are refused (the Signer then asks for the extra confir
   assert.throws(() => checkRules({ waitSeconds: 7 }));
   assert.throws(() => checkRules({ nfts: 'yes' }));
   assert.equal(checkRules({ klvThreshold: '100000000' }).klvThreshold, '100000000');
+});
+
+test('the network fee counts towards the KLV amount setting (second review)', () => {
+  const rules = { ...DEFAULT_RULES, klvThreshold: parseKlv('100').toString() };
+  const withFee = (reading, fee) => ({ ...reading, feeUnits: parseKlv(fee) });
+  assert.deepEqual(ids(withFee(tx(klv(A, '99.5')), '0.4'), rules), []);
+  assert.deepEqual(ids(withFee(tx(klv(A, '99.7')), '0.4'), rules), ['amount']);
+  const text = reasonsForExtraConfirmation(withFee(tx(klv(A, '99.7')), '0.4'), rules, known, { appId: 'com.hub', now: NOW })[0].text;
+  assert.match(text, /100\.1 KLV \(network fee included\)/);
+  // Only trusted receivers: the fee alone doesn't trigger it.
+  assert.deepEqual(ids(withFee(tx(klv(A, '1')), '0.4'), { ...rules, klvThreshold: '1', trusted: [A] }), []);
 });
