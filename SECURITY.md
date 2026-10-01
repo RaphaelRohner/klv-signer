@@ -80,7 +80,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Harmful library | A dependency is taken over and ships malicious code in an update. | Reviewed 30 Sep 2026 (DEPENDENCIES.md): all from the npm registry with integrity hashes, no high/critical audit findings, no install scripts in app packages. Crypto and native libraries pinned exactly; new ones saved exactly. And with no internet permission, a harmful library couldn't send anything out. Needs repeating before each release. | Partly |
 | Stolen signing key or build machine | Someone with the app-signing key or the build machine publishes a harmful "update". | Since 1 Oct 2026 the signing key exists only on the owner's Mac (disk encrypted) and in encrypted backups; it was deleted from Expo's servers, so an Expo account takeover can't sign updates. The official key fingerprint is published (README, RELEASING.md), and `tools/release-check.mjs` refuses APKs signed with any other key. | Your side |
 | Tampered download | The APK people download differs from the source code here. | Planned: published checksums, build provenance from GitHub Actions, and ideally reproducible builds. | Your side |
-| Account takeover | Someone gets into the GitHub, Expo or Google Play account and replaces the app or code. | Two-factor authentication on every account involved. | Your side |
+| Account takeover | Someone gets into the GitHub, Expo or Google Play account and replaces the app or code. | GitHub and Expo use two-factor authentication with an authenticator app (1 Oct 2026); Google Play will too. The signing key isn't on any of these accounts. | Your side |
 
 ---
 
@@ -122,7 +122,7 @@ that affects a row above.
 - [ ] Independent human review (community feedback after publishing; a professional one before real money)
 - [x] Release process, part 1: signing key moved off Expo, encrypted backups, official fingerprint published, release check script with checksums (RELEASING.md)
 - [ ] Release process, part 2: build provenance (GitHub Actions), reproducible build
-- [ ] Two-factor authentication on GitHub, Expo and Google Play
+- [x] Two-factor authentication on GitHub and Expo (authenticator app, 1 Oct 2026); Google Play when that account exists
 
 ## Sources
 
