@@ -23,7 +23,7 @@ uninstall the Signer and restore their wallet from the recovery words. If the
 key is ever stolen, tell users immediately (README, Klever forum) and stop
 installing updates until a new, re-keyed Signer is announced.
 
-### One-time move from Expo to the Mac (1 Oct 2026)
+### One-time move from Expo to the Mac (done 1 Oct 2026)
 
 1. In Terminal, in the `app` folder: `npx eas-cli@latest credentials -p android`
    → build profile **preview** → (menu wording may differ slightly) **credentials.json: Upload/Download

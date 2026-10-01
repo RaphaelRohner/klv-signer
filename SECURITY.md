@@ -78,7 +78,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
 | Harmful library | A dependency is taken over and ships malicious code in an update. | Reviewed 30 Sep 2026 (DEPENDENCIES.md): all from the npm registry with integrity hashes, no high/critical audit findings, no install scripts in app packages. Crypto and native libraries pinned exactly; new ones saved exactly. And with no internet permission, a harmful library couldn't send anything out. Needs repeating before each release. | Partly |
-| Stolen signing key or build machine | Someone with the app-signing key or the build machine publishes a harmful "update". | Keep the signing keystore and its password offline and backed up; encrypt the build machine's disk. | Your side |
+| Stolen signing key or build machine | Someone with the app-signing key or the build machine publishes a harmful "update". | Since 1 Oct 2026 the signing key exists only on the owner's Mac (disk encrypted) and in encrypted backups; it was deleted from Expo's servers, so an Expo account takeover can't sign updates. The official key fingerprint is published (README, RELEASING.md), and `tools/release-check.mjs` refuses APKs signed with any other key. | Your side |
 | Tampered download | The APK people download differs from the source code here. | Planned: published checksums, build provenance from GitHub Actions, and ideally reproducible builds. | Your side |
 | Account takeover | Someone gets into the GitHub, Expo or Google Play account and replaces the app or code. | Two-factor authentication on every account involved. | Your side |
 
@@ -101,6 +101,7 @@ that affects a row above.
 | 30 Sep 2026 | No internet permission (plus "display over other apps", storage, vibration removed); signing refused by any copy that has it; tests guard against it coming back. The Signer going online closed | 17 / 6 / 6 |
 | 30 Sep 2026 | Dependency review (DEPENDENCIES.md): nothing high or critical; crypto/native packages pinned exactly. Harmful library stays Partly: a review is a snapshot and must be repeated | 17 / 6 / 6 |
 | 30 Sep 2026 | Extra confirmation settings (amount, new receivers, tokens/NFTs, an app's first request, several transfers, bursts; trusted receivers): password only, type the address ending, optional wait. Relaxing needs the password | 17 / 6 / 6 (look-alike addresses reduced, still Partly) |
+| 1 Oct 2026 | Signing key moved from Expo to the owner's Mac with encrypted backups; official fingerprint published; release check script. Rows stay "Your side" (they depend on keeping the key and accounts safe) | 16 / 7 / 6 |
 | 1 Oct 2026 | Second AI review (REVIEW-2026-10.md): no signing bypass found; 30+ smaller problems fixed (see the report). "Fake Signer" moved to Partly: honest rating until client apps can check the Signer's certificate | 16 / 7 / 6 |
 
 ## Planned fixes (Stage 4)
@@ -119,7 +120,8 @@ that affects a row above.
 - [x] Review all dependencies (DEPENDENCIES.md; repeat before each release)
 - [x] Second AI review of the whole app (REVIEW-2026-10.md)
 - [ ] Independent human review (community feedback after publishing; a professional one before real money)
-- [ ] Release process: signing certificate fingerprint (also lets client apps verify the Signer), checksums, build provenance, reproducible build
+- [x] Release process, part 1: signing key moved off Expo, encrypted backups, official fingerprint published, release check script with checksums (RELEASING.md)
+- [ ] Release process, part 2: build provenance (GitHub Actions), reproducible build
 - [ ] Two-factor authentication on GitHub, Expo and Google Play
 
 ## Sources
