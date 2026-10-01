@@ -218,6 +218,9 @@ export default function ApproveScreen({
             <Notice kind="warning">
               <Body><Strong>Extra confirmation needed</Strong></Body>
               {extra.map((r) => <Body key={r.id}>• {r.text}</Body>)}
+              {waitLeft > 0 ? (
+                <Body><Strong>You can approve in {waitLeft} s.</Strong> Use the time to check the details.</Body>
+              ) : null}
               <Body muted>
                 Compare with the full address above, type the last {ADDRESS_ENDING_LENGTH} characters
                 {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'}, then approve with your password.
