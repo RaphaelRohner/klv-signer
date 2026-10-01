@@ -531,11 +531,11 @@ Then build and install as usual.
       by side, Reject and Approve side by side. Approve works.
 - [ ] The phone's **back button**: from Settings → Home; from the rules or
       change-password screen → Settings.
-- [ ] **No autofill, no learning:** typing a password anywhere in the Signer
+- [x] **No autofill, no learning:** typing a password anywhere in the Signer
       shows no keyboard suggestions, no autofill and no "Save password?"
-      prompt; **Show** displays the password under the box. (Passed 1 Oct 2026,
-      except: Google still offered to save on Back from Extra confirmation,
-      with the amount as "username". Fixed in the next build; recheck that.)
+      prompt; **Show** displays the password under the box. (Passed 1 Oct 2026
+      after three rounds: per-box settings, the whole window, and finally
+      ending any autofill session on every keystroke and screen change.)
 - [ ] **Locking:** open Settings, press the phone's Home button, open the
       Signer again → it's locked (Unlock screen). Same from the QR screen.
 - [ ] **Copy or share** on Home → pick "Copy" → the Signer is locked when
