@@ -80,8 +80,7 @@ import StorageProblemScreen from './src/screens/StorageProblemScreen.js';
 
 // Requests from other apps (Stage 3)
 import {
-  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getElapsedRealtime, getPendingRequest,
-  hasSigningCertificate, protectWindow,
+  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest, hasSigningCertificate, protectWindow,
 } from './modules/klv-signer-requests/index.js';
 import {
   DEVICE_CHECK_FAILED, describeDeviceSecurity, isSigningBlocked, SIGNING_BLOCKED_TEXT,
@@ -96,14 +95,6 @@ import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
  * the app on any of them locks it (and forgets any transaction in progress).
  */
 const UNLOCKED_SCREENS = ['home', 'settings', 'receive', 'pasteTx', 'approve', 'signed', 'changePassword', 'signingRules'];
-
-/**
- * "Copy or share" on Home opens Android's share sheet, which counts as
- * leaving the Signer. So the Signer doesn't lock just for that, it waits up
- * to SHARE_GRACE_MS (timed with the stopwatch the phone clock can't change)
- * and only while you were on Home. Back later than that = locked.
- */
-const SHARE_GRACE_MS = 60 * 1000;
 
 /** The screens used while answering a request from another app. */
 const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestProblem'];
@@ -353,46 +344,10 @@ export default function App() {
   // --- Lock automatically when you leave the app ------------------------------
   // AppState tells us when the app goes to the background (you switched apps,
   // went to the home screen, or turned the screen off).
-  // Set by "Copy or share": { started: stopwatch ms } while the share sheet is open.
-  const shareAwayRef = useRef(null);
-  const shareTimerRef = useRef(null);
-  const screenRef = useRef(screen);
-  useEffect(() => { screenRef.current = screen; }, [screen]);
-
-  const lockNow = useCallback(() => {
-    newSession();
-    setReading(null);
-    setSignResult(null);
-    setScreen((current) => (UNLOCKED_SCREENS.includes(current) ? 'unlock' : current));
-  }, [newSession]);
-
-  /** Home's "Copy or share": allow ONE short trip to the share sheet without locking. */
-  const allowShareTrip = useCallback(() => {
-    shareAwayRef.current = { armedAt: getElapsedRealtime(), started: null };
-  }, []);
-
   useEffect(() => {
     if (!LOCK_WHEN_LEFT) return undefined;
     const subscription = AppState.addEventListener('change', (state) => {
-      const trip = shareAwayRef.current;
-      if (state === 'active' && trip && trip.started !== null) {
-        // Back from the share sheet: fine if quick, locked if it took too long.
-        shareAwayRef.current = null;
-        clearTimeout(shareTimerRef.current);
-        const now = getElapsedRealtime();
-        if (now < 0 || now - trip.started > SHARE_GRACE_MS) lockNow();
-        return;
-      }
-      if (state === 'background' && trip && trip.started === null && screenRef.current === 'home'
-        && !requestRef.current && getElapsedRealtime() - trip.armedAt < 5000) {
-        // Leaving for the share sheet just opened from Home: don't lock yet.
-        trip.started = getElapsedRealtime();
-        shareTimerRef.current = setTimeout(() => { shareAwayRef.current = null; lockNow(); }, SHARE_GRACE_MS);
-        return;
-      }
       if (state === 'background') {
-        shareAwayRef.current = null;
-        clearTimeout(shareTimerRef.current);
         newSession(); // a password check or signature still running must not act later
         // Leaving the Signer while an app is waiting = no decision: tell the app.
         if (requestRef.current) {
@@ -412,8 +367,8 @@ export default function App() {
         });
       }
     });
-    return () => { subscription.remove(); clearTimeout(shareTimerRef.current); };
-  }, [finishRequest, newSession, lockNow]);
+    return () => subscription.remove();
+  }, [finishRequest, newSession]);
 
   // --- Starting over: back to the welcome screen, forget the draft -----------
   const backToWelcome = useCallback(() => {
@@ -557,7 +512,6 @@ export default function App() {
             notice={homeNotice}
             onSettings={() => { setHomeNotice(''); setJustCreated(false); setScreen('settings'); }}
             onReceive={() => setScreen('receive')}
-            onShareStart={allowShareTrip}
             onLock={() => { newSession(); setHomeNotice(''); setScreen('unlock'); }}
           />
         );

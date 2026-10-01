@@ -525,9 +525,8 @@ Then build and install as usual.
       change-password screen → Settings.
 - [ ] **Locking:** open Settings, press the phone's Home button, open the
       Signer again → it's locked (Unlock screen). Same from the QR screen.
-- [ ] **Copy or share** on Home → pick "Copy" (or just close the share
-      sheet) → you're back on Home, still unlocked. Open the share sheet again
-      and wait more than a minute before coming back → locked.
+- [ ] **Copy or share** on Home → pick "Copy" → the Signer is locked when
+      you come back (on purpose: leaving it always locks).
 
 ---
 

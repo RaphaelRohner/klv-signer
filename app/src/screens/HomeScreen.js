@@ -37,11 +37,9 @@ import { isSigningBlocked } from '../security/deviceChecks.js';
  * @param {() => void} props.onLock
  * @param {() => void} props.onSettings   opens the Settings screen
  * @param {() => void} props.onReceive    opens the QR code screen
- * @param {() => void} [props.onShareStart]  called just before the share sheet opens
- *        (so leaving for it doesn't lock the Signer, see App.js SHARE_GRACE_MS)
  */
 export default function HomeScreen({
-  address, justCreated, notice, deviceFindings, deviceChecked = true, onLock, onSettings, onReceive, onShareStart,
+  address, justCreated, notice, deviceFindings, deviceChecked = true, onLock, onSettings, onReceive,
 }) {
   return (
     <Screen>
@@ -77,7 +75,7 @@ export default function HomeScreen({
         <AddressBlocks address={address} />
         <View style={styles.buttonRow}>
           <Button title="Show QR code" kind="secondary" onPress={onReceive} style={styles.half} />
-          <Button title="Copy or share" kind="secondary" onPress={() => { if (onShareStart) onShareStart(); shareAddress(address); }} style={styles.half} />
+          <Button title="Copy or share" kind="secondary" onPress={() => shareAddress(address)} style={styles.half} />
         </View>
       </Card>
 
@@ -95,6 +93,9 @@ export default function HomeScreen({
 /**
  * Opens Android's share sheet with the address. It has a "Copy" option, so
  * this also copies the address, without the Signer needing clipboard access.
+ * Like leaving the Signer any other way, this locks it (no exceptions: a
+ * 1-minute pause for the share sheet was tried and removed, because it also
+ * let you switch to any other app and come back unlocked).
  */
 function shareAddress(address) {
   Share.share({ message: address }).catch(() => {});
