@@ -370,6 +370,10 @@ export default function App() {
     return () => subscription.remove();
   }, [finishRequest, newSession]);
 
+  // The rules screen's own back handling (unsaved changes), see SigningRulesScreen.js.
+  const rulesBackRef = useRef(null);
+  const backToSettings = useCallback(() => setScreen('settings'), []);
+
   // --- Starting over: back to the welcome screen, forget the draft -----------
   const backToWelcome = useCallback(() => {
     setDraftPhrase(null);
@@ -388,7 +392,8 @@ export default function App() {
       setPassword: () => setScreen(setupOrigin === 'create' ? 'confirmPhrase' : 'restore'),
       settings: () => { setHomeNotice(''); setScreen('home'); },
       receive: () => setScreen('home'),
-      signingRules: () => setScreen('settings'),
+      // The rules screen asks "Save your changes?" first if something isn't saved.
+      signingRules: () => (rulesBackRef.current ? rulesBackRef.current() : setScreen('settings')),
       changePassword: () => setScreen('settings'),
       pasteTx: () => setScreen('settings'),
       approve: () => { newSession(); setReading(null); setScreen('home'); },  // back = reject
@@ -531,7 +536,7 @@ export default function App() {
           />
         );
       case 'signingRules':
-        return <SigningRulesScreen walletAddress={address} onDone={() => setScreen('settings')} />;
+        return <SigningRulesScreen walletAddress={address} onDone={backToSettings} backRef={rulesBackRef} />;
       case 'changePassword':
         return (
           <ChangePasswordScreen

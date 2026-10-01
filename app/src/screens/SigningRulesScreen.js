@@ -7,16 +7,21 @@
  * optional wait). The rules themselves and what they mean are explained in
  * security/extraConfirmation.js. Nothing here ever blocks a transaction.
  *
- * SAVING
- *   - Changes that make the Signer STRICTER are saved straight away.
+ * SAVING (new layout, 1 Oct 2026)
+ *   As soon as anything is changed, a bar fixed at the bottom of the screen
+ *   (it doesn't scroll) says "Unsaved changes" with a Save button.
+ *   - Changes that make the Signer STRICTER are saved with that tap.
  *   - Changes that make it LESS strict (switching a rule off, raising the
  *     amount, shorter wait, adding a trusted receiver) need your password,
  *     never the fingerprint. So someone who can use your finger, but doesn't
  *     know your password, can't quietly switch the protection off.
+ *     The bar then opens a small panel: the warning and the password box.
+ *   - Leaving with unsaved changes (Back, or the phone's back button) asks
+ *     "Save your changes?" with Save / Discard / Keep editing.
  * The password is checked like any other password try (wrong tries count).
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import {
@@ -30,12 +35,26 @@ import {
 import { validAddressOrNull } from '../klever/address.js';
 import { loadRules, saveRules } from '../storage/signingRules.js';
 
+/** The rules as they'd be saved: the draft, with the amount taken from its text box. */
+function candidateOf(draft, amountText) {
+  const amountOn = draft.klvThreshold !== null;
+  const amountOk = amountOn && klvCandidates(amountText).length === 1;
+  return { ...draft, klvThreshold: amountOk ? parseKlv(amountText).toString() : draft.klvThreshold };
+}
+
+/** Is there anything not saved yet? */
+function isChanged(draft, saved, amountText) {
+  return JSON.stringify(candidateOf(draft, amountText)) !== JSON.stringify(saved);
+}
+
 /**
  * @param {object} props
  * @param {string} props.walletAddress  your own address (can't be a "trusted receiver" of itself)
  * @param {() => void} props.onDone
+ * @param {{ current: (() => void) | null }} [props.backRef]  App.js calls backRef.current()
+ *        for the phone's back button, so unsaved changes aren't lost by accident
  */
-export default function SigningRulesScreen({ walletAddress, onDone }) {
+export default function SigningRulesScreen({ walletAddress, onDone, backRef }) {
   usePreventScreenCapture('signing-rules'); // there's a password box
   const pw = usePasswordCheck();
   const [saved, setSaved] = useState(null);   // what's stored now
@@ -46,6 +65,27 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
   const [password, setPassword] = useState('');
   const [done, setDone] = useState('');
   const [loadProblem, setLoadProblem] = useState('');
+  // What the bottom bar shows: null (just "Unsaved changes · Save"),
+  // 'password' (warning + password box) or 'leave' ("Save your changes?").
+  const [step, setStep] = useState(null);
+  const leaveAfterSave = useRef(false);
+
+  // The phone's back button goes through the same "unsaved changes?" check.
+  // (`latest` holds this screen's current values for that check.)
+  const latest = useRef({});
+  useEffect(() => { latest.current = { draft, saved, amountText, busy: pw.busy }; });
+  useEffect(() => {
+    if (!backRef) return undefined;
+    backRef.current = () => {
+      const now = latest.current;
+      if (now.busy) return;
+      if (now.draft && isChanged(now.draft, now.saved, now.amountText)) {
+        leaveAfterSave.current = false;
+        setStep('leave');
+      } else onDone();
+    };
+    return () => { backRef.current = null; };
+  }, [backRef, onDone]);
 
   useEffect(() => {
     loadRules()
@@ -66,7 +106,7 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
 
   if (!draft) return <Screen><ScreenHeader title="Extra confirmation" onBack={onDone} /></Screen>;
 
-  const set = (patch) => { setDraft((prev) => ({ ...prev, ...patch })); setDone(''); };
+  const set = (patch) => { setDraft((prev) => ({ ...prev, ...patch })); setDone(''); setStep(null); };
   const busy = pw.busy;
   const amountOn = draft.klvThreshold !== null;
   const amountChoices = klvCandidates(amountText);           // what the typed number could mean
@@ -74,8 +114,8 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
   const amountBad = amountOn && amountChoices.length !== 1;
 
   // The rules as they'd be saved (amount taken from its text box).
-  const candidate = { ...draft, klvThreshold: amountOn && !amountBad ? parseKlv(amountText).toString() : draft.klvThreshold };
-  const changed = JSON.stringify(candidate) !== JSON.stringify(saved);
+  const candidate = candidateOf(draft, amountText);
+  const changed = isChanged(draft, saved, amountText);
   const relaxing = isRelaxing(saved, candidate);
 
   function addTrusted() {
@@ -88,6 +128,7 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
     setTrustedError('');
   }
 
+  /** Save the rules (the password is checked first if they're less strict). */
   async function save() {
     if (relaxing) {
       const result = await pw.check(password, () => null);
@@ -98,26 +139,108 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
       await saveRules(candidate);
     } catch (error) {
       setDone(`Saving failed: ${error.message}`);
+      setStep(null);
       return;
     }
     setSaved(candidate);
     setDraft(candidate);
     setLoadProblem('');
+    setStep(null);
     setDone('Saved.');
+    if (leaveAfterSave.current) { leaveAfterSave.current = false; onDone(); }
+  }
+
+  /** The bar's Save button: straight away if stricter, via the password panel if less strict. */
+  function startSave() {
+    if (amountBad) return;
+    if (relaxing) { pw.clearMessage(); setStep('password'); } else save();
+  }
+
+  /** Back (top-left or the phone's button): ask first if something isn't saved. */
+  function requestBack() {
+    if (busy) return;
+    if (changed) { leaveAfterSave.current = false; setStep('leave'); } else onDone();
   }
 
   const rule = (key, title, subtitle, last) => (
     <ListRow title={title} subtitle={subtitle} toggle={{ value: !!draft[key], onChange: (v) => set({ [key]: v }) }} disabled={busy} last={last} />
   );
 
+  // The bar fixed at the bottom (only while something is unsaved, or a question is open).
+  let footer = null;
+  if (step === 'password') {
+    footer = (
+      <>
+        <Text style={styles.footerTitle}>These changes make the Signer less strict</Text>
+        <Text style={styles.footerText}>So they need your app password (not the fingerprint).</Text>
+        {pw.message ? <Notice kind="danger">{pw.message}</Notice> : null}
+        {pw.wait > 0 ? <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice> : null}
+        <Field
+          label="App password"
+          value={password}
+          secret
+          editable={!pw.busy && pw.wait === 0}
+          onChangeText={(t) => { setPassword(t); pw.clearMessage(); }}
+          onSubmitEditing={save}
+          returnKeyType="done"
+        />
+        <View style={styles.footerButtons}>
+          <Button
+            title="Cancel"
+            kind="secondary"
+            disabled={pw.busy}
+            onPress={() => { setPassword(''); pw.clearMessage(); leaveAfterSave.current = false; setStep(null); }}
+            style={styles.half}
+          />
+          <Button
+            title={pw.busy ? 'Checking…' : 'Save'}
+            onPress={save}
+            busy={pw.busy}
+            disabled={!password || pw.wait > 0}
+            style={styles.half}
+          />
+        </View>
+      </>
+    );
+  } else if (step === 'leave') {
+    footer = (
+      <>
+        <Text style={styles.footerTitle}>Save your changes before leaving?</Text>
+        <View style={styles.footerButtons}>
+          <Button title="Discard" kind="danger" onPress={onDone} style={styles.third} />
+          <Button title="Keep editing" kind="secondary" onPress={() => setStep(null)} style={styles.third} />
+          <Button
+            title="Save"
+            disabled={amountBad}
+            onPress={() => { leaveAfterSave.current = true; if (relaxing) { pw.clearMessage(); setStep('password'); } else save(); }}
+            style={styles.third}
+          />
+        </View>
+      </>
+    );
+  } else if (changed) {
+    footer = (
+      <View style={styles.bar}>
+        <View style={styles.flex}>
+          <Text style={styles.footerTitle}>Unsaved changes</Text>
+          <Text style={styles.footerText}>
+            {amountBad ? 'Check the amount first.' : relaxing ? 'Less strict: needs your password.' : 'Stricter: saves straight away.'}
+          </Text>
+        </View>
+        <Button title="Save" onPress={startSave} disabled={amountBad || busy} style={styles.barButton} />
+      </View>
+    );
+  }
+
   return (
-    <Screen>
-      <ScreenHeader title="Extra confirmation" onBack={pw.busy ? undefined : onDone} />
+    <Screen footer={footer}>
+      <ScreenHeader title="Extra confirmation" onBack={pw.busy ? undefined : requestBack} />
       <Body muted>
         When a transaction matches a rule, the Signer asks for your password (no fingerprint) and the last 6
         characters of the receiver, and can make you wait first. Nothing is ever blocked.
       </Body>
       {loadProblem ? <Notice kind="danger">{loadProblem}</Notice> : null}
+      {done ? <Notice kind={done === 'Saved.' ? 'info' : 'danger'}>{done}</Notice> : null}
 
       <Card>
         {/* Large amounts: the amount box is always visible, and only usable while the rule is on. */}
@@ -221,30 +344,6 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
       />
       <Button title="Add trusted receiver" kind="secondary" onPress={addTrusted} disabled={busy || !newTrusted.trim()} />
 
-      {relaxing ? (
-        <>
-          <Notice kind="warning">These changes make the Signer less strict, so they need your password (not the fingerprint).</Notice>
-          {pw.message ? <Notice kind="danger">{pw.message}</Notice> : null}
-          {pw.wait > 0 ? <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice> : null}
-          <Field
-            label="App password"
-            value={password}
-            secret
-            editable={!pw.busy && pw.wait === 0}
-            onChangeText={(t) => { setPassword(t); pw.clearMessage(); }}
-          />
-        </>
-      ) : (
-        <Body muted style={styles.note}>Making it stricter saves straight away. Relaxing a rule asks for your password.</Body>
-      )}
-      {done ? <Notice kind="info">{done}</Notice> : null}
-      <Button
-        title={pw.busy ? 'Checking…' : 'Save'}
-        onPress={save}
-        busy={pw.busy}
-        disabled={!changed || amountBad || (relaxing && (!password || pw.wait > 0))}
-      />
-      <Button title={changed ? 'Back without saving' : 'Back'} kind="secondary" onPress={onDone} disabled={pw.busy} />
       <Body muted style={styles.note}>
         The Signer has no internet, so it can't know your balance or prices: amounts are in KLV. The history it uses
         (receivers and apps you've signed for) stays on this phone.
@@ -276,4 +375,12 @@ const styles = StyleSheet.create({
   },
   removeText: { color: colors.dangerText, fontSize: 13 },
   note: { marginTop: 12 },
+  flex: { flex: 1 },
+  bar: { flexDirection: 'row', alignItems: 'center' },
+  barButton: { marginTop: 0, minWidth: 110, marginLeft: 12 },
+  footerTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  footerText: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  footerButtons: { flexDirection: 'row', marginHorizontal: -4 },
+  half: { flex: 1, marginHorizontal: 4 },
+  third: { flex: 1, marginHorizontal: 4, paddingHorizontal: 6 },
 });

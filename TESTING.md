@@ -516,6 +516,14 @@ Then build and install as usual.
 - [ ] **Extra confirmation screen:** the amount box is visible even when
       "Large amounts" is off (greyed); switching it on makes it usable. The wait
       is three buttons (No wait / 10 s / 30 s).
+- [ ] **Saving there:** change anything → a bar fixed at the bottom says
+      "Unsaved changes" with **Save** (it stays put while you scroll).
+      - Stricter change (e.g. NFTs on) → Save → "Saved." at the top.
+      - Less strict (e.g. NFTs off) → Save → the bar opens: warning +
+        password box + Cancel / Save. Wrong password → refused; right → saved.
+      - Change something, then tap Back (top left) or the phone's back
+        button → "Save your changes before leaving?" with Discard / Keep
+        editing / Save. Each does what it says.
 - [ ] **Approve:** from the Hub, send to a new address → the requesting app
       at the top with a TESTNET badge, big amount, address in groups with the
       address in boxes (`klv1`, 4, then boxes of 6) and the **last box

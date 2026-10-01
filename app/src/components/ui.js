@@ -42,14 +42,17 @@ export const colors = {
  * Screen — the page every screen sits on.
  * Keeps content clear of the notch/status bar, lets long pages scroll, and
  * moves content up when the keyboard opens so text boxes stay visible.
+ * An optional `footer` stays fixed at the bottom, outside the scrolling part.
  */
-export function Screen({ children }) {
+export function Screen({ children, footer }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
+        {/* `footer`: a bar fixed at the bottom that doesn't scroll (e.g. "Unsaved changes · Save"). */}
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -320,6 +323,10 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: 20, paddingBottom: 40, flexGrow: 1 },
+  footer: {
+    borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.card,
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14,
+  },
   title: { color: colors.text, fontSize: 24, fontWeight: '600', marginBottom: 12 },
   body: { color: colors.text, fontSize: 16, lineHeight: 23, marginBottom: 8 },
   muted: { color: colors.muted, fontSize: 14, lineHeight: 20 },
