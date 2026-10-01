@@ -47,7 +47,12 @@ export const colors = {
 export function Screen({ children, footer }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* noExcludeDescendants: Android's autofill service ignores this whole screen. */}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        importantForAutofill="noExcludeDescendants"
+      >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
@@ -149,31 +154,36 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy, style
  * Field — a labelled text box.
  *
  * `secret` hides what you type (for passwords) and adds a "Show"/"Hide"
- * button, so you can check what you typed. For secret words we also
- * switch off auto-correct, auto-capitals and the keyboard's word
- * suggestions, so the keyboard app doesn't "learn" your recovery words.
+ * button, so you can check what you typed. `noLearning` (recovery words,
+ * addresses) also switches off the keyboard's word suggestions, so the
+ * keyboard app doesn't "learn" them. Every box has autofill switched off.
  * Any other TextInput settings can be passed through (`...rest`).
  */
 export function Field({ label, secret, noLearning, error, ...rest }) {
   // For password boxes: is the password currently shown in plain text?
   // Starts hidden every time the screen opens.
   const [revealed, setRevealed] = React.useState(false);
-  const privacy = secret || noLearning
-    ? {
-      autoCorrect: false,
-      autoCapitalize: 'none',
-      autoComplete: 'off',
-      importantForAutofill: 'no',
-      spellCheck: false,
-      // On Android, 'visible-password' turns off suggestions and learning
-      // while still showing the letters (used for recovery words, and for a
-      // password while "Show" is on: otherwise some keyboards start learning
-      // the password as soon as it's visible; second review).
-      keyboardType: (noLearning && !secret) || (secret && revealed) ? 'visible-password' : 'default',
-    }
-    : {};
+  // EVERY text box in the Signer: no autofill pop-ups (password managers,
+  // Google/Samsung autofill), no auto-correct, no spell check. The Signer has
+  // no box where another app should fill in or remember anything.
+  const privacy = {
+    autoCorrect: false,
+    autoComplete: 'off',
+    importantForAutofill: 'no',
+    spellCheck: false,
+    ...(secret || noLearning
+      ? {
+        autoCapitalize: 'none',
+        // On Android, 'visible-password' turns off suggestions and learning
+        // while still showing the letters (used for recovery words, and for a
+        // password while "Show" is on: otherwise some keyboards start learning
+        // the password as soon as it's visible; second review).
+        keyboardType: (noLearning && !secret) || (secret && revealed) ? 'visible-password' : 'default',
+      }
+      : {}),
+  };
   return (
-    <View style={styles.fieldWrap}>
+    <View style={styles.fieldWrap} importantForAutofill="noExcludeDescendants">
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.inputRow}>
         <TextInput
