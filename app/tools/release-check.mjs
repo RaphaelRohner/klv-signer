@@ -28,6 +28,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
+import { Buffer } from 'node:buffer';
 
 /**
  * The Signer's official signing-key fingerprint (SHA-256 of its certificate).

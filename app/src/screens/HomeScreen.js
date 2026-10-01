@@ -2,58 +2,59 @@
  * HomeScreen.js — shown after unlocking
  * =====================================
  *
- * Stage 3 version. It shows:
- *   - your wallet address (public, safe to share: long-press to copy it),
- *   - which network the Signer is set to (testnet),
- *   - test information: how long the last unlock took and which engine did
- *     the password work (see crypto/passwordKey.js). This helps us tune the
- *     speed on your phone.
- *   - "Sign a test transaction" (Stage 2: paste a transaction by hand),
- *   - a warning if the phone looks rooted or unlocked (then signing is
- *     switched off), has no screen lock, a keyboard you installed yourself,
- *     or apps with accessibility access,
- *   - the "Fingerprint or face" switch (optional shortcut for the password),
- *   - the apps you've allowed to use the Signer ("Connected apps"),
- *   - "Extra confirmation" settings (when a transaction needs a second, stricter
- *     confirmation; see security/extraConfirmation.js),
- *   - "Change password", "Lock now" and "Remove wallet from this phone".
+ * Only what you need day to day (new layout, 1 Oct 2026):
+ *   - the top line: "KLV Signer", the network badge and a Settings button,
+ *   - one-off messages (e.g. "Password changed", "Your wallet is set up"),
+ *   - your wallet address: in groups of 4 characters (long-press to copy),
+ *     and "Show QR code" so another wallet can scan it to send to you,
+ *   - a status line: "Ready to sign", or a warning if the phone looks unsafe
+ *     (details are on the Settings screen; on a rooted or unlocked phone
+ *     signing is switched off),
+ *   - the apps you've allowed ("Connected apps"), with when each last had
+ *     something signed,
+ *   - "Lock now".
  *
- * From Stage 3 on, signing requests from other apps will open the approval
- * screen directly.
+ * Everything else (fingerprint/face, password, extra confirmation, removing
+ * the wallet, test tools) is on the Settings screen (SettingsScreen.js).
+ * Signing requests from other apps open the approval screen directly.
  */
 
-import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
-import { Body, Button, Gap, NetworkBadge, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
-import RemoveWallet from '../components/RemoveWallet.js';
-import ConnectedAppsList from '../components/ConnectedAppsList.js';
-import DeviceWarning from '../components/DeviceWarning.js';
-import BiometricSetting from '../components/BiometricSetting.js';
+import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Body, Button, Card, NetworkBadge, Notice, Screen, colors } from '../components/ui.js';
+import { groupAddress } from '../klever/format.js';
+import { loadConnectedApps } from '../storage/connectedApps.js';
+import { loadHistory } from '../storage/signingRules.js';
+import { isSigningBlocked } from '../security/deviceChecks.js';
 
 /**
  * @param {object} props
  * @param {string} props.address
- * @param {{seconds:number, engine:string}|null} props.unlockInfo  test info from the last unlock
  * @param {boolean} props.justCreated   true right after setup (shows a "saved" message)
- * @param {() => void} props.onLock
  * @param {object[]} props.deviceFindings  phone-safety warnings (security/deviceChecks.js)
- * @param {() => void} props.onSignTest  opens the "sign a test transaction" screen
+ * @param {boolean} props.deviceChecked    false until the first phone check has finished
  * @param {string} [props.notice]  a one-off message (e.g. "Password changed")
- * @param {() => void} props.onChangePassword  opens the change-password screen
- * @param {() => void} props.onSigningRules    opens the "Extra confirmation" settings
- * @param {boolean} props.signingBlocked  true on a rooted/unlocked phone: no signing
- * @param {() => void} props.onRemoved
+ * @param {() => void} props.onLock
+ * @param {() => void} props.onSettings   opens the Settings screen
+ * @param {() => void} props.onReceive    opens the QR code screen
  */
-export default function HomeScreen({ address, unlockInfo, justCreated, onLock, onSignTest, onRemoved, deviceFindings, signingBlocked, notice, onChangePassword, onSigningRules }) {
-  const [showRemove, setShowRemove] = useState(false);
-
+export default function HomeScreen({ address, justCreated, notice, deviceFindings, deviceChecked = true, onLock, onSettings, onReceive }) {
   return (
     <Screen>
-      <NetworkBadge />
-      <Title>Your wallet</Title>
-      <DeviceWarning findings={deviceFindings} />
-      {notice ? <Notice kind="info">{notice}</Notice> : null}
+      <View style={styles.top}>
+        <Text style={styles.appName} accessibilityRole="header">KLV Signer</Text>
+        <NetworkBadge />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          onPress={onSettings}
+          style={({ pressed }) => [styles.settings, pressed && styles.pressed]}
+        >
+          <Text style={styles.settingsText}>Settings</Text>
+        </Pressable>
+      </View>
 
+      {notice ? <Notice kind="info">{notice}</Notice> : null}
       {justCreated ? (
         <Notice kind="info">
           Your wallet is set up and locked with your password. Try "Lock now" and unlock again to check the
@@ -61,41 +62,136 @@ export default function HomeScreen({ address, unlockInfo, justCreated, onLock, o
         </Notice>
       ) : null}
 
-      <Body muted>Address (long-press to copy; safe to share)</Body>
-      <Text selectable style={styles.address}>{address}</Text>
+      {/* The address: public, safe to share. */}
+      <Card style={styles.addressCard}>
+        <Text style={styles.label}>Your address · safe to share</Text>
+        <Text selectable style={styles.address} accessibilityLabel={`Your address: ${address}`}>{groupAddress(address)}</Text>
+        <Text style={styles.hint}>Long-press the address to copy it.</Text>
+        <Button title="Show QR code" kind="secondary" onPress={onReceive} />
+      </Card>
 
-      <Notice kind="info">
-        <Body>
-          <Strong>Stage 3.</Strong> Other apps can now ask the Signer to sign, and you approve each request here.
-          You can still paste a test transaction by hand.
-        </Body>
-      </Notice>
+      <Status findings={deviceFindings} checked={deviceChecked} />
 
-      {unlockInfo ? (
-        <Body muted>
-          {unlockInfo.engine === 'fingerprint or face'
-            ? 'Unlocked with fingerprint or face.'
-            : `Test info: the last password check took ${unlockInfo.seconds.toFixed(1)} s using the ${unlockInfo.engine} engine.`}
-        </Body>
-      ) : null}
+      <ConnectedApps onManage={onSettings} />
 
-      <Gap />
-      <Button title="Sign a test transaction" onPress={onSignTest} disabled={signingBlocked} />
-      <Button title="Lock now" kind="secondary" onPress={onLock} />
-      <Button title="Extra confirmation settings" kind="secondary" onPress={onSigningRules} />
-      <Button title="Change password" kind="secondary" onPress={onChangePassword} />
-      <BiometricSetting />
-      <ConnectedAppsList />
-      <Gap size={24} />
-      {showRemove ? (
-        <RemoveWallet onRemoved={onRemoved} onCancel={() => setShowRemove(false)} />
-      ) : (
-        <Button title="Remove wallet from this phone…" kind="danger" onPress={() => setShowRemove(true)} />
-      )}
+      <View style={styles.spacer} />
+      <Body muted style={styles.footnote}>Apps send their requests here. Every signature needs your password or fingerprint.</Body>
+      <Button title="Lock now" onPress={onLock} />
     </Screen>
   );
 }
 
+/** "Ready to sign", or what's wrong with the phone (details in Settings). */
+function Status({ findings, checked }) {
+  if (!checked) return <Notice kind="info">Checking the phone…</Notice>;
+  if (isSigningBlocked(findings)) {
+    return (
+      <Notice kind="danger">
+        <Text style={styles.statusTitle}>Signing is switched off on this phone</Text>
+        <Text style={styles.statusText}>{findings.map((f) => f.title).join('; ')}. Details in Settings → This phone.</Text>
+      </Notice>
+    );
+  }
+  if (findings && findings.length > 0) {
+    return (
+      <Notice kind="warning">
+        <Text style={styles.statusTitle}>Ready to sign, with {findings.length === 1 ? 'a warning' : `${findings.length} warnings`}</Text>
+        <Text style={styles.statusText}>{findings.map((f) => f.title).join('; ')}. Details in Settings → This phone.</Text>
+      </Notice>
+    );
+  }
+  return (
+    <Notice kind="info">
+      <Text style={styles.statusTitle}>Ready to sign</Text>
+      <Text style={styles.statusText}>Phone checks passed · no internet access</Text>
+    </Notice>
+  );
+}
+
+/** The allowed apps, with when each last had something signed (from this phone's own history). */
+function ConnectedApps({ onManage }) {
+  const [apps, setApps] = useState(null);
+  const [lastSigned, setLastSigned] = useState({});
+
+  useEffect(() => {
+    loadConnectedApps().then(setApps).catch(() => setApps({}));
+    loadHistory().then((h) => setLastSigned(h.apps || {})).catch(() => {});
+  }, []);
+
+  if (apps === null) return null;
+  const entries = Object.entries(apps);
+
+  return (
+    <View style={styles.apps}>
+      <View style={styles.appsHead}>
+        <Text style={styles.appsTitle} accessibilityRole="header">Connected apps</Text>
+        <Pressable accessibilityRole="button" onPress={onManage} hitSlop={10}>
+          <Text style={styles.link}>Manage</Text>
+        </Pressable>
+      </View>
+      {entries.length === 0 ? (
+        <Body muted>No apps yet. When an app asks to use the Signer, you'll be asked whether to allow it.</Body>
+      ) : (
+        <Card>
+          {entries.map(([packageName, app], i) => (
+            <View key={packageName} style={[styles.appRow, i < entries.length - 1 && styles.divider]}>
+              <View style={styles.appLetter}><Text style={styles.appLetterText}>{(app.label || '?').slice(0, 1).toUpperCase()}</Text></View>
+              <View style={styles.flex}>
+                <Text style={styles.appName2} numberOfLines={1}>{app.label}</Text>
+                <Text style={styles.appSub} numberOfLines={1}>
+                  {lastSigned[packageName] ? `Last signature ${describeWhen(lastSigned[packageName])}` : 'Allowed, nothing signed yet'}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </Card>
+      )}
+    </View>
+  );
+}
+
+/** "today, 14:23" / "yesterday" / "3 Oct 2026". */
+function describeWhen(time) {
+  const d = new Date(time);
+  const now = new Date();
+  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+  const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (sameDay(d, now)) return `today, ${hhmm}`;
+  const yesterday = new Date(now.getTime() - 86400000);
+  if (sameDay(d, yesterday)) return `yesterday, ${hhmm}`;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 const styles = StyleSheet.create({
-  address: { color: colors.accent, fontSize: 15, fontFamily: 'monospace', marginBottom: 12 },
+  flex: { flex: 1 },
+  top: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, minHeight: 48 },
+  appName: { flex: 1, color: colors.text, fontSize: 18, fontWeight: '600' },
+  settings: {
+    marginLeft: 10, minHeight: 44, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  settingsText: { color: colors.text, fontSize: 14 },
+  pressed: { opacity: 0.7 },
+  addressCard: { padding: 18 },
+  label: { color: colors.muted, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
+  address: { color: colors.accent, fontSize: 15, lineHeight: 24, fontFamily: 'monospace' },
+  hint: { color: colors.muted, fontSize: 12, marginTop: 8 },
+  statusTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  statusText: { color: colors.muted, fontSize: 13, lineHeight: 19, marginTop: 2 },
+  apps: { marginTop: 16 },
+  appsHead: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 4, paddingHorizontal: 2 },
+  appsTitle: { flex: 1, color: colors.text, fontSize: 15, fontWeight: '600' },
+  link: { color: colors.accent, fontSize: 14 },
+  appRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  appLetter: {
+    width: 36, height: 36, borderRadius: 10, backgroundColor: colors.raised, alignItems: 'center',
+    justifyContent: 'center', marginRight: 12,
+  },
+  appLetterText: { color: colors.warning, fontSize: 16, fontWeight: '600' },
+  appName2: { color: colors.text, fontSize: 15 },
+  appSub: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  spacer: { flexGrow: 1, minHeight: 24 },
+  footnote: { marginBottom: 0 },
 });

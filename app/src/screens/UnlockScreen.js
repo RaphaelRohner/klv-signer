@@ -18,9 +18,10 @@
  *      wait before trying again. The waiting time survives closing the app,
  *      because the counter is saved.
  *
- * FINGERPRINT OR FACE (optional, switched on from the Home screen)
+ * FINGERPRINT OR FACE (optional)
  * If it's on, a "Unlock with fingerprint or face" button sits above the
  * password box (components/BiometricButton.js). The password always works too.
+ * (Switched on in Settings.)
  *
  * PHONE-SAFETY WARNING
  * If the phone looks unsafe for a wallet (rooted, unlocked bootloader, no
@@ -30,9 +31,10 @@
  */
 
 import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
-import { Body, Button, Field, NetworkBadge, Notice, Screen, Title, colors } from '../components/ui.js';
+import { Body, Button, Field, NetworkBadge, Notice, Screen, colors } from '../components/ui.js';
+import { shortAddress } from '../klever/format.js';
 import RemoveWallet from '../components/RemoveWallet.js';
 import DeviceWarning from '../components/DeviceWarning.js';
 import BiometricButton from '../components/BiometricButton.js';
@@ -61,13 +63,19 @@ export default function UnlockScreen({ address, deviceFindings, onUnlocked, onRe
 
   return (
     <Screen>
-      <NetworkBadge />
-      <Title>Unlock</Title>
-      <Body muted>Wallet</Body>
-      <Text selectable style={styles.address}>{address}</Text>
+      <View style={styles.badgeRow}><NetworkBadge /></View>
+      <View style={styles.brand}>
+        <View style={styles.markBox}>
+          <Image source={require('../../assets/seal-mark.png')} style={styles.mark} accessibilityIgnoresInvertColors />
+        </View>
+        <Text style={styles.title} accessibilityRole="header">Unlock KLV Signer</Text>
+        <Text style={styles.address} accessibilityLabel={`Wallet ${address}`}>{shortAddress(address)}</Text>
+      </View>
 
       {/* "This phone may not be safe" box. Shows nothing on a safe phone. */}
       <DeviceWarning findings={deviceFindings} />
+
+      <View style={styles.spacer} />
 
       {/* Messages sit ABOVE the password box: below it, the phone's keyboard
           can cover them (that's how the 30-second message got hidden in testing). */}
@@ -100,24 +108,39 @@ export default function UnlockScreen({ address, deviceFindings, onUnlocked, onRe
         busy={pw.busy}
         disabled={!password || pw.wait > 0}
       />
-      {pw.busy ? <Body muted>Checking takes a moment on purpose. It's what makes guessing slow.</Body> : null}
+      {pw.busy ? <Body muted style={styles.center}>Checking takes a moment on purpose. It's what makes guessing slow.</Body> : null}
 
       {/* Forgot-password route: remove the wallet here, then restore it from the phrase. */}
       {showRemove ? (
-        <RemoveWallet onRemoved={onRemoved} onCancel={() => setShowRemove(false)} />
-      ) : (
         <>
-          <Body muted style={{ marginTop: 24 }}>
-            Forgot your password? Nobody can recover it, but your recovery phrase can: remove the wallet from the
-            Signer, then restore it with a new password.
+          <Body muted style={styles.forgotText}>
+            Nobody can recover the password, but your recovery phrase can: remove the wallet from the Signer, then
+            restore it with a new password.
           </Body>
-          <Button title="I forgot my password" kind="secondary" onPress={() => setShowRemove(true)} disabled={pw.busy} />
+          <RemoveWallet onRemoved={onRemoved} onCancel={() => setShowRemove(false)} />
         </>
+      ) : (
+        <Pressable accessibilityRole="button" onPress={() => setShowRemove(true)} disabled={pw.busy} style={styles.forgot} hitSlop={6}>
+          <Text style={styles.forgotLink}>Forgot your password?</Text>
+        </Pressable>
       )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  address: { color: colors.accent, fontSize: 14, fontFamily: 'monospace', marginBottom: 16 },
+  badgeRow: { flexDirection: 'row', justifyContent: 'flex-end' },
+  brand: { alignItems: 'center', paddingTop: 32, paddingBottom: 16 },
+  markBox: {
+    width: 88, height: 88, borderRadius: 24, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
+  mark: { width: 68, height: 68 },
+  title: { color: colors.text, fontSize: 24, fontWeight: '600' },
+  address: { color: colors.muted, fontSize: 14, fontFamily: 'monospace', marginTop: 6 },
+  spacer: { flexGrow: 1, minHeight: 16 },
+  center: { textAlign: 'center', marginTop: 8 },
+  forgot: { alignSelf: 'center', paddingVertical: 14, paddingHorizontal: 12, marginTop: 4 },
+  forgotLink: { color: colors.accent, fontSize: 14 },
+  forgotText: { marginTop: 16 },
 });

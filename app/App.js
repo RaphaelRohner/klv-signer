@@ -67,6 +67,8 @@ import RestoreScreen from './src/screens/RestoreScreen.js';
 import SetPasswordScreen from './src/screens/SetPasswordScreen.js';
 import UnlockScreen from './src/screens/UnlockScreen.js';
 import HomeScreen from './src/screens/HomeScreen.js';
+import SettingsScreen from './src/screens/SettingsScreen.js';
+import ReceiveScreen from './src/screens/ReceiveScreen.js';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen.js';
 import SigningRulesScreen from './src/screens/SigningRulesScreen.js';
 import PasteTransactionScreen from './src/screens/PasteTransactionScreen.js';
@@ -384,7 +386,11 @@ export default function App() {
       restore: backToWelcome,
       confirmPhrase: () => setScreen('showPhrase'),
       setPassword: () => setScreen(setupOrigin === 'create' ? 'confirmPhrase' : 'restore'),
-      pasteTx: () => setScreen('home'),
+      settings: () => { setHomeNotice(''); setScreen('home'); },
+      receive: () => setScreen('home'),
+      signingRules: () => setScreen('settings'),
+      changePassword: () => setScreen('settings'),
+      pasteTx: () => setScreen('settings'),
       approve: () => { newSession(); setReading(null); setScreen('home'); },  // back = reject
       signed: () => { setSignResult(null); setScreen('home'); },
       // For requests from other apps, "back" means "no".
@@ -500,20 +506,32 @@ export default function App() {
         return (
           <HomeScreen
             deviceFindings={deviceFindings}
+            deviceChecked={deviceChecked}
             address={address}
-            unlockInfo={unlockInfo}
             justCreated={justCreated}
             notice={homeNotice}
+            onSettings={() => { setHomeNotice(''); setJustCreated(false); setScreen('settings'); }}
+            onReceive={() => setScreen('receive')}
+            onLock={() => { newSession(); setHomeNotice(''); setScreen('unlock'); }}
+          />
+        );
+      case 'receive':
+        return <ReceiveScreen address={address} onBack={() => setScreen('home')} />;
+      case 'settings':
+        return (
+          <SettingsScreen
+            deviceFindings={deviceFindings}
+            unlockInfo={unlockInfo}
+            notice={homeNotice}
+            onBack={() => { setHomeNotice(''); setScreen('home'); }}
             onChangePassword={() => { setHomeNotice(''); setScreen('changePassword'); }}
             onSigningRules={() => { setHomeNotice(''); setScreen('signingRules'); }}
-            signingBlocked={signingBlocked}
-            onLock={() => { newSession(); setHomeNotice(''); setScreen('unlock'); }}
-            onSignTest={() => setScreen('pasteTx')}
+            onSignTest={() => { if (!signingBlocked) setScreen('pasteTx'); }}
             onRemoved={afterRemoved}
           />
         );
       case 'signingRules':
-        return <SigningRulesScreen walletAddress={address} onDone={() => setScreen('home')} />;
+        return <SigningRulesScreen walletAddress={address} onDone={() => setScreen('settings')} />;
       case 'changePassword':
         return (
           <ChangePasswordScreen
@@ -522,9 +540,9 @@ export default function App() {
               setHomeNotice(biometricWasOn
                 ? 'Password changed. Fingerprint or face was switched off: switch it on again below with the new password.'
                 : 'Password changed. Use the new password from now on.');
-              setScreen('home');
+              setScreen('settings');
             })}
-            onBack={() => setScreen('home')}
+            onBack={() => setScreen('settings')}
           />
         );
       case 'pasteTx':
@@ -532,7 +550,7 @@ export default function App() {
           <PasteTransactionScreen
             address={address}
             onRead={(r) => { setReading(r); setScreen('approve'); }}
-            onCancel={() => setScreen('home')}
+            onCancel={() => setScreen('settings')}
           />
         );
       case 'approve':

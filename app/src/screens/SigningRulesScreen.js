@@ -2,7 +2,7 @@
  * SigningRulesScreen.js — "Extra confirmation" settings
  * ====================================================
  *
- * Opened from Home. Here you choose when a transaction needs a second,
+ * Opened from Settings. Here you choose when a transaction needs a second,
  * stricter confirmation (password only, typing the receiver address ending,
  * optional wait). The rules themselves and what they mean are explained in
  * security/extraConfirmation.js. Nothing here ever blocks a transaction.
@@ -17,34 +17,18 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
-import { Body, Button, Field, Notice, Screen, Title, colors } from '../components/ui.js';
+import {
+  Body, Button, Card, Field, ListRow, Notice, Screen, ScreenHeader, SectionLabel, colors,
+} from '../components/ui.js';
+import { groupAddress } from '../klever/format.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import {
   DEFAULT_RULES, WAIT_CHOICES, formatKlv, isRelaxing, klvCandidates, parseKlv,
 } from '../security/extraConfirmation.js';
 import { validAddressOrNull } from '../klever/address.js';
 import { loadRules, saveRules } from '../storage/signingRules.js';
-
-/** One on/off line with an explanation. */
-function Rule({ title, text, value, onChange, disabled }) {
-  return (
-    <View style={styles.rule}>
-      <View style={styles.ruleText}>
-        <Text style={styles.ruleTitle}>{title}</Text>
-        <Text style={styles.small}>{text}</Text>
-      </View>
-      <Switch
-        value={value}
-        disabled={disabled}
-        onValueChange={onChange}
-        trackColor={{ false: colors.border, true: colors.accent }}
-        thumbColor={colors.text}
-      />
-    </View>
-  );
-}
 
 /**
  * @param {object} props
@@ -80,7 +64,7 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
       });
   }, []);
 
-  if (!draft) return <Screen><Title>Extra confirmation</Title></Screen>;
+  if (!draft) return <Screen><ScreenHeader title="Extra confirmation" onBack={onDone} /></Screen>;
 
   const set = (patch) => { setDraft((prev) => ({ ...prev, ...patch })); setDone(''); };
   const busy = pw.busy;
@@ -122,37 +106,45 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
     setDone('Saved.');
   }
 
+  const rule = (key, title, subtitle, last) => (
+    <ListRow title={title} subtitle={subtitle} toggle={{ value: !!draft[key], onChange: (v) => set({ [key]: v }) }} disabled={busy} last={last} />
+  );
+
   return (
     <Screen>
-      <Title>Extra confirmation</Title>
-      <Body>
-        When a transaction hits one of these rules, the Signer asks for more: your password (no fingerprint), the last
-        characters of the receiver address typed by you, and optionally a short wait. Nothing is ever blocked.
+      <ScreenHeader title="Extra confirmation" onBack={pw.busy ? undefined : onDone} />
+      <Body muted>
+        When a transaction matches a rule, the Signer asks for your password (no fingerprint) and the last 6
+        characters of the receiver, and can make you wait first. Nothing is ever blocked.
       </Body>
       {loadProblem ? <Notice kind="danger">{loadProblem}</Notice> : null}
 
-      <Rule
-        disabled={busy}
-        title="Large amounts"
-        text="More than a set amount of KLV in one transaction."
-        value={amountOn}
-        onChange={(on) => {
-          if (on && !parseKlv(amountText)) setAmountText('100');
-          set({ klvThreshold: on ? (parseKlv(amountText) || 100000000n).toString() : null });
-        }}
-      />
-      {amountOn ? (
-        <>
+      <Card>
+        {/* Large amounts: the amount box is always visible, and only usable while the rule is on. */}
+        <ListRow
+          title="Large amounts"
+          subtitle="KLV sent in one transaction, network fee included"
+          disabled={busy}
+          toggle={{
+            value: amountOn,
+            onChange: (on) => {
+              if (on && !parseKlv(amountText)) setAmountText('100');
+              set({ klvThreshold: on ? (parseKlv(amountText) || 100000000n).toString() : null });
+            },
+          }}
+          last
+        />
+        <View style={[styles.amount, !amountOn && styles.dim]}>
           <Field
-            label="Ask extra above (KLV)"
-          value={amountText}
-          keyboardType="decimal-pad"
-          editable={!busy}
-          onChangeText={(t) => { setAmountText(t); setDone(''); }}
-          placeholder="100"
+            label={amountOn ? 'Ask extra above (KLV)' : 'Ask extra above (KLV) · switch on to use'}
+            value={amountText}
+            keyboardType="decimal-pad"
+            editable={!busy && amountOn}
+            onChangeText={(t) => { setAmountText(t); setDone(''); }}
+            placeholder="100"
             error={amountBad && !amountAmbiguous ? 'Please enter an amount like 100 or 12.5.' : ''}
           />
-          {!amountBad ? <Text style={styles.small}>= {formatKlv(parseKlv(amountText))} KLV</Text> : null}
+          {amountOn && !amountBad ? <Text style={styles.small}>= {formatKlv(parseKlv(amountText))} KLV</Text> : null}
           {amountAmbiguous ? (
             <Notice kind="warning">
               <Body>&quot;{amountText.trim()}&quot; can be read two ways. Which did you mean?</Body>
@@ -165,35 +157,60 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
               </View>
             </Notice>
           ) : null}
-        </>
-      ) : null}
-      <Rule disabled={busy} title="New receivers" text="An address you've never signed a transfer to." value={draft.newReceiver} onChange={(v) => set({ newReceiver: v })} />
-      <Rule disabled={busy} title="Other tokens" text="Any token other than KLV." value={draft.otherTokens} onChange={(v) => set({ otherTokens: v })} />
-      <Rule disabled={busy} title="NFTs" text="Any NFT transfer." value={draft.nfts} onChange={(v) => set({ nfts: v })} />
-      <Rule disabled={busy} title="An app's first request" text="The first signature a newly allowed app asks for." value={draft.firstAppRequest} onChange={(v) => set({ firstAppRequest: v })} />
-      <Rule disabled={busy} title="Several transfers at once" text="More than one transfer in one transaction." value={draft.multiTransfer} onChange={(v) => set({ multiTransfer: v })} />
-      <Rule disabled={busy} title="Many requests quickly" text="3 or more signing requests within 2 minutes." value={draft.burst} onChange={(v) => set({ burst: v })} />
+        </View>
+        <View style={styles.divider} />
+        {rule('newReceiver', 'New receivers', 'An address you\'ve never signed a transfer to')}
+        {rule('otherTokens', 'Other tokens', 'Any token other than KLV')}
+        {rule('nfts', 'NFTs', 'Any NFT transfer')}
+        {rule('firstAppRequest', 'An app\'s first request', 'The first signature a newly allowed app asks for')}
+        {rule('multiTransfer', 'Several transfers at once', 'More than one transfer in one transaction')}
+        {rule('burst', 'Many requests quickly', '3 or more signing requests within 2 minutes', true)}
+      </Card>
 
-      <Text style={[styles.ruleTitle, { marginTop: 16 }]}>Wait before Approve</Text>
-      <View style={styles.choices}>
-        {WAIT_CHOICES.map((s) => (
-          <View key={s} style={styles.choice}>
-            <Button title={s === 0 ? 'None' : `${s} s`} kind={draft.waitSeconds === s ? 'primary' : 'secondary'} onPress={() => set({ waitSeconds: s })} disabled={busy} />
-          </View>
-        ))}
+      <SectionLabel>Wait before approving</SectionLabel>
+      <View style={styles.segment} accessibilityRole="radiogroup">
+        {WAIT_CHOICES.map((sec) => {
+          const selected = draft.waitSeconds === sec;
+          return (
+            <Pressable
+              key={sec}
+              accessibilityRole="radio"
+              accessibilityState={{ selected, disabled: busy }}
+              onPress={busy ? undefined : () => set({ waitSeconds: sec })}
+              style={[styles.segmentItem, selected && styles.segmentOn]}
+            >
+              <Text style={[styles.segmentText, selected && styles.segmentTextOn]}>{sec === 0 ? 'No wait' : `${sec} s`}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Text style={[styles.ruleTitle, { marginTop: 16 }]}>Trusted receivers</Text>
+      <SectionLabel>Trusted receivers · rules skipped</SectionLabel>
       <Text style={styles.small}>
         Transfers to these addresses (e.g. your own other wallets) skip the amount, new-receiver, token and NFT rules.
       </Text>
-      {draft.trusted.length === 0 ? <Body muted>None yet.</Body> : null}
-      {draft.trusted.map((a) => (
-        <View key={a} style={styles.trusted}>
-          <Text selectable style={styles.address}>{a}</Text>
-          <Button title="Remove" kind="secondary" disabled={busy} onPress={() => set({ trusted: draft.trusted.filter((x) => x !== a) })} />
-        </View>
-      ))}
+      <Card>
+        {draft.trusted.length === 0 ? (
+          <Text style={[styles.small, styles.padded]}>None yet.</Text>
+        ) : draft.trusted.map((a, i) => (
+          <ListRow
+            key={a}
+            title={groupAddress(a)}
+            last={i === draft.trusted.length - 1}
+            right={(
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${a}`}
+                disabled={busy}
+                onPress={() => set({ trusted: draft.trusted.filter((x) => x !== a) })}
+                style={styles.remove}
+              >
+                <Text style={styles.removeText}>Remove</Text>
+              </Pressable>
+            )}
+          />
+        ))}
+      </Card>
       <Field
         label="Add an address"
         value={newTrusted}
@@ -202,7 +219,7 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
         placeholder="klv1…"
         error={trustedError}
       />
-      <Button title="Add" kind="secondary" onPress={addTrusted} disabled={busy || !newTrusted.trim()} />
+      <Button title="Add trusted receiver" kind="secondary" onPress={addTrusted} disabled={busy || !newTrusted.trim()} />
 
       {relaxing ? (
         <>
@@ -217,7 +234,9 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
             onChangeText={(t) => { setPassword(t); pw.clearMessage(); }}
           />
         </>
-      ) : null}
+      ) : (
+        <Body muted style={styles.note}>Making it stricter saves straight away. Relaxing a rule asks for your password.</Body>
+      )}
       {done ? <Notice kind="info">{done}</Notice> : null}
       <Button
         title={pw.busy ? 'Checking…' : 'Save'}
@@ -226,7 +245,7 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
         disabled={!changed || amountBad || (relaxing && (!password || pw.wait > 0))}
       />
       <Button title={changed ? 'Back without saving' : 'Back'} kind="secondary" onPress={onDone} disabled={pw.busy} />
-      <Body muted style={{ marginTop: 12 }}>
+      <Body muted style={styles.note}>
         The Signer has no internet, so it can't know your balance or prices: amounts are in KLV. The history it uses
         (receivers and apps you've signed for) stays on this phone.
       </Body>
@@ -236,18 +255,25 @@ export default function SigningRulesScreen({ walletAddress, onDone }) {
 }
 
 const styles = StyleSheet.create({
-  rule: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
-    borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  ruleText: { flex: 1, paddingRight: 12 },
-  ruleTitle: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  amount: { paddingHorizontal: 16, paddingBottom: 12 },
+  dim: { opacity: 0.5 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
   small: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  padded: { padding: 16 },
   choices: { flexDirection: 'row', marginHorizontal: -4 },
   choice: { flex: 1, paddingHorizontal: 4 },
-  trusted: {
-    backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12,
-    padding: 12, marginVertical: 6,
+  segment: {
+    flexDirection: 'row', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 14, padding: 5,
   },
-  address: { color: colors.accent, fontSize: 14, fontFamily: 'monospace' },
+  segmentItem: { flex: 1, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  segmentOn: { backgroundColor: colors.accent },
+  segmentText: { color: colors.muted, fontSize: 14 },
+  segmentTextOn: { color: colors.accentText, fontWeight: '600' },
+  remove: {
+    minHeight: 40, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  removeText: { color: colors.dangerText, fontSize: 13 },
+  note: { marginTop: 12 },
 });

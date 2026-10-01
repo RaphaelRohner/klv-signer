@@ -1,5 +1,5 @@
 /*
- * BiometricSetting.js — the "Fingerprint or face" switch on the Home screen
+ * BiometricSetting.js — the "Fingerprint or face" switch (Settings screen)
  * ========================================================================
  *
  * Lets you choose whether the Signer may use your fingerprint or face as a
@@ -16,9 +16,9 @@
  */
 
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
-import { Body, Button, Field, Notice, colors } from './ui.js';
+import { Body, Button, Field, ListRow, Notice } from './ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { PASSWORD_REFRESH_DAYS } from '../security/biometricPolicy.js';
 
@@ -27,43 +27,36 @@ export default function BiometricSetting() {
   const [asking, setAsking] = useState(false);
   const b = pw.biometric;
 
-  return (
-    <View style={styles.wrap}>
-      <Text style={styles.heading}>Fingerprint or face</Text>
-      {pw.message && !asking ? <Notice kind="danger">{pw.message}</Notice> : null}
+  // What the grey line under "Fingerprint or face" says.
+  const subtitle = b.enabled && !b.supported
+    ? 'On, but this phone has no fingerprint or secure face unlock set up right now'
+    : b.enabled
+      ? `Password still needed after a restart and every ${PASSWORD_REFRESH_DAYS} days`
+      : !b.supported
+        ? 'Not available: no strong fingerprint or face unlock on this phone'
+        : 'Unlock and approve without typing your password';
 
-      {b.enabled && !b.supported ? (
-        <>
-          <Body>
-            On, but not usable right now: this phone has no fingerprint or secure face unlock set up at the moment.
-            Set one up again in Android's settings, or switch this off.
-          </Body>
-          <Button title="Switch off" kind="secondary" onPress={() => pw.disableBiometric()} />
-        </>
-      ) : b.enabled ? (
-        <>
-          <Body>
-            <Text style={styles.on}>On.</Text> You can unlock and approve with your fingerprint or face. Your password
-            always works too, and is asked after a phone restart and at least once every {PASSWORD_REFRESH_DAYS} days.
-          </Body>
-          <Button title="Switch off" kind="secondary" onPress={() => pw.disableBiometric()} />
-        </>
-      ) : !b.supported ? (
-        <Body muted>
-          This phone has no fingerprint or secure face unlock set up, so the Signer uses your password only. (Android
-          only allows "strong" fingerprint or face checks to protect keys. Most face unlocks don't qualify.)
-        </Body>
-      ) : asking ? (
-        <EnableForm pw={pw} onDone={() => setAsking(false)} />
-      ) : (
-        <>
-          <Body muted>
-            Off. Switch it on to unlock and approve with your fingerprint or face instead of typing your password.
-            The password always keeps working.
-          </Body>
-          <Button title="Switch on" kind="secondary" onPress={() => setAsking(true)} />
-        </>
-      )}
+  function onToggle(on) {
+    pw.clearMessage();
+    if (on) setAsking(true);
+    else { setAsking(false); pw.disableBiometric(); }
+  }
+
+  return (
+    <View>
+      <ListRow
+        title="Fingerprint or face"
+        subtitle={subtitle}
+        toggle={{ value: b.enabled || asking, onChange: onToggle }}
+        disabled={!b.supported && !b.enabled}
+        last
+      />
+      {pw.message && !asking ? <View style={styles.inner}><Notice kind="danger">{pw.message}</Notice></View> : null}
+      {asking && !b.enabled ? (
+        <View style={styles.inner}>
+          <EnableForm pw={pw} onDone={() => setAsking(false)} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -103,7 +96,5 @@ function EnableForm({ pw, onDone }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginTop: 24 },
-  heading: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  on: { color: colors.accent, fontWeight: '700' },
+  inner: { paddingHorizontal: 16, paddingBottom: 12 },
 });

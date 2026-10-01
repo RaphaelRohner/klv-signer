@@ -485,6 +485,42 @@ No `npm install` needed. Build and install the new APK as usual.
 - F13 passed on 1 Oct 2026. Found and fixed on the way: the "try again in …"
   countdown (and some other yellow boxes) showed no text.
 
+
+**F14. The new look (1 Oct 2026)**
+
+**Needs `npm install` once** (new package: `qrcode-generator`, for the QR code).
+Then build and install as usual.
+
+- [ ] **App icon:** on the phone's home screen and app list, the Signer has the
+      new teal seal icon ("KLV SIGNER" around a check mark). Long-press it:
+      the round/rounded shape looks right, nothing cut off.
+- [ ] **Unlock:** the seal at the top, "Unlock KLV Signer", your short address,
+      fingerprint button, password box, and a small "Forgot your password?"
+      link at the bottom (tapping it shows the remove-wallet steps).
+- [ ] **Home:** address in groups of 4 (long-press still copies it), a green
+      "Ready to sign" box, your connected apps with "Last signature …", and
+      **Lock now** at the bottom. No test tools, no settings buttons any more.
+- [ ] **QR code:** Home → **Show QR code** → a black-and-white code. Scan it
+      with another phone's camera or the Klever app → it reads your klv1…
+      address exactly. **Done** goes back.
+- [ ] **Settings** (button top right on Home): sections Unlocking, Signing,
+      Connected apps, This phone, About, Danger zone. Check:
+      - Fingerprint switch off → on (asks password, then fingerprint) → off.
+      - Change password opens; Back returns to Settings.
+      - Extra confirmation shows a summary (e.g. "6 rules on · over 1 KLV")
+        and opens the rules screen; Back returns to Settings.
+      - About shows version 0.1.0 and the signing key 82:D0:9D…86:11.
+      - "Sign a test transaction" still opens the paste screen.
+- [ ] **Extra confirmation screen:** the amount box is visible even when
+      "Large amounts" is off (greyed); switching it on makes it usable. The wait
+      is three buttons (No wait / 10 s / 30 s).
+- [ ] **Approve:** from the Hub, send to a new address → the requesting app
+      at the top with a TESTNET badge, big amount, address in groups with the
+      **last 6 characters underlined** in teal, fee and transaction number side
+      by side, Reject and Approve side by side. Approve works.
+- [ ] The phone's **back button**: from Settings → Home; from the rules or
+      change-password screen → Settings.
+
 ---
 
 ## Good to know

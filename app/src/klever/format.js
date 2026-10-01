@@ -106,3 +106,8 @@ export function describeNote(bytes) {
 export function shortAddress(address) {
   return address.length > 20 ? `${address.slice(0, 10)}…${address.slice(-6)}` : address;
 }
+
+/** "klv1abcd…" → "klv1 abcd efgh …": groups of 4 characters, for comparing by eye. */
+export function groupAddress(address) {
+  return (String(address).match(/.{1,4}/g) || []).join(' ');
+}

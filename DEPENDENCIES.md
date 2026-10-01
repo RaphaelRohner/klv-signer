@@ -40,6 +40,7 @@ no internet permission, even a harmful package couldn't send anything out.
 | `expo-secure-store` | 57.0.4 | Saving the vault in Android's Keystore; fingerprint/face copy | Expo | locked |
 | `expo-crypto` | 57.0.3 | The phone's secure random numbers (new wallets, salts) | Expo | locked |
 | `expo-screen-capture` | 57.0.3 | Blocking screenshots on sensitive screens | Expo | locked |
+| `qrcode-generator` | 2.0.4 | Draws your address as a QR code (Receive screen). Added 1 Oct 2026: MIT, no dependencies, no install scripts, no network code; only ever sees the public address | Kazuhiko Arase | exact |
 
 "exact" = the version is written exactly in `package.json`; "locked" = fixed by
 `package-lock.json` (Expo's own packages follow the Expo version, 57).

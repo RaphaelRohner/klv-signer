@@ -1,5 +1,5 @@
 /*
- * ConnectedAppsList.js — the "Connected apps" section on the Home screen
+ * ConnectedAppsList.js — the "Connected apps" section (Settings screen)
  * ======================================================================
  *
  * Lists the apps you've allowed to send requests (see requests/appTrust.js),
@@ -8,8 +8,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Body, Button, colors } from './ui.js';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { Body, Card, ListRow, colors } from './ui.js';
 import { loadConnectedApps, saveConnectedApps } from '../storage/connectedApps.js';
 import { withoutApp } from '../requests/appTrust.js';
 
@@ -29,31 +29,42 @@ export default function ConnectedAppsList() {
   if (apps === null) return null;
   const entries = Object.entries(apps);
 
-  return (
-    <View style={styles.wrap}>
-      <Text style={styles.heading}>Connected apps</Text>
-      {entries.length === 0 ? (
+  if (entries.length === 0) {
+    return (
+      <Card style={styles.empty}>
         <Body muted>No apps yet. When an app asks to use the Signer, you'll be asked whether to allow it.</Body>
-      ) : (
-        entries.map(([packageName, app]) => (
-          <View key={packageName} style={styles.row}>
-            <Text style={styles.name}>{app.label}</Text>
-            <Text style={styles.mono}>{packageName}</Text>
-            <Button title="Remove" kind="secondary" onPress={() => remove(packageName)} />
-          </View>
-        ))
-      )}
-    </View>
+      </Card>
+    );
+  }
+  return (
+    <Card>
+      {entries.map(([packageName, app], i) => (
+        <ListRow
+          key={packageName}
+          title={app.label}
+          subtitle={packageName}
+          last={i === entries.length - 1}
+          right={(
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${app.label}`}
+              onPress={() => remove(packageName)}
+              style={({ pressed }) => [styles.remove, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={styles.removeText}>Remove</Text>
+            </Pressable>
+          )}
+        />
+      ))}
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginTop: 24 },
-  heading: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  row: {
-    backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12,
-    padding: 12, marginBottom: 10,
+  empty: { padding: 16 },
+  remove: {
+    minHeight: 40, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
   },
-  name: { color: colors.text, fontSize: 16, fontWeight: '600' },
-  mono: { color: colors.muted, fontSize: 13, fontFamily: 'monospace' },
+  removeText: { color: colors.dangerText, fontSize: 13 },
 });

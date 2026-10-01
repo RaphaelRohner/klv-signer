@@ -76,3 +76,12 @@ export const WRONG_PASSWORD_POLICY = {
  * another app or turn off the screen, so you must enter your password again.
  */
 export const LOCK_WHEN_LEFT = true;
+
+// ---------------------------------------------------------------------------
+// The Signer's official signing key ("seal")
+// ---------------------------------------------------------------------------
+// SHA-256 fingerprint of the certificate genuine Signer APKs are signed with.
+// Shown in Settings → About, so you can compare it with the README and the
+// release notes. Must match OFFICIAL_FINGERPRINT in tools/release-check.mjs.
+export const OFFICIAL_SIGNING_KEY =
+  '82:D0:9D:D7:D3:27:A4:8D:DB:97:EE:05:FE:EC:0A:8C:F4:14:C4:81:7F:0F:B7:26:8B:8A:88:F0:25:7E:86:11';

@@ -6,7 +6,7 @@
     "scheme": "klvsigner",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": false
     },
@@ -52,6 +52,7 @@
         "projectId": "9c182657-9104-4a4e-9034-5fdb6f29588b"
       }
     },
-    "owner": "raphaelrohner"
+    "owner": "raphaelrohner",
+    "backgroundColor": "#121214"
   }
 }

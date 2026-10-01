@@ -15,6 +15,7 @@
     "expo-screen-capture": "~57.0.3",
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
+    "qrcode-generator": "2.0.4",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-nitro-modules": "0.37.1",

@@ -11,7 +11,7 @@
 
 import React from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NETWORK } from '../config.js';
@@ -28,7 +28,13 @@ export const colors = {
   accent: '#3FD1C6',
   accentText: '#0B0B0C',
   danger: '#FF6B5E',
+  dangerText: '#FF8A7F',   // red text on dark (easier to read than the pure red)
   warning: '#F2C14E',
+  raised: '#2A2722',       // small tiles, e.g. an app's letter
+  // Tinted boxes for messages (background, edge)
+  infoBg: '#16231F', infoEdge: '#22433D',
+  warningBg: '#2A2415', warningEdge: '#6B5622',
+  dangerBg: '#2E1A18', dangerEdge: '#6B2E28',
 };
 
 /**
@@ -68,12 +74,16 @@ export function Strong({ children }) {
  * kind: 'warning' (yellow), 'danger' (red) or 'info' (teal).
  */
 export function Notice({ kind = 'info', children }) {
-  const edge = kind === 'danger' ? colors.danger : kind === 'warning' ? colors.warning : colors.accent;
+  const tint = kind === 'danger'
+    ? { backgroundColor: colors.dangerBg, borderColor: colors.dangerEdge }
+    : kind === 'warning'
+      ? { backgroundColor: colors.warningBg, borderColor: colors.warningEdge }
+      : { backgroundColor: colors.infoBg, borderColor: colors.infoEdge };
   return (
     // accessibilityLiveRegion: screen readers (TalkBack) read the message out
     // when it appears, e.g. "Wrong password." ('assertive' for problems).
     <View
-      style={[styles.notice, { borderLeftColor: edge }]}
+      style={[styles.notice, tint]}
       accessibilityLiveRegion={kind === 'danger' ? 'assertive' : 'polite'}
     >
       {isPlainText(children) ? <Text style={styles.body}>{children}</Text> : children}
@@ -97,7 +107,7 @@ function isPlainText(children) {
  *   busy: shows a spinner and ignores taps (while something slow runs)
  *   disabled: greyed out and ignores taps
  */
-export function Button({ title, onPress, kind = 'primary', disabled, busy }) {
+export function Button({ title, onPress, kind = 'primary', disabled, busy, style }) {
   const inactive = disabled || busy;
   return (
     <Pressable
@@ -109,6 +119,7 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy }) {
         styles.button,
         kind === 'primary' ? styles.buttonPrimary : styles.buttonOutline,
         kind === 'danger' && { borderColor: colors.danger },
+        style,
         inactive && styles.buttonInactive,
         pressed && !inactive && styles.buttonPressed,
       ]}
@@ -120,7 +131,7 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy }) {
           style={[
             styles.buttonText,
             kind === 'primary' ? { color: colors.accentText } : { color: colors.text },
-            kind === 'danger' && { color: colors.danger },
+            kind === 'danger' && { color: colors.dangerText },
           ]}
         >
           {title}
@@ -193,12 +204,84 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
 export function NetworkBadge() {
   const isTest = NETWORK === 'testnet';
   return (
-    <View style={[styles.badge, { borderColor: isTest ? colors.warning : colors.danger }]}>
-      <Text style={[styles.badgeText, { color: isTest ? colors.warning : colors.danger }]}>
-        {isTest ? 'TESTNET · practice network' : 'MAINNET · real network'}
-      </Text>
+    <View
+      style={[styles.badge, { backgroundColor: isTest ? colors.warning : colors.danger }]}
+      accessibilityLabel={isTest ? 'Testnet, the practice network' : 'Mainnet, the real network'}
+    >
+      <Text style={styles.badgeText}>{isTest ? 'TESTNET' : 'MAINNET'}</Text>
     </View>
   );
+}
+
+/**
+ * ScreenHeader — the top line of a screen: an optional "‹ Back" button and a
+ * title, with room for something on the right (e.g. the network badge).
+ */
+export function ScreenHeader({ title, onBack, right }) {
+  return (
+    <View style={styles.header}>
+      {onBack ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} hitSlop={8} style={styles.back}>
+          <Text style={styles.backText}>‹</Text>
+        </Pressable>
+      ) : null}
+      <Text style={styles.headerTitle} accessibilityRole="header">{title}</Text>
+      {right || null}
+    </View>
+  );
+}
+
+/** Card — a rounded box that groups related things. */
+export function Card({ children, style }) {
+  return <View style={[styles.card, style]}>{children}</View>;
+}
+
+/** SectionLabel — small grey capitals above a group ("UNLOCKING"). */
+export function SectionLabel({ children, danger }) {
+  return <Text style={[styles.sectionLabel, danger && { color: colors.dangerText }]} accessibilityRole="header">{children}</Text>;
+}
+
+/**
+ * ListRow — one line inside a Card: a title, an optional grey line under it,
+ * and on the right either an on/off switch (`toggle`), a "›" (`onPress`), or
+ * anything you pass as `right`. `last` leaves out the divider line below.
+ */
+export function ListRow({ title, subtitle, onPress, toggle, right, last, disabled }) {
+  const content = (
+    <>
+      <View style={styles.rowText}>
+        <Text style={[styles.rowTitle, disabled && styles.dim]}>{title}</Text>
+        {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
+      </View>
+      {toggle ? (
+        <Switch
+          value={toggle.value}
+          onValueChange={toggle.onChange}
+          disabled={disabled}
+          accessibilityLabel={title}
+          trackColor={{ false: colors.raised, true: colors.accent }}
+          thumbColor={toggle.value ? colors.accentText : colors.muted}
+        />
+      ) : null}
+      {right || null}
+      {onPress && !toggle && !right ? <Text style={styles.chevron}>›</Text> : null}
+    </>
+  );
+  const rowStyle = [styles.row, !last && styles.rowDivider];
+  if (onPress && !toggle) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
+        accessibilityState={{ disabled: !!disabled }}
+        onPress={disabled ? undefined : onPress}
+        style={({ pressed }) => [rowStyle, pressed && styles.buttonPressed]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+  return <View style={rowStyle}>{content}</View>;
 }
 
 /** Gap — empty vertical space between blocks. */
@@ -213,35 +296,50 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: 20, paddingBottom: 40, flexGrow: 1 },
-  title: { color: colors.text, fontSize: 26, fontWeight: '700', marginBottom: 12 },
+  title: { color: colors.text, fontSize: 24, fontWeight: '600', marginBottom: 12 },
   body: { color: colors.text, fontSize: 16, lineHeight: 23, marginBottom: 8 },
   muted: { color: colors.muted, fontSize: 14, lineHeight: 20 },
   strong: { fontWeight: '700' },
-  notice: {
-    backgroundColor: colors.card, borderLeftWidth: 4, borderRadius: 8, padding: 14, marginVertical: 10,
-  },
+  notice: { borderWidth: 1, borderRadius: 14, padding: 14, marginVertical: 8 },
   button: {
-    minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    minHeight: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 16, marginTop: 12,
   },
   buttonPrimary: { backgroundColor: colors.accent },
-  buttonOutline: { borderWidth: 1.5, borderColor: colors.border },
+  buttonOutline: { borderWidth: 1, borderColor: colors.border },
   buttonInactive: { opacity: 0.4 },
   buttonPressed: { opacity: 0.75 },
   buttonText: { fontSize: 16, fontWeight: '600' },
   fieldWrap: { marginVertical: 8 },
   inputRow: { flexDirection: 'row', alignItems: 'center' },
-  reveal: { paddingHorizontal: 12, paddingVertical: 12, marginLeft: 6 },
-  revealText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
-  label: { color: colors.muted, fontSize: 14, marginBottom: 6 },
+  reveal: {
+    minWidth: 64, minHeight: 50, marginLeft: 8, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10,
+  },
+  revealText: { color: colors.accent, fontSize: 14, fontWeight: '600' },
+  label: { color: colors.muted, fontSize: 13, marginBottom: 6 },
   input: {
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 10,
-    color: colors.text, fontSize: 16, paddingHorizontal: 12, paddingVertical: 12,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12,
+    color: colors.text, fontSize: 16, paddingHorizontal: 14, minHeight: 50, paddingVertical: 12,
   },
   inputMultiline: { minHeight: 130, textAlignVertical: 'top' },
   error: { color: colors.danger, fontSize: 14, marginTop: 6 },
-  badge: {
-    alignSelf: 'flex-start', borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 16,
+  badge: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  badgeText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, color: colors.background, fontFamily: 'monospace' },
+  header: { flexDirection: 'row', alignItems: 'center', minHeight: 48, marginBottom: 12 },
+  back: { width: 44, height: 44, marginLeft: -10, alignItems: 'center', justifyContent: 'center' },
+  backText: { color: colors.text, fontSize: 34, lineHeight: 38, marginTop: -4 },
+  headerTitle: { flex: 1, color: colors.text, fontSize: 20, fontWeight: '600' },
+  card: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 16, marginVertical: 6 },
+  sectionLabel: {
+    color: colors.muted, fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase',
+    marginTop: 18, marginBottom: 4, marginHorizontal: 4,
   },
-  badgeText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, paddingHorizontal: 16, paddingVertical: 12 },
+  rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  rowText: { flex: 1, paddingRight: 12 },
+  rowTitle: { color: colors.text, fontSize: 15 },
+  rowSubtitle: { color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  chevron: { color: colors.muted, fontSize: 24, lineHeight: 26 },
+  dim: { opacity: 0.45 },
 });

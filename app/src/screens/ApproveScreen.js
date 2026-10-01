@@ -47,6 +47,7 @@ import {
   ADDRESS_ENDING_LENGTH, WAIT_CHOICES, endingMatches, reasonsForExtraConfirmation, receiversToConfirm, withRequest, withSigned,
 } from '../security/extraConfirmation.js';
 import { loadHistory, loadRules, saveHistory } from '../storage/signingRules.js';
+import { groupAddress } from '../klever/format.js';
 
 /**
  * @param {object} props
@@ -163,20 +164,24 @@ export default function ApproveScreen({
 
   return (
     <Screen>
+      {/* Who is asking, and on which network */}
+      <View style={styles.requester}>
+        <View style={styles.letter}><Text style={styles.letterText}>{(requester.name || '?').slice(0, 1).toUpperCase()}</Text></View>
+        <View style={styles.flex}>
+          <Text style={styles.requestFrom}>Request from</Text>
+          <Text style={styles.value} numberOfLines={2}>{requester.name}</Text>
+          <Text style={styles.small} numberOfLines={1}>{requester.detail}</Text>
+        </View>
+        <View
+          style={[styles.netBadge, { backgroundColor: reading.network === 'mainnet' ? colors.danger : colors.warning }]}
+          accessibilityLabel={`Network: ${NETWORKS[reading.network].label}`}
+        >
+          <Text style={styles.netBadgeText}>{reading.network === 'mainnet' ? 'MAINNET' : 'TESTNET'}</Text>
+        </View>
+      </View>
+
       <Title>Approve this transaction?</Title>
       <DeviceWarning findings={deviceFindings} compact />
-
-      {/* Who is asking */}
-      <Row label="Requested by">
-        <Text style={styles.value}>{requester.name}</Text>
-        <Text style={styles.small}>{requester.detail}</Text>
-      </Row>
-
-      <Row label="Network">
-        <Text style={[styles.value, { color: reading.network === 'mainnet' ? colors.danger : colors.warning }]}>
-          {NETWORKS[reading.network].label}
-        </Text>
-      </Row>
 
       {several ? (
         <Notice kind="warning">This transaction contains {reading.transfers.length} transfers. Check every one.</Notice>
@@ -188,15 +193,24 @@ export default function ApproveScreen({
           <Text style={styles.cardLabel}>{several ? `Transfer ${i + 1}: send` : 'Send'}</Text>
           <Text style={styles.amount}>{t.text}</Text>
           {t.note ? <Text style={styles.small}>{t.note}</Text> : null}
-          <Text style={[styles.cardLabel, { marginTop: 10 }]}>To</Text>
-          {/* In groups of 4 characters, easier to compare by eye. */}
-          <Text style={styles.address}>{groupAddress(t.to)}</Text>
+          <View style={styles.cardDivider} />
+          <Text style={styles.cardLabel}>To</Text>
+          {/* In groups of 4 characters, easier to compare by eye. When the
+              ending must be typed, those last characters are underlined. */}
+          <AddressText address={t.to} markEnding={needExtra} />
         </View>
       ))}
 
-      <Row label="Network fee">
-        <Text style={styles.value}>{reading.fee}</Text>
-      </Row>
+      <View style={styles.tiles}>
+        <View style={styles.tile}>
+          <Text style={styles.tileLabel}>Network fee</Text>
+          <Text style={styles.tileValue}>{reading.fee}</Text>
+        </View>
+        <View style={styles.tile}>
+          <Text style={styles.tileLabel}>Transaction no.</Text>
+          <Text style={styles.tileValue}>{reading.nonce.toString()}</Text>
+        </View>
+      </View>
 
       {/* Notes are text the requesting app wrote. Boxed and labelled, so a
           note can't pass itself off as part of the Signer's own screen. */}
@@ -206,13 +220,6 @@ export default function ApproveScreen({
           <Text numberOfLines={8} style={[styles.noteText, !n.readable && { color: colors.muted }]}>{n.text}</Text>
         </View>
       ))}
-
-      <Row label="From">
-        <Text style={styles.small}>Your wallet · transaction number {reading.nonce.toString()}</Text>
-      </Row>
-      <Row label="Fingerprint">
-        <Text selectable style={styles.small}>{reading.hashHex}</Text>
-      </Row>
 
       <Body muted style={{ marginTop: 8 }}>
         Signing is final: once the app sends it to the network, it can't be undone. If anything here is not what
@@ -238,8 +245,8 @@ export default function ApproveScreen({
               ) : null}
               <Body muted>
                 Compare with the full address above, type the last {ADDRESS_ENDING_LENGTH} characters
-                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'}, then approve with your password.
-                (You chose these rules under Home → Extra confirmation settings.)
+                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (underlined), then approve with your password.
+                (You chose these rules under Settings → Extra confirmation.)
               </Body>
             </Notice>
           ) : null}
@@ -275,50 +282,86 @@ export default function ApproveScreen({
             editable={!pw.busy && pw.wait === 0}
             onChangeText={(value) => { setPassword(value); pw.clearMessage(); }}
           />
-          <Button
-            title={pw.busy ? 'Signing…'
-              : !deviceChecked || extra === null ? 'Checking…'
-                : waitLeft > 0 ? `Approve possible in ${waitLeft} s` : 'Approve and sign'}
-            onPress={approve}
-            busy={pw.busy}
-            disabled={!password || pw.wait > 0 || !deviceChecked || !ready}
-          />
+          <View style={styles.buttons}>
+            <Button title="Reject" kind="danger" onPress={onRejected} disabled={pw.busy} style={styles.half} />
+            <Button
+              title={pw.busy ? 'Signing…'
+                : !deviceChecked || extra === null ? 'Checking…'
+                  : waitLeft > 0 ? `Approve in ${waitLeft} s` : 'Approve'}
+              onPress={approve}
+              busy={pw.busy}
+              disabled={!password || pw.wait > 0 || !deviceChecked || !ready}
+              style={styles.half}
+            />
+          </View>
         </>
       )}
-      <Button title="Reject" kind="danger" onPress={onRejected} disabled={pw.busy} />
+      {blocked ? <Button title="Reject" kind="danger" onPress={onRejected} disabled={pw.busy} /> : null}
+      <Text selectable style={styles.fingerprint}>Transaction fingerprint: {reading.hashHex}</Text>
     </Screen>
   );
 }
 
-/** Row — a small grey label with its value underneath. */
-function Row({ label, children }) {
+/**
+ * AddressText — the address in groups of 4; with `markEnding`, its last
+ * characters (the ones you type for the extra confirmation) are underlined.
+ */
+function AddressText({ address, markEnding }) {
+  const grouped = groupAddress(address);
+  if (!markEnding) return <Text style={styles.address}>{grouped}</Text>;
+  // Where the last ADDRESS_ENDING_LENGTH real characters start in the grouped text.
+  let count = 0;
+  let cut = grouped.length;
+  while (cut > 0 && count < ADDRESS_ENDING_LENGTH) {
+    cut -= 1;
+    if (grouped[cut] !== ' ') count += 1;
+  }
   return (
-    <View style={styles.row}>
-      <Text style={styles.cardLabel}>{label}</Text>
-      {children}
-    </View>
+    <Text style={styles.address}>
+      {grouped.slice(0, cut)}
+      <Text style={styles.ending}>{grouped.slice(cut)}</Text>
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { marginVertical: 8 },
-  card: {
-    backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12,
-    padding: 14, marginVertical: 8,
+  flex: { flex: 1 },
+  requester: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderColor: colors.border,
+    borderWidth: 1, borderRadius: 14, padding: 12, marginBottom: 14,
   },
-  cardLabel: { color: colors.muted, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  amount: { color: colors.text, fontSize: 26, fontWeight: '700' },
-  value: { color: colors.text, fontSize: 17, fontWeight: '600' },
-  address: { color: colors.accent, fontSize: 15, fontFamily: 'monospace' },
-  small: { color: colors.muted, fontSize: 13, fontFamily: 'monospace' },
+  letter: {
+    width: 40, height: 40, borderRadius: 10, backgroundColor: colors.raised, alignItems: 'center',
+    justifyContent: 'center', marginRight: 12,
+  },
+  letterText: { color: colors.warning, fontSize: 17, fontWeight: '600' },
+  requestFrom: { color: colors.muted, fontSize: 12 },
+  netBadge: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginLeft: 8 },
+  netBadgeText: { color: colors.background, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, fontFamily: 'monospace' },
+  card: {
+    backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 16,
+    padding: 18, marginVertical: 8,
+  },
+  cardDivider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: 12 },
+  cardLabel: { color: colors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
+  amount: { color: colors.text, fontSize: 30, fontWeight: '700' },
+  value: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  address: { color: colors.text, fontSize: 15, lineHeight: 24, fontFamily: 'monospace' },
+  ending: { color: colors.accent, textDecorationLine: 'underline', fontWeight: '700' },
+  small: { color: colors.muted, fontSize: 12, fontFamily: 'monospace' },
+  tiles: { flexDirection: 'row', marginVertical: 4, marginHorizontal: -5 },
+  tile: {
+    flex: 1, marginHorizontal: 5, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12,
+  },
+  tileLabel: { color: colors.muted, fontSize: 12, marginBottom: 3 },
+  tileValue: { color: colors.text, fontSize: 14, fontFamily: 'monospace' },
+  buttons: { flexDirection: 'row', marginHorizontal: -5 },
+  half: { flex: 1, marginHorizontal: 5 },
+  fingerprint: { color: colors.muted, fontSize: 11, fontFamily: 'monospace', textAlign: 'center', marginTop: 16 },
   noteBox: {
-    borderColor: colors.border, borderWidth: 1, borderStyle: 'dashed', borderRadius: 8,
-    padding: 10, marginVertical: 8,
+    borderColor: '#5A5548', borderWidth: 1, borderStyle: 'dashed', borderRadius: 12,
+    padding: 12, marginVertical: 8,
   },
   noteText: { color: colors.text, fontSize: 15 },
 });
 
-/** "klv1abcd…" → "klv1 abcd efgh …": groups of 4 characters, for comparing by eye. */
-export function groupAddress(address) {
-  return String(address).match(/.{1,4}/g).join(' ');
-}

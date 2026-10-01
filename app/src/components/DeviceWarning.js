@@ -35,7 +35,7 @@ export default function DeviceWarning({ findings, compact }) {
       <Notice kind={blocked ? 'danger' : 'warning'}>
         <Body>
           <Strong>{blocked ? 'Signing is switched off on this phone:' : 'This phone may not be safe for a wallet:'}</Strong>{' '}
-          {titles}. Details on the Home screen.
+          {titles}. Details in Settings → This phone.
         </Body>
       </Notice>
     );
