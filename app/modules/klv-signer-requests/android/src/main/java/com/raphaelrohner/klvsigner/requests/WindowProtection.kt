@@ -3,7 +3,7 @@
  * ======================================================================
  *
  * Applied to the Signer's window whenever it comes to the front (see
- * KlvSignerRequestsModule.kt). Three protections, all built into Android:
+ * KlvSignerRequestsModule.kt). Four protections, all built into Android:
  *
  *   1. HIDE OTHER APPS' OVERLAYS (Android 12+)
  *      Other apps can draw floating windows over everything ("display over
@@ -25,6 +25,10 @@
  *      the screen reader TalkBack) can read or use it. Android 16 enforces
  *      this more strictly.
  *
+ *   4. NO AUTOFILL (added 1 Oct 2026)
+ *      Password managers (Google's, Samsung Pass …) never fill in, suggest
+ *      or offer to save anything typed in the Signer.
+ *
  * Everything is set on the window's top view, so it covers every Signer
  * screen at once. None of it changes anything for you in normal use.
  */
@@ -34,6 +38,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.view.View
+import android.view.autofill.AutofillManager
 
 object WindowProtection {
 
@@ -68,7 +73,20 @@ object WindowProtection {
       accessibilitySensitive = true
     }
 
+    // 4. No autofill, anywhere in the Signer (1 Oct 2026). Marking the whole
+    //    window "not important for autofill, nor anything inside it" means
+    //    password managers (e.g. Google's) never fill in, suggest or offer to
+    //    save anything typed in the Signer, including the app password.
+    //    Any autofill session already started for this window is cancelled.
+    decor.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+    try {
+      activity.getSystemService(AutofillManager::class.java)?.cancel()
+    } catch (e: Exception) {
+      // Never let a protection crash the app.
+    }
+
     return mapOf(
+      "autofillOff" to (decor.importantForAutofill == View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS),
       "overlaysHidden" to overlaysHidden,
       "obscuredTapsIgnored" to decor.filterTouchesWhenObscured,
       "accessibilitySensitive" to accessibilitySensitive,
