@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NETWORK } from '../config.js';
 import { addressGroups } from '../klever/format.js';
+import { cancelAutofill } from '../../modules/klv-signer-requests/index.js';
 
 // ---------------------------------------------------------------------------
 // Colours: dark background like the Hub, one teal accent, red for danger
@@ -202,6 +203,11 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
           secureTextEntry={!!secret}
           {...privacy}
           {...rest}
+          // Each focus and keystroke ends any password-manager session (see
+          // cancelAutofill in modules/klv-signer-requests), so nothing typed
+          // here is ever offered for saving.
+          onFocus={(e) => { cancelAutofill(); if (rest.onFocus) rest.onFocus(e); }}
+          onChangeText={(t) => { cancelAutofill(); if (rest.onChangeText) rest.onChangeText(t); }}
         />
         {secret ? (
           <Pressable

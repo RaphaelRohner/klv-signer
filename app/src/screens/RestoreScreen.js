@@ -25,6 +25,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { cancelAutofill } from '../../modules/klv-signer-requests/index.js';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { isValidRecoveryPhrase, walletFromPhrase, wipeBytes } from '../crypto/wallet.js';
@@ -119,8 +120,8 @@ export default function RestoreScreen({ onRestored, onBack }) {
                 style={[styles.box, looksWrong && styles.boxWrong]}
                 value={word}
                 editable={!foundAddress}
-                onChangeText={(text) => onType(index, text)}
-                onFocus={() => setFocused(index)}
+                onChangeText={(text) => { cancelAutofill(); onType(index, text); }}
+                onFocus={() => { cancelAutofill(); setFocused(index); }}
                 onBlur={() => setFocused(null)}
                 onSubmitEditing={() => boxes.current[index + 1]?.focus()}
                 returnKeyType={index < wordCount - 1 ? 'next' : 'done'}

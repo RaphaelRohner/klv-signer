@@ -17,6 +17,8 @@
  *                                 to the front.
  *   getElapsedRealtime()        → milliseconds since the phone started (can't
  *                                 be changed by the user; for waiting times).
+ *   cancelAutofill()            → ends any password-manager autofill session
+ *                                 for the Signer's window, saving nothing.
  *   hasSigningCertificate(p, c) → was app p ever signed with certificate c?
  *   getBootCount()              → how many times the phone has started up.
  *                                 The fingerprint/face option asks for the
@@ -86,6 +88,22 @@ class KlvSignerRequestsModule : Module() {
     // changed in Settings, so wrong-password waiting times can't be skipped.
     Function("getElapsedRealtime") {
       android.os.SystemClock.elapsedRealtime().toDouble()
+    }
+
+    // Ends Android's autofill "session" for the Signer's window without
+    // saving anything. Called whenever you type or move between screens, so
+    // a password manager never gets to the point of asking "Save password?"
+    // (marking the window as not-for-autofill alone didn't stop Google's).
+    Function("cancelAutofill") {
+      val activity = appContext.currentActivity
+      activity?.runOnUiThread {
+        try {
+          activity.getSystemService(android.view.autofill.AutofillManager::class.java)?.cancel()
+        } catch (e: Exception) {
+          // Never let this crash the app.
+        }
+      }
+      activity != null
     }
 
     // Was this app ever signed with this certificate (SHA-256 hex)? Covers

@@ -75,6 +75,19 @@ export function getElapsedRealtime() {
   }
 }
 
+/**
+ * Ends Android's autofill session for the Signer's window, without saving
+ * anything (so a password manager never asks "Save password?"). Safe to call
+ * often; does nothing in tests.
+ */
+export function cancelAutofill() {
+  try {
+    if (native) native.cancelAutofill();
+  } catch {
+    // ignore
+  }
+}
+
 /** How many times the phone has started up (-1 if unknown, e.g. in tests). */
 export function getBootCount() {
   return native ? native.getBootCount() : -1;

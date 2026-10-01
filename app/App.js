@@ -80,7 +80,8 @@ import StorageProblemScreen from './src/screens/StorageProblemScreen.js';
 
 // Requests from other apps (Stage 3)
 import {
-  addClosedListener, addRequestListener, completeRequest, getDeviceSecurity, getPendingRequest, hasSigningCertificate, protectWindow,
+  addClosedListener, addRequestListener, cancelAutofill, completeRequest, getDeviceSecurity, getPendingRequest,
+  hasSigningCertificate, protectWindow,
 } from './modules/klv-signer-requests/index.js';
 import {
   DEVICE_CHECK_FAILED, describeDeviceSecurity, isSigningBlocked, SIGNING_BLOCKED_TEXT,
@@ -340,6 +341,9 @@ export default function App() {
     const active = AppState.addEventListener('change', (state) => { if (state === 'active') check(); });
     return () => { arrived.remove(); closed.remove(); active.remove(); };
   }, [beginRequest, clearRequest]);
+
+  // Every screen change ends any password-manager autofill session (nothing saved).
+  useEffect(() => { cancelAutofill(); }, [screen]);
 
   // --- Lock automatically when you leave the app ------------------------------
   // AppState tells us when the app goes to the background (you switched apps,
