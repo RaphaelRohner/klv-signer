@@ -53,8 +53,9 @@ installing updates until a new, re-keyed Signer is announced.
 6. **GitHub release** (repository → Releases → Draft a new release):
    - Tag: `v0.2.0` (the version), title "KLV Signer 0.2.0 (testnet preview)".
    - Upload `klv-signer-0.2.0.apk` and `klv-signer-0.2.0.apk.sha256`.
-   - Notes: what changed, the checksum, the official key fingerprint, and
-     "testnet only, no independent audit yet".
+   - Notes: what changed, the checksum, the official key fingerprint,
+     "testnet only, no independent audit yet", and the "Before you start"
+     text from the README (as is, own risk, only funds you could afford to lose).
    - Tick **Set as a pre-release** while it's testnet.
 7. **Announce** (Klever forum) with a link to the release, never to a file
    hosted anywhere else.

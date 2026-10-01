@@ -542,6 +542,19 @@ Then build and install as usual.
       you come back (on purpose: leaving it always locks).
 - F14 passed completely on 1 Oct 2026.
 
+
+**F15. "Before you start" (risks and terms)**
+
+No `npm install` needed.
+
+- [ ] Settings → About → **Before you start** → the four points (as is, own
+      risk; only funds you could afford to lose; harder to steal, not
+      impossible; scams; your responsibility) → **Done** returns to Settings.
+- [ ] Leave the Signer from that screen → locked, like every other screen.
+- [ ] (Only if you set up a test wallet again some day) Welcome → Create or
+      Restore → the same screen first, with **I understand** to continue and
+      Back to return.
+
 ---
 
 ## Good to know

@@ -69,6 +69,7 @@ import UnlockScreen from './src/screens/UnlockScreen.js';
 import HomeScreen from './src/screens/HomeScreen.js';
 import SettingsScreen from './src/screens/SettingsScreen.js';
 import ReceiveScreen from './src/screens/ReceiveScreen.js';
+import TermsScreen from './src/screens/TermsScreen.js';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen.js';
 import SigningRulesScreen from './src/screens/SigningRulesScreen.js';
 import PasteTransactionScreen from './src/screens/PasteTransactionScreen.js';
@@ -95,12 +96,12 @@ import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
  * The screens that are only reachable while the Signer is unlocked. Leaving
  * the app on any of them locks it (and forgets any transaction in progress).
  */
-const UNLOCKED_SCREENS = ['home', 'settings', 'receive', 'pasteTx', 'approve', 'signed', 'changePassword', 'signingRules'];
+const UNLOCKED_SCREENS = ['home', 'settings', 'receive', 'termsInfo', 'pasteTx', 'approve', 'signed', 'changePassword', 'signingRules'];
 
 /** The screens used while answering a request from another app. */
 const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestProblem'];
 /** Wallet setup screens: leaving the Signer here forgets the recovery words. */
-const SETUP_SCREENS = ['showPhrase', 'confirmPhrase', 'restore', 'setPassword'];
+const SETUP_SCREENS = ['terms', 'showPhrase', 'confirmPhrase', 'restore', 'setPassword'];
 
 /**
  * previousCertStillValid — the app's stored certificate isn't its current one,
@@ -395,6 +396,8 @@ export default function App() {
       confirmPhrase: () => setScreen('showPhrase'),
       setPassword: () => setScreen(setupOrigin === 'create' ? 'confirmPhrase' : 'restore'),
       settings: () => { setHomeNotice(''); setScreen('home'); },
+      terms: backToWelcome,
+      termsInfo: () => setScreen('settings'),
       receive: () => setScreen('home'),
       // The rules screen asks "Save your changes?" first if something isn't saved.
       signingRules: () => (rulesBackRef.current ? rulesBackRef.current() : setScreen('settings')),
@@ -460,17 +463,27 @@ export default function App() {
         return (
           <WelcomeScreen
             deviceFindings={deviceFindings}
-            onCreate={() => {
-              setDraftPhrase(createRecoveryPhrase(RECOVERY_PHRASE_WORDS));
-              setSetupOrigin('create');
-              setScreen('showPhrase');
-            }}
-            onRestore={() => {
-              setSetupOrigin('restore');
-              setScreen('restore');
+            // Both ways in go through "Before you start" first (TermsScreen.js).
+            onCreate={() => { setSetupOrigin('create'); setScreen('terms'); }}
+            onRestore={() => { setSetupOrigin('restore'); setScreen('terms'); }}
+          />
+        );
+      case 'terms':
+        return (
+          <TermsScreen
+            onBack={backToWelcome}
+            onAccept={() => {
+              if (setupOrigin === 'create') {
+                setDraftPhrase(createRecoveryPhrase(RECOVERY_PHRASE_WORDS));
+                setScreen('showPhrase');
+              } else {
+                setScreen('restore');
+              }
             }}
           />
         );
+      case 'termsInfo':
+        return <TermsScreen onBack={() => setScreen('settings')} />;
       case 'showPhrase':
         return <ShowPhraseScreen phrase={draftPhrase} onContinue={() => setScreen('confirmPhrase')} onBack={backToWelcome} />;
       case 'confirmPhrase':
@@ -536,6 +549,7 @@ export default function App() {
             onChangePassword={() => { setHomeNotice(''); setScreen('changePassword'); }}
             onSigningRules={() => { setHomeNotice(''); setScreen('signingRules'); }}
             onSignTest={() => { if (!signingBlocked) setScreen('pasteTx'); }}
+            onTerms={() => setScreen('termsInfo')}
             onRemoved={afterRemoved}
           />
         );

@@ -12,6 +12,19 @@ their own app instead. The **Devikins Legacy Hub** is the first app that will us
 whole idea in plain English, with a build plan and a glossary.
 **Building and testing on your phone:** [TESTING.md](TESTING.md).
 
+## Before you start
+
+KLV Signer is free, open-source software, provided **as is**, without any
+warranty. You use it at your own risk.
+
+- **Only use wallets holding funds you could afford to lose.** No app can guarantee your funds are safe.
+- **The Signer makes it harder to steal from you.** It can't stop everything: a phone with harmful apps, or someone who tricks you into approving a transaction, can still cost you money.
+- **Most losses come from scams, not hacks.** Nobody legitimate will ever ask for your recovery words. Read every approval screen before you sign.
+- **You are responsible** for your recovery words, your password and your phone. If the words are lost, nobody can recover the wallet.
+
+The app shows the same text before a wallet is created or restored, and in
+Settings → About.
+
 ## Current status
 
 **Stage 1 — Wallet + password: done and tested on the phone (29 Sep 2026).**

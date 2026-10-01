@@ -10,8 +10,8 @@
  *   THIS PHONE    the phone-safety check results (root, bootloader, screen
  *                 lock, keyboard, accessibility apps), explained
  *   ABOUT         version, the official signing-key fingerprint, how long the
- *                 last unlock took (test info), and the developer tool
- *                 "Sign a test transaction"
+ *                 last unlock took (test info), "Before you start" (risks
+ *                 and terms), and the developer tool "Sign a test transaction"
  *   DANGER ZONE   Remove wallet from this phone
  */
 
@@ -51,9 +51,10 @@ export function describeRules(saved) {
  * @param {() => void} props.onSigningRules
  * @param {() => void} props.onSignTest
  * @param {() => void} props.onRemoved
+ * @param {() => void} props.onTerms   opens "Before you start" (risks and terms)
  */
 export default function SettingsScreen({
-  deviceFindings, unlockInfo, notice, onBack, onChangePassword, onSigningRules, onSignTest, onRemoved,
+  deviceFindings, unlockInfo, notice, onBack, onChangePassword, onSigningRules, onSignTest, onRemoved, onTerms,
 }) {
   const [rulesSummary, setRulesSummary] = useState('');
   const [showRemove, setShowRemove] = useState(false);
@@ -116,6 +117,7 @@ export default function SettingsScreen({
         ) : null}
       </Card>
       <Card>
+        <ListRow title="Before you start" subtitle="Risks and terms (free software, as is)" onPress={onTerms} />
         <ListRow
           title="Sign a test transaction"
           subtitle="Developer tool: paste a transaction by hand"
