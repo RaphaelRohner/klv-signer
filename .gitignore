@@ -2,3 +2,11 @@
 .DS_Store
 *.apk
 *.aab
+
+# The Signer's signing key ("seal") and its passwords: NEVER in git.
+# Kept only on this Mac + offline backups (see RELEASING.md).
+credentials.json
+credentials/
+*.jks
+*.keystore
+*.apk.sha256

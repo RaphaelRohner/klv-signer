@@ -83,15 +83,19 @@ source) would receive your requests. Before the first request, check the
 installed Signer's signing certificate against the official fingerprint:
 
 ```kotlin
-val official = hexToBytes("<official SHA-256 certificate fingerprint>")
+val official = hexToBytes("82D09DD7D327A48DDB97EE05FEEC0A8CF414C4817F0FB7268B8A88F0257E8611")
 val genuine = context.packageManager.hasSigningCertificate(
     "com.raphaelrohner.klvsigner", official, PackageManager.CERT_INPUT_SHA256)
 if (!genuine) { /* don't send requests; tell the user the Signer isn't the official one */ }
 ```
 
-The official fingerprint will be published with the first public release
-(README and release notes). Until then, test builds are signed with a
-development key and this check can't be relied on.
+The official fingerprint (SHA-256 of the Signer's signing certificate):
+
+`82:D0:9D:D7:D3:27:A4:8D:DB:97:EE:05:FE:EC:0A:8C:F4:14:C4:81:7F:0F:B7:26:8B:8A:88:F0:25:7E:86:11`
+
+It's also in the README and in every release's notes. If it ever changes,
+that will be announced loudly; until then, treat any other fingerprint as a
+fake Signer.
 
 ---
 

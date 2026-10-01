@@ -29,6 +29,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `HOW-IT-WORKS.md` | The plain-English guide: what the Signer does, why, and the build plan. |
 | `TESTING.md` | Step-by-step: build the APK, then test each feature on your phone. |
 | `REVIEW-2026-10.md` | The second (AI) review: what was checked, what was found, what was fixed and what's still open. |
+| `RELEASING.md` | How a release is made: the signing key, backups, the release check, publishing on GitHub. |
 | `SECURITY.md` | The common attacks on Android wallet apps, where the Signer stands against each, the planned fixes, and how to report a vulnerability privately. |
 | `SIGNER-PROTOCOL.md` | **For developers:** exactly how any Android app asks the Signer for an address or a signature, with examples. |
 | `DEPENDENCIES.md` | What the app is built from: every important add-on package, the review findings, and the checks to repeat before each release. |
@@ -60,6 +61,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | Android package | `com.raphaelrohner.klvsigner` | The app's permanent ID on Android. Never change it after installing, or Android treats it as a different app (and its stored wallet is gone). |
 | Network | testnet | Set in `app/src/config.js`. |
 | How apps ask | Android "ask another app for a result", screen `com.raphaelrohner.klvsigner.requests.SignRequestActivity` | Android tells the Signer which app is asking and returns the answer only to that app. See SIGNER-PROTOCOL.md. |
+| Signing key (SHA-256) | `82:D0:9D:D7:D3:27:A4:8D:DB:97:EE:05:FE:EC:0A:8C:F4:14:C4:81:7F:0F:B7:26:8B:8A:88:F0:25:7E:86:11` | The Signer's official "seal". A genuine Signer APK is always signed with this key. Check it before installing; client apps can check it too (SIGNER-PROTOCOL.md 2c). See RELEASING.md. |
 | Cloud backup | Off | The scrambled key never leaves the phone through Android backups. |
 | Expo version | SDK 57 | Same as the Hub. |
 | Minimum Android | 12 (API 31) | Older versions lack protections the Signer relies on (task hijacking fix, overlay blocking). |
