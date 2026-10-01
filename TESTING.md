@@ -450,6 +450,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 - [ ] Amount box: type `1,000` (or `1.000`) → "can be read two ways", with
       buttons **1 KLV** and **1000 KLV**; Save stays grey until you pick one.
       `12,5` → "= 12.5 KLV" (clear, no question).
+- F12 passed completely on 1 Oct 2026.
 
 ---
 
