@@ -523,6 +523,11 @@ Then build and install as usual.
       by side, Reject and Approve side by side. Approve works.
 - [ ] The phone's **back button**: from Settings → Home; from the rules or
       change-password screen → Settings.
+- [ ] **Locking:** open Settings, press the phone's Home button, open the
+      Signer again → it's locked (Unlock screen). Same from the QR screen.
+- [ ] **Copy or share** on Home → pick "Copy" (or just close the share
+      sheet) → you're back on Home, still unlocked. Open the share sheet again
+      and wait more than a minute before coming back → locked.
 
 ---
 

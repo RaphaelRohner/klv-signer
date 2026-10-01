@@ -37,8 +37,12 @@ import { isSigningBlocked } from '../security/deviceChecks.js';
  * @param {() => void} props.onLock
  * @param {() => void} props.onSettings   opens the Settings screen
  * @param {() => void} props.onReceive    opens the QR code screen
+ * @param {() => void} [props.onShareStart]  called just before the share sheet opens
+ *        (so leaving for it doesn't lock the Signer, see App.js SHARE_GRACE_MS)
  */
-export default function HomeScreen({ address, justCreated, notice, deviceFindings, deviceChecked = true, onLock, onSettings, onReceive }) {
+export default function HomeScreen({
+  address, justCreated, notice, deviceFindings, deviceChecked = true, onLock, onSettings, onReceive, onShareStart,
+}) {
   return (
     <Screen>
       <View style={styles.top}>
@@ -68,7 +72,7 @@ export default function HomeScreen({ address, justCreated, notice, deviceFinding
         <AddressBlocks address={address} />
         <View style={styles.buttonRow}>
           <Button title="Show QR code" kind="secondary" onPress={onReceive} style={styles.half} />
-          <Button title="Copy or share" kind="secondary" onPress={() => shareAddress(address)} style={styles.half} />
+          <Button title="Copy or share" kind="secondary" onPress={() => { if (onShareStart) onShareStart(); shareAddress(address); }} style={styles.half} />
         </View>
       </Card>
 
