@@ -43,7 +43,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard } from 'react-native';
+import { AppState, Keyboard } from 'react-native';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { getBootCount, getElapsedRealtime } from '../../modules/klv-signer-requests/index.js';
 import { isWeakerThan, lockKey, openVault, scramblingKeyFromPassword, WrongPasswordError } from '../crypto/vault.js';
@@ -108,9 +108,16 @@ export function usePasswordCheck() {
   const running = useRef(false);
 
   // Load the saved wrong-password counter and fingerprint setting when the screen opens.
+  // Read again whenever the Signer comes back to the front (e.g. after a
+  // visit to Android's settings), so the countdown always matches what's saved.
   useEffect(() => {
-    loadAttempts().then((a) => setAttempts(restartIfRebooted(a, clock()))).catch(() => setAttempts(FRESH_STATE));
+    const reload = () => loadAttempts()
+      .then((a) => setAttempts(restartIfRebooted(a, clock())))
+      .catch(() => setAttempts(FRESH_STATE));
+    reload();
     loadBiometricState().then(setBioState);
+    const sub = AppState.addEventListener('change', (s) => { if (s === 'active') reload(); });
+    return () => sub.remove();
   }, []);
 
   // Tick once a second, so a waiting-period countdown updates on screen.
@@ -119,7 +126,10 @@ export function usePasswordCheck() {
     return () => clearInterval(timer);
   }, []);
 
-  const wait = secondsLeft(attempts, { now, elapsed: getElapsedRealtime(), boot: bootCount });
+  // Exactly the same clock reading as the check itself uses (clock()), so the
+  // countdown on screen and the real wait can never disagree. `now` changes
+  // every second and makes the screen redraw.
+  const wait = now ? secondsLeft(attempts, clock()) : 0;
   const blockedReason = biometricBlockedReason(bioState, { now, bootCount });
   const biometric = {
     supported,
@@ -138,9 +148,12 @@ export function usePasswordCheck() {
   async function beginPasswordTry() {
     const c = clock();
     const before = restartIfRebooted(await loadAttempts(), c);
-    if (secondsLeft(before, c) > 0) {
+    const left = secondsLeft(before, c);
+    if (left > 0) {
       await saveAttempts(before).catch(() => {});
       setAttempts(before);
+      Keyboard.dismiss();
+      setMessage(`Still waiting: you can try again in ${formatWait(left)}.`);
       return { allowed: false };
     }
     const assumed = recordFailure(before, c);

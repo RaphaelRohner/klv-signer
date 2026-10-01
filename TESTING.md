@@ -437,18 +437,18 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       the right one + password → signed.
 - (30 Sep 2026: the steps above passed — first transfer extra, second
   normal with fingerprint, 2 KLV extra with ending + password. Continue here.)
-- [ ] Settings: choose **Wait 10 s**, save, send 2 KLV again → the button
+- [x] Settings: choose **Wait 10 s**, save, send 2 KLV again → the button
       counts down "Approve possible in 10 s".
       (Passed 1 Oct 2026 with 30 s. The countdown is on the Approve button at
       the bottom: scroll down to see it.)
-- [ ] Settings: switch **Large amounts** off → a note says it needs your
+- [x] Settings: switch **Large amounts** off → a note says it needs your
       password; wrong password → refused; right password → saved.
       (Passed 1 Oct 2026.)
-- [ ] Settings: add your own receiving test address as a **trusted
+- [x] Settings: add your own receiving test address as a **trusted
       receiver** (needs the password) → sending 2 KLV to it is normal again.
       (Passed 1 Oct 2026: approved with fingerprint.)
-- [ ] Optional: send to an address you've never used → "never sent to … before".
-- [ ] Amount box: type `1,000` (or `1.000`) → "can be read two ways", with
+- [x] Optional: send to an address you've never used → "never sent to … before".
+- [x] Amount box: type `1,000` (or `1.000`) → "can be read two ways", with
       buttons **1 KLV** and **1000 KLV**; Save stays grey until you pick one.
       `12,5` → "= 12.5 KLV" (clear, no question).
 - F12 passed completely on 1 Oct 2026.
@@ -457,11 +457,11 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
 
 No `npm install` needed. Build and install the new APK as usual.
 
-- [ ] Everyday use still works: unlock with fingerprint, send 0.1 KLV from
+- [x] Everyday use still works: unlock with fingerprint, send 0.1 KLV from
       the Hub to the usual address → approve with fingerprint → signed, and it
       arrives. (This also checks that the Hub still finds the Signer: the
       Signer now only accepts requests addressed to it by exact name.)
-- [ ] On the approval screen, the receiver address is shown in groups of
+- [x] On the approval screen, the receiver address is shown in groups of
       4 characters (`klv1 abcd efgh …`).
 - [ ] Changing the phone's clock doesn't skip a wait: **Lock now** → type a
       wrong password 5 times → "try again in 30 s". Leave the Signer, Android
