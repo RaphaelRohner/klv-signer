@@ -491,7 +491,7 @@ No `npm install` needed. Build and install the new APK as usual.
 **Needs `npm install` once** (new package: `qrcode-generator`, for the QR code).
 Then build and install as usual.
 
-- [ ] **App icon:** on the phone's home screen and app list, the Signer has the
+- [x] **App icon:** on the phone's home screen and app list, the Signer has the
       new teal seal icon ("KLV SIGNER" around a check mark), filling most of
       the icon, the lettering clear of both rings. Nothing cut off.
 - [ ] **Unlock:** the seal at the top, "Unlock KLV Signer", your short address,
@@ -531,9 +531,11 @@ Then build and install as usual.
       by side, Reject and Approve side by side. Approve works.
 - [ ] The phone's **back button**: from Settings → Home; from the rules or
       change-password screen → Settings.
-- [x] **No autofill, no learning:** typing a password anywhere in the Signer
+- [ ] **No autofill, no learning:** typing a password anywhere in the Signer
       shows no keyboard suggestions, no autofill and no "Save password?"
-      prompt; **Show** displays the password under the box. (Passed 1 Oct 2026.)
+      prompt; **Show** displays the password under the box. (Passed 1 Oct 2026,
+      except: Google still offered to save on Back from Extra confirmation,
+      with the amount as "username". Fixed in the next build; recheck that.)
 - [ ] **Locking:** open Settings, press the phone's Home button, open the
       Signer again → it's locked (Unlock screen). Same from the QR screen.
 - [ ] **Copy or share** on Home → pick "Copy" → the Signer is locked when
