@@ -85,3 +85,10 @@ export const LOCK_WHEN_LEFT = true;
 // release notes. Must match OFFICIAL_FINGERPRINT in tools/release-check.mjs.
 export const OFFICIAL_SIGNING_KEY =
   '82:D0:9D:D7:D3:27:A4:8D:DB:97:EE:05:FE:EC:0A:8C:F4:14:C4:81:7F:0F:B7:26:8B:8A:88:F0:25:7E:86:11';
+
+// ---------------------------------------------------------------------------
+// Screenshot protection
+// ---------------------------------------------------------------------------
+// The name under which App.js blocks screenshots and screen recording for the
+// whole Signer. Only ReceiveScreen.js (your QR code) lifts it while open.
+export const CAPTURE_KEY = 'klv-signer';

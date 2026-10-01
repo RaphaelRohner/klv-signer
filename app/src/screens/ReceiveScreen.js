@@ -9,13 +9,16 @@
  * The QR code holds ONLY the address, nothing secret. It's drawn by the
  * Signer itself, offline (klever/qr.js works out which squares are dark,
  * and we draw them as plain boxes).
- * Screenshots are allowed here (you may want to share your address).
+ * This is the only screen where screenshots are allowed (you may want to
+ * share your address); everywhere else App.js blocks them.
  */
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { allowScreenCaptureAsync, preventScreenCaptureAsync } from 'expo-screen-capture';
 import { StyleSheet, Text, View } from 'react-native';
 import { AddressBlocks, Body, Button, Card, Screen, ScreenHeader, colors } from '../components/ui.js';
 import { qrRuns } from '../klever/qr.js';
+import { CAPTURE_KEY } from '../config.js';
 
 /** Size of the QR code on screen (points). */
 const QR_SIZE = 260;
@@ -29,6 +32,13 @@ const QUIET = 3;
  */
 export default function ReceiveScreen({ address, onBack }) {
   const code = useMemo(() => qrRuns(address), [address]);
+
+  // The one screen where screenshots are allowed (to share your address).
+  // Blocked again the moment this screen closes.
+  useEffect(() => {
+    allowScreenCaptureAsync(CAPTURE_KEY).catch(() => {});
+    return () => { preventScreenCaptureAsync(CAPTURE_KEY).catch(() => {}); };
+  }, []);
   const cells = code.size + QUIET * 2;
   const unit = QR_SIZE / cells;
 

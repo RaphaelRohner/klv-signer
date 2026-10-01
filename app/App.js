@@ -51,9 +51,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, BackHandler, View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { preventScreenCaptureAsync } from 'expo-screen-capture';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { LOCK_WHEN_LEFT, NETWORK, PASSWORD_STRETCHING, RECOVERY_PHRASE_WORDS } from './src/config.js';
+import { CAPTURE_KEY, LOCK_WHEN_LEFT, NETWORK, PASSWORD_STRETCHING, RECOVERY_PHRASE_WORDS } from './src/config.js';
 import { createRecoveryPhrase, walletFromPhrase, wipeBytes } from './src/crypto/wallet.js';
 import { lockKey } from './src/crypto/vault.js';
 import { engineName } from './src/crypto/passwordKey.js';
@@ -346,6 +347,19 @@ export default function App() {
   // Every screen change ends any password-manager autofill session (nothing saved).
   useEffect(() => { cancelAutofill(); }, [screen]);
 
+  // --- No screenshots or screen recording, anywhere in the Signer ------------
+  // Switched on once, before anything but the blank loading screen is shown
+  // (so even a recording that's already running never catches a first frame
+  // of a real screen). Also hides the Signer in the app switcher preview.
+  // Only the QR code screen allows screenshots, so you can share your address
+  // (ReceiveScreen.js lifts it while that screen is open).
+  const [captureBlocked, setCaptureBlocked] = useState(false);
+  useEffect(() => {
+    preventScreenCaptureAsync(CAPTURE_KEY)
+      .catch(() => {})            // a phone where it fails still opens the app
+      .finally(() => setCaptureBlocked(true));
+  }, []);
+
   // --- Lock automatically when you leave the app ------------------------------
   // AppState tells us when the app goes to the background (you switched apps,
   // went to the home screen, or turned the screen off).
@@ -458,6 +472,9 @@ export default function App() {
 
   // --- Which screen to show ---------------------------------------------------------
   function renderScreen() {
+    // Nothing but the blank loading screen until screenshot/recording
+    // protection is switched on (see captureBlocked above).
+    if (!captureBlocked) return renderLoading();
     switch (screen) {
       case 'welcome':
         return (
@@ -630,12 +647,16 @@ export default function App() {
       case 'signed':
         return <SignedScreen result={signResult} onDone={() => { setSignResult(null); setScreen('home'); }} />;
       default: // 'loading'
-        return (
-          <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
-            <ActivityIndicator color={colors.accent} />
-          </View>
-        );
+        return renderLoading();
     }
+  }
+
+  function renderLoading() {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
   }
 
   return (

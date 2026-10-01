@@ -554,6 +554,13 @@ No `npm install` needed.
 - [ ] (Only if you set up a test wallet again some day) Welcome → Create or
       Restore → the same screen first, with **I understand** to continue and
       Back to return.
+- [ ] **Screenshots blocked everywhere:** try a screenshot on Unlock, Home and
+      Settings → blocked (black, or Android says it isn't allowed). On the
+      **QR code** screen → the screenshot works. Back on Home → blocked again.
+- [ ] The app switcher (square button) shows the Signer as a blank card.
+- [ ] Settings → About → **Share info for support** → the share sheet shows
+      a short text: version, Android, phone checks, extra confirmation summary,
+      signing key. No address, nothing secret. (The Signer locks, as always.)
 
 ---
 

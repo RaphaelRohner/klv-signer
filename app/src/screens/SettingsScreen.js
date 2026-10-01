@@ -11,12 +11,14 @@
  *                 lock, keyboard, accessibility apps), explained
  *   ABOUT         version, the official signing-key fingerprint, how long the
  *                 last unlock took (test info), "Before you start" (risks
- *                 and terms), and the developer tool "Sign a test transaction"
+ *                 and terms), "Share info for support" (plain text instead
+ *                 of screenshots, which the Signer blocks), and the
+ *                 developer tool "Sign a test transaction"
  *   DANGER ZONE   Remove wallet from this phone
  */
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, Share, StyleSheet, Text, View } from 'react-native';
 import {
   Body, Button, Card, ListRow, Notice, Screen, ScreenHeader, SectionLabel, Strong, colors,
 } from '../components/ui.js';
@@ -119,6 +121,11 @@ export default function SettingsScreen({
       <Card>
         <ListRow title="Before you start" subtitle="Risks and terms (free software, as is)" onPress={onTerms} />
         <ListRow
+          title="Share info for support"
+          subtitle="Version, phone checks and settings as text; no address, nothing secret. Opens the share sheet (the Signer locks)."
+          onPress={() => Share.share({ message: supportInfo(deviceFindings, rulesSummary) }).catch(() => {})}
+        />
+        <ListRow
           title="Sign a test transaction"
           subtitle="Developer tool: paste a transaction by hand"
           onPress={onSignTest}
@@ -135,6 +142,24 @@ export default function SettingsScreen({
       )}
     </Screen>
   );
+}
+
+/**
+ * supportInfo — a plain-text summary for asking for help (e.g. on the forum),
+ * instead of screenshots (which the Signer blocks). Contains NO address,
+ * keys, words or passwords: only the version, Android version, the phone
+ * check results and the extra-confirmation summary.
+ */
+export function supportInfo(findings, rulesSummary) {
+  return [
+    'KLV Signer support info',
+    `Version: ${appJson.expo.version} (${NETWORK})`,
+    `Android: ${Platform.OS === 'android' ? `API ${Platform.Version}` : Platform.OS}`,
+    `Phone checks: ${findings.length === 0 ? 'no problems found' : findings.map((f) => f.title).join('; ')}`,
+    `Extra confirmation: ${rulesSummary || 'unknown'}`,
+    `Expected signing key: ${OFFICIAL_SIGNING_KEY}`,
+    '(No address, keys, recovery words or passwords are included.)',
+  ].join('\n');
 }
 
 /** One line with a coloured dot in front. */
