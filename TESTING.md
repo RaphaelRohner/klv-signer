@@ -463,18 +463,19 @@ No `npm install` needed. Build and install the new APK as usual.
       Signer now only accepts requests addressed to it by exact name.)
 - [x] On the approval screen, the receiver address is shown in groups of
       4 characters (`klv1 abcd efgh …`).
-- [ ] Changing the phone's clock doesn't skip a wait: **Lock now** → type a
+- [x] Changing the phone's clock doesn't skip a wait: **Lock now** → type a
       wrong password 5 times → "try again in 30 s". Leave the Signer, Android
       Settings → Date & time → switch **automatic** off and set the time 1 hour
       later → back to the Signer → still waiting (about the same seconds as
       before, not zero). Then switch **automatic** time on again, and unlock
       with the right password once the wait is over.
-- [ ] **Show** on a password box: the letters appear, and the keyboard
+- [x] **Show** on a password box: the letters appear, and the keyboard
       shows no word suggestions while they're visible (on some keyboards it
       looks slightly different, e.g. no suggestion bar).
 - [ ] Network fee in the amount rule: Settings → **Large amounts** on, **1**
-      KLV, Save. Send an amount from the Hub that's just under 1 KLV, so
-      amount + network fee (shown on the approval screen) is over 1 → the
+      KLV, Save. Send **0.9999** KLV from the Hub to an address that is
+      **not** a trusted receiver (trusted ones skip this rule). The fee is
+      tiny (about 0.00025 KLV), but 0.9999 + fee is just over 1 → the
       yellow box says "… KLV (network fee included), more than your 1 KLV
       setting". Reject it. Then set Large amounts back as you like.
 - [ ] Leaving mid-request: start a send from the Hub, and when the approval
