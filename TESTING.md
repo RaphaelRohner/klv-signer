@@ -472,16 +472,18 @@ No `npm install` needed. Build and install the new APK as usual.
 - [x] **Show** on a password box: the letters appear, and the keyboard
       shows no word suggestions while they're visible (on some keyboards it
       looks slightly different, e.g. no suggestion bar).
-- [ ] Network fee in the amount rule: Settings → **Large amounts** on, **1**
+- [x] Network fee in the amount rule: Settings → **Large amounts** on, **1**
       KLV, Save. Send **0.9999** KLV from the Hub to an address that is
       **not** a trusted receiver (trusted ones skip this rule). The fee is
       tiny (about 0.00025 KLV), but 0.9999 + fee is just over 1 → the
       yellow box says "… KLV (network fee included), more than your 1 KLV
       setting". Reject it. Then set Large amounts back as you like.
-- [ ] Leaving mid-request: start a send from the Hub, and when the approval
+- [x] Leaving mid-request: start a send from the Hub, and when the approval
       screen shows, press the phone's Home button. Open the Hub again → it
       says you left without deciding (nothing signed). Open the Signer → it's
       locked or on the Unlock screen, not on the old approval.
+- F13 passed on 1 Oct 2026. Found and fixed on the way: the "try again in …"
+  countdown (and some other yellow boxes) showed no text.
 
 ---
 
