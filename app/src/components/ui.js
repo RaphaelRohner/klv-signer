@@ -11,7 +11,7 @@
 
 import React from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
+  ActivityIndicator, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NETWORK } from '../config.js';
@@ -47,10 +47,13 @@ export const colors = {
 export function Screen({ children, footer }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
-      {/* noExcludeDescendants: Android's autofill service ignores this whole screen. */}
+      {/* noExcludeDescendants: Android's autofill service ignores this whole screen.
+          behavior "padding" on Android too: the app draws edge to edge (Expo's
+          default), so Android no longer shrinks the screen for the keyboard by
+          itself. Without this, the keyboard covered the bottom save bar. */}
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         importantForAutofill="noExcludeDescendants"
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
