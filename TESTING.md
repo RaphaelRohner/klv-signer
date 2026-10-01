@@ -442,6 +442,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       the bottom: scroll down to see it.)
 - [ ] Settings: switch **Large amounts** off → a note says it needs your
       password; wrong password → refused; right password → saved.
+      (Passed 1 Oct 2026.)
 - [ ] Settings: add your own receiving test address as a **trusted
       receiver** (needs the password) → sending 2 KLV to it is normal again.
 - [ ] Optional: send to an address you've never used → "never sent to … before".
