@@ -445,6 +445,7 @@ apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
       (Passed 1 Oct 2026.)
 - [ ] Settings: add your own receiving test address as a **trusted
       receiver** (needs the password) → sending 2 KLV to it is normal again.
+      (Passed 1 Oct 2026: approved with fingerprint.)
 - [ ] Optional: send to an address you've never used → "never sent to … before".
 - [ ] Amount box: type `1,000` (or `1.000`) → "can be read two ways", with
       buttons **1 KLV** and **1000 KLV**; Save stays grey until you pick one.
