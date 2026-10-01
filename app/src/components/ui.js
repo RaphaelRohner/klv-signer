@@ -76,9 +76,19 @@ export function Notice({ kind = 'info', children }) {
       style={[styles.notice, { borderLeftColor: edge }]}
       accessibilityLiveRegion={kind === 'danger' ? 'assertive' : 'polite'}
     >
-      {typeof children === 'string' ? <Text style={styles.body}>{children}</Text> : children}
+      {isPlainText(children) ? <Text style={styles.body}>{children}</Text> : children}
     </View>
   );
+}
+
+/**
+ * Is this only text (and numbers)? E.g. `Try again in {waitText}.` arrives as
+ * several pieces, not one string. Text must sit inside a <Text>, or Android
+ * shows nothing (this hid the "try again in …" countdown until 1 Oct 2026).
+ */
+function isPlainText(children) {
+  const parts = React.Children.toArray(children);
+  return parts.length > 0 && parts.every((p) => typeof p === 'string' || typeof p === 'number');
 }
 
 /**
