@@ -494,18 +494,18 @@ Then build and install as usual.
 - [x] **App icon:** on the phone's home screen and app list, the Signer has the
       new teal seal icon ("KLV SIGNER" around a check mark), filling most of
       the icon, the lettering clear of both rings. Nothing cut off.
-- [ ] **Unlock:** the seal at the top, "Unlock KLV Signer", your short address,
+- [x] **Unlock:** the seal at the top, "Unlock KLV Signer", your short address,
       fingerprint button, password box, and a small "Forgot your password?"
       link at the bottom (tapping it shows the remove-wallet steps).
-- [ ] **Home:** address in little boxes (`klv1`, then 4, then boxes of 6), **Copy or share**
+- [x] **Home:** address in little boxes (`klv1`, then 4, then boxes of 6), **Copy or share**
       opens Android's share sheet (tap "Copy" there, paste it somewhere to
       check), a green
       "Ready to sign" box, your connected apps with "Last signature …", and
       **Lock now** at the bottom. No test tools, no settings buttons any more.
-- [ ] **QR code:** Home → **Show QR code** → a black-and-white code. Scan it
+- [x] **QR code:** Home → **Show QR code** → a black-and-white code. Scan it
       with another phone's camera or the Klever app → it reads your klv1…
       address exactly. **Done** goes back.
-- [ ] **Settings** (button top right on Home): sections Unlocking, Signing,
+- [x] **Settings** (button top right on Home): sections Unlocking, Signing,
       Connected apps, This phone, About, Danger zone. Check:
       - Fingerprint switch off → on (asks password, then fingerprint) → off.
       - Change password opens; Back returns to Settings.
@@ -513,10 +513,10 @@ Then build and install as usual.
         and opens the rules screen; Back returns to Settings.
       - About shows version 0.1.0 and the signing key 82:D0:9D…86:11.
       - "Sign a test transaction" still opens the paste screen.
-- [ ] **Extra confirmation screen:** the amount box is visible even when
+- [x] **Extra confirmation screen:** the amount box is visible even when
       "Large amounts" is off (greyed); switching it on makes it usable. The wait
       is three buttons (No wait / 10 s / 30 s).
-- [ ] **Saving there:** change anything → a bar fixed at the bottom says
+- [x] **Saving there:** change anything → a bar fixed at the bottom says
       "Unsaved changes" with **Save** (it stays put while you scroll).
       - Stricter change (e.g. NFTs on) → Save → "Saved." at the top.
       - Less strict (e.g. NFTs off) → Save → the bar opens: warning +
@@ -524,22 +524,23 @@ Then build and install as usual.
       - Change something, then tap Back (top left) or the phone's back
         button → "Save your changes before leaving?" with Discard / Keep
         editing / Save. Each does what it says.
-- [ ] **Approve:** from the Hub, send to a new address → the requesting app
+- [x] **Approve:** from the Hub, send to a new address → the requesting app
       at the top with a TESTNET badge, big amount, address in groups with the
       address in boxes (`klv1`, 4, then boxes of 6) and the **last box
       outlined in teal** (exactly the 6 characters to type), fee and transaction number side
       by side, Reject and Approve side by side. Approve works.
-- [ ] The phone's **back button**: from Settings → Home; from the rules or
+- [x] The phone's **back button**: from Settings → Home; from the rules or
       change-password screen → Settings.
 - [x] **No autofill, no learning:** typing a password anywhere in the Signer
       shows no keyboard suggestions, no autofill and no "Save password?"
       prompt; **Show** displays the password under the box. (Passed 1 Oct 2026
       after three rounds: per-box settings, the whole window, and finally
       ending any autofill session on every keystroke and screen change.)
-- [ ] **Locking:** open Settings, press the phone's Home button, open the
+- [x] **Locking:** open Settings, press the phone's Home button, open the
       Signer again → it's locked (Unlock screen). Same from the QR screen.
-- [ ] **Copy or share** on Home → pick "Copy" → the Signer is locked when
+- [x] **Copy or share** on Home → pick "Copy" → the Signer is locked when
       you come back (on purpose: leaving it always locks).
+- F14 passed completely on 1 Oct 2026.
 
 ---
 
