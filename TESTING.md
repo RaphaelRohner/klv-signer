@@ -497,7 +497,7 @@ Then build and install as usual.
 - [ ] **Unlock:** the seal at the top, "Unlock KLV Signer", your short address,
       fingerprint button, password box, and a small "Forgot your password?"
       link at the bottom (tapping it shows the remove-wallet steps).
-- [ ] **Home:** address in little boxes of 4 characters, **Copy or share**
+- [ ] **Home:** address in little boxes (`klv1`, then 4, then boxes of 6), **Copy or share**
       opens Android's share sheet (tap "Copy" there, paste it somewhere to
       check), a green
       "Ready to sign" box, your connected apps with "Last signature …", and
@@ -518,7 +518,8 @@ Then build and install as usual.
       is three buttons (No wait / 10 s / 30 s).
 - [ ] **Approve:** from the Hub, send to a new address → the requesting app
       at the top with a TESTNET badge, big amount, address in groups with the
-      **last 6 characters underlined** in teal, fee and transaction number side
+      address in boxes (`klv1`, 4, then boxes of 6) and the **last box
+      outlined in teal** (exactly the 6 characters to type), fee and transaction number side
       by side, Reject and Approve side by side. Approve works.
 - [ ] The phone's **back button**: from Settings → Home; from the rules or
       change-password screen → Settings.

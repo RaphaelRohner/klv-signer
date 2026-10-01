@@ -107,7 +107,22 @@ export function shortAddress(address) {
   return address.length > 20 ? `${address.slice(0, 10)}…${address.slice(-6)}` : address;
 }
 
-/** "klv1abcd…" → "klv1 abcd efgh …": groups of 4 characters, for comparing by eye. */
+/**
+ * addressGroups — a klv1… address cut into boxes for comparing by eye.
+ * Every Klever address is exactly 62 characters ("klv1" + 58), so it's cut
+ * as: "klv1", the next 4, then nine boxes of 6. The LAST box is then always
+ * exactly the 6 characters you type for the extra confirmation.
+ * Anything that isn't a normal address is cut into plain boxes of 4.
+ */
+export function addressGroups(address) {
+  const a = String(address);
+  if (a.length === 62 && a.startsWith('klv1')) {
+    return [a.slice(0, 4), a.slice(4, 8), ...(a.slice(8).match(/.{6}/g))];
+  }
+  return a.match(/.{1,4}/g) || [];
+}
+
+/** The same, as one line of text with spaces: "klv1 rr0k kwkv9v …". */
 export function groupAddress(address) {
-  return (String(address).match(/.{1,4}/g) || []).join(' ');
+  return addressGroups(address).join(' ');
 }

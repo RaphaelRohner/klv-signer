@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NETWORK } from '../config.js';
+import { addressGroups } from '../klever/format.js';
 
 // ---------------------------------------------------------------------------
 // Colours: dark background like the Hub, one teal accent, red for danger
@@ -285,16 +286,24 @@ export function ListRow({ title, subtitle, onPress, toggle, right, last, disable
 }
 
 /**
- * AddressBlocks — a klv1… address shown as little boxes of 4 characters,
- * easy to compare by eye. Screen readers get the address in one piece.
+ * AddressBlocks — a klv1… address shown as little boxes (see addressGroups
+ * in klever/format.js: "klv1", 4, then boxes of 6; the last box is the
+ * 6 characters typed for the extra confirmation). `markLast` outlines that
+ * last box in teal; `muted` shows the text in the normal colour instead of
+ * teal. Screen readers get the address in one piece.
  */
-export function AddressBlocks({ address }) {
-  const groups = String(address).match(/.{1,4}/g) || [];
+export function AddressBlocks({ address, markLast, muted }) {
+  const groups = addressGroups(address);
   return (
     <View style={styles.blocks} accessible accessibilityLabel={`Address ${address}`}>
-      {groups.map((g, i) => (
-        <View key={i} style={styles.block}><Text style={styles.blockText}>{g}</Text></View>
-      ))}
+      {groups.map((g, i) => {
+        const marked = markLast && i === groups.length - 1;
+        return (
+          <View key={i} style={[styles.block, marked && styles.blockMarked]}>
+            <Text style={[styles.blockText, muted && { color: colors.text }, marked && styles.blockTextMarked]}>{g}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -363,4 +372,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   blockText: { color: colors.accent, fontSize: 15, fontFamily: 'monospace' },
+  blockMarked: { borderColor: colors.accent, borderWidth: 2 },
+  blockTextMarked: { color: colors.accent, fontWeight: '700', textDecorationLine: 'underline' },
 });

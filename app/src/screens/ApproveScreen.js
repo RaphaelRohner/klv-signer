@@ -36,7 +36,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
-import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
+import { AddressBlocks, Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { signTransaction } from '../klever/signTransaction.js';
 import DeviceWarning from '../components/DeviceWarning.js';
@@ -47,7 +47,6 @@ import {
   ADDRESS_ENDING_LENGTH, WAIT_CHOICES, endingMatches, reasonsForExtraConfirmation, receiversToConfirm, withRequest, withSigned,
 } from '../security/extraConfirmation.js';
 import { loadHistory, loadRules, saveHistory } from '../storage/signingRules.js';
-import { groupAddress } from '../klever/format.js';
 
 /**
  * @param {object} props
@@ -195,9 +194,9 @@ export default function ApproveScreen({
           {t.note ? <Text style={styles.small}>{t.note}</Text> : null}
           <View style={styles.cardDivider} />
           <Text style={styles.cardLabel}>To</Text>
-          {/* In groups of 4 characters, easier to compare by eye. When the
-              ending must be typed, those last characters are underlined. */}
-          <AddressText address={t.to} markEnding={needExtra} />
+          {/* In little boxes, easier to compare by eye. When the ending must
+              be typed, the last box (exactly those 6 characters) is outlined. */}
+          <AddressBlocks address={t.to} markLast={needExtra} muted />
         </View>
       ))}
 
@@ -245,7 +244,7 @@ export default function ApproveScreen({
               ) : null}
               <Body muted>
                 Compare with the full address above, type the last {ADDRESS_ENDING_LENGTH} characters
-                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (underlined), then approve with your password.
+                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (the outlined box), then approve with your password.
                 (You chose these rules under Settings → Extra confirmation.)
               </Body>
             </Notice>
@@ -302,28 +301,6 @@ export default function ApproveScreen({
   );
 }
 
-/**
- * AddressText — the address in groups of 4; with `markEnding`, its last
- * characters (the ones you type for the extra confirmation) are underlined.
- */
-function AddressText({ address, markEnding }) {
-  const grouped = groupAddress(address);
-  if (!markEnding) return <Text style={styles.address}>{grouped}</Text>;
-  // Where the last ADDRESS_ENDING_LENGTH real characters start in the grouped text.
-  let count = 0;
-  let cut = grouped.length;
-  while (cut > 0 && count < ADDRESS_ENDING_LENGTH) {
-    cut -= 1;
-    if (grouped[cut] !== ' ') count += 1;
-  }
-  return (
-    <Text style={styles.address}>
-      {grouped.slice(0, cut)}
-      <Text style={styles.ending}>{grouped.slice(cut)}</Text>
-    </Text>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   requester: {
@@ -346,8 +323,6 @@ const styles = StyleSheet.create({
   cardLabel: { color: colors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
   amount: { color: colors.text, fontSize: 30, fontWeight: '700' },
   value: { color: colors.text, fontSize: 16, fontWeight: '600' },
-  address: { color: colors.text, fontSize: 15, lineHeight: 24, fontFamily: 'monospace' },
-  ending: { color: colors.accent, textDecorationLine: 'underline', fontWeight: '700' },
   small: { color: colors.muted, fontSize: 12, fontFamily: 'monospace' },
   tiles: { flexDirection: 'row', marginVertical: 4, marginHorizontal: -5 },
   tile: {
