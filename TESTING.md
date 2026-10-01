@@ -492,12 +492,14 @@ No `npm install` needed. Build and install the new APK as usual.
 Then build and install as usual.
 
 - [ ] **App icon:** on the phone's home screen and app list, the Signer has the
-      new teal seal icon ("KLV SIGNER" around a check mark). Long-press it:
-      the round/rounded shape looks right, nothing cut off.
+      new teal seal icon ("KLV SIGNER" around a check mark), filling most of
+      the icon, the lettering clear of both rings. Nothing cut off.
 - [ ] **Unlock:** the seal at the top, "Unlock KLV Signer", your short address,
       fingerprint button, password box, and a small "Forgot your password?"
       link at the bottom (tapping it shows the remove-wallet steps).
-- [ ] **Home:** address in groups of 4 (long-press still copies it), a green
+- [ ] **Home:** address in little boxes of 4 characters, **Copy or share**
+      opens Android's share sheet (tap "Copy" there, paste it somewhere to
+      check), a green
       "Ready to sign" box, your connected apps with "Last signature …", and
       **Lock now** at the bottom. No test tools, no settings buttons any more.
 - [ ] **QR code:** Home → **Show QR code** → a black-and-white code. Scan it

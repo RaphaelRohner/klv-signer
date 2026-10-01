@@ -8,13 +8,13 @@
  *
  * The QR code holds ONLY the address, nothing secret. It's drawn by the
  * Signer itself, offline (klever/qr.js works out which squares are dark,
- * and we draw them as plain boxes). Screenshots are allowed here (you may want to share your address).
+ * and we draw them as plain boxes).
+ * Screenshots are allowed here (you may want to share your address).
  */
 
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Body, Button, Card, Screen, ScreenHeader, colors } from '../components/ui.js';
-import { groupAddress } from '../klever/format.js';
+import { AddressBlocks, Body, Button, Card, Screen, ScreenHeader, colors } from '../components/ui.js';
 import { qrRuns } from '../klever/qr.js';
 
 /** Size of the QR code on screen (points). */
@@ -61,7 +61,7 @@ export default function ReceiveScreen({ address, onBack }) {
 
       <Card style={styles.card}>
         <Text style={styles.label}>Your address</Text>
-        <Text selectable style={styles.address}>{groupAddress(address)}</Text>
+        <AddressBlocks address={address} />
       </Card>
       <Body muted>Before someone sends you something, check together that the start and the end of the address match.</Body>
       <Button title="Done" kind="secondary" onPress={onBack} />
@@ -73,5 +73,4 @@ const styles = StyleSheet.create({
   qr: { alignSelf: 'center', backgroundColor: '#fff', borderRadius: 16, marginVertical: 16, overflow: 'hidden' },
   card: { padding: 16 },
   label: { color: colors.muted, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 },
-  address: { color: colors.accent, fontSize: 15, lineHeight: 24, fontFamily: 'monospace' },
 });

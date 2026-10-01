@@ -284,6 +284,21 @@ export function ListRow({ title, subtitle, onPress, toggle, right, last, disable
   return <View style={rowStyle}>{content}</View>;
 }
 
+/**
+ * AddressBlocks — a klv1… address shown as little boxes of 4 characters,
+ * easy to compare by eye. Screen readers get the address in one piece.
+ */
+export function AddressBlocks({ address }) {
+  const groups = String(address).match(/.{1,4}/g) || [];
+  return (
+    <View style={styles.blocks} accessible accessibilityLabel={`Address ${address}`}>
+      {groups.map((g, i) => (
+        <View key={i} style={styles.block}><Text style={styles.blockText}>{g}</Text></View>
+      ))}
+    </View>
+  );
+}
+
 /** Gap — empty vertical space between blocks. */
 export function Gap({ size = 16 }) {
   return <View style={{ height: size }} />;
@@ -342,4 +357,10 @@ const styles = StyleSheet.create({
   rowSubtitle: { color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 3 },
   chevron: { color: colors.muted, fontSize: 24, lineHeight: 26 },
   dim: { opacity: 0.45 },
+  blocks: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -3 },
+  block: {
+    margin: 3, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  blockText: { color: colors.accent, fontSize: 15, fontFamily: 'monospace' },
 });

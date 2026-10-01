@@ -5,8 +5,9 @@
  * Only what you need day to day (new layout, 1 Oct 2026):
  *   - the top line: "KLV Signer", the network badge and a Settings button,
  *   - one-off messages (e.g. "Password changed", "Your wallet is set up"),
- *   - your wallet address: in groups of 4 characters (long-press to copy),
- *     and "Show QR code" so another wallet can scan it to send to you,
+ *   - your wallet address: in little boxes of 4 characters, with "Show QR
+ *     code" (another wallet scans it to send to you) and "Copy or share"
+ *     (Android's share sheet, which includes "Copy"),
  *   - a status line: "Ready to sign", or a warning if the phone looks unsafe
  *     (details are on the Settings screen; on a rooted or unlocked phone
  *     signing is switched off),
@@ -20,9 +21,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Body, Button, Card, NetworkBadge, Notice, Screen, colors } from '../components/ui.js';
-import { groupAddress } from '../klever/format.js';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { AddressBlocks, Body, Button, Card, NetworkBadge, Notice, Screen, colors } from '../components/ui.js';
 import { loadConnectedApps } from '../storage/connectedApps.js';
 import { loadHistory } from '../storage/signingRules.js';
 import { isSigningBlocked } from '../security/deviceChecks.js';
@@ -65,9 +65,11 @@ export default function HomeScreen({ address, justCreated, notice, deviceFinding
       {/* The address: public, safe to share. */}
       <Card style={styles.addressCard}>
         <Text style={styles.label}>Your address · safe to share</Text>
-        <Text selectable style={styles.address} accessibilityLabel={`Your address: ${address}`}>{groupAddress(address)}</Text>
-        <Text style={styles.hint}>Long-press the address to copy it.</Text>
-        <Button title="Show QR code" kind="secondary" onPress={onReceive} />
+        <AddressBlocks address={address} />
+        <View style={styles.buttonRow}>
+          <Button title="Show QR code" kind="secondary" onPress={onReceive} style={styles.half} />
+          <Button title="Copy or share" kind="secondary" onPress={() => shareAddress(address)} style={styles.half} />
+        </View>
       </Card>
 
       <Status findings={deviceFindings} checked={deviceChecked} />
@@ -79,6 +81,14 @@ export default function HomeScreen({ address, justCreated, notice, deviceFinding
       <Button title="Lock now" onPress={onLock} />
     </Screen>
   );
+}
+
+/**
+ * Opens Android's share sheet with the address. It has a "Copy" option, so
+ * this also copies the address, without the Signer needing clipboard access.
+ */
+function shareAddress(address) {
+  Share.share({ message: address }).catch(() => {});
 }
 
 /** "Ready to sign", or what's wrong with the phone (details in Settings). */
@@ -175,8 +185,8 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.7 },
   addressCard: { padding: 18 },
   label: { color: colors.muted, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
-  address: { color: colors.accent, fontSize: 15, lineHeight: 24, fontFamily: 'monospace' },
-  hint: { color: colors.muted, fontSize: 12, marginTop: 8 },
+  buttonRow: { flexDirection: 'row', marginHorizontal: -5, marginTop: 4 },
+  half: { flex: 1, marginHorizontal: 5 },
   statusTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
   statusText: { color: colors.muted, fontSize: 13, lineHeight: 19, marginTop: 2 },
   apps: { marginTop: 16 },
