@@ -591,15 +591,16 @@ No `npm install` needed. Build and install the new APK as usual.
 
 No `npm install` needed. Build and install the new APK.
 
-- [ ] Settings → This phone → under the check results: **Where the lock on
+- [x] Settings → This phone → under the check results: **Where the lock on
       your stored wallet is kept** with one of: "In a separate security chip
       (StrongBox), the strongest kind" or "In the phone's secure area (TEE),
       separate from Android". (Note which one your phone shows.)
-- [ ] Home shows no new warning.
-- [ ] Settings → About → **Share info for support** → a new line "Wallet lock
+- [x] Home shows no new warning.
+- [x] Settings → About → **Share info for support** → a new line "Wallet lock
       kept: …" with the same words.
 - (Not testable on a normal phone: "Only in software" with a warning. The
   automatic tests cover it.)
+- F17 passed on 5 Oct 2026 (test phone: "In the phone's secure area (TEE)").
 
 ---
 
