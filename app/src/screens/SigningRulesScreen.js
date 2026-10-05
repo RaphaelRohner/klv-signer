@@ -253,7 +253,7 @@ export default function SigningRulesScreen({ walletAddress, onDone, backRef }) {
             value: amountOn,
             onChange: (on) => {
               if (on && !parseKlv(amountText)) setAmountText('100');
-              set({ klvThreshold: on ? (parseKlv(amountText) || 100000000n).toString() : null });
+              set({ klvThreshold: on ? (parseKlv(amountText) || 10000000000n).toString() : null }); // 10,000 KLV if empty
             },
           }}
           last
@@ -288,7 +288,8 @@ export default function SigningRulesScreen({ walletAddress, onDone, backRef }) {
         {rule('nfts', 'NFTs', 'Any NFT transfer')}
         {rule('firstAppRequest', 'An app\'s first request', 'The first signature a newly allowed app asks for')}
         {rule('multiTransfer', 'Several transfers at once', 'More than one transfer in one transaction')}
-        {rule('burst', 'Many requests quickly', '3 or more signing requests within 2 minutes', true)}
+        {rule('burst', 'Many requests quickly', '3 or more signing requests within 2 minutes')}
+        {rule('repeat', 'The same transfer again', 'Same receiver, token and amount as one you signed in the last hour (a possible double payment)', true)}
       </Card>
 
       <SectionLabel>Wait before approving</SectionLabel>
@@ -349,7 +350,7 @@ export default function SigningRulesScreen({ walletAddress, onDone, backRef }) {
         The Signer has no internet, so it can't know your balance or prices: amounts are in KLV. The history it uses
         (receivers and apps you've signed for) stays on this phone.
       </Body>
-      <Button title="Reset to recommended" kind="secondary" disabled={busy} onPress={() => { setDraft({ ...DEFAULT_RULES }); setAmountText(''); setDone(''); }} />
+      <Button title="Reset to recommended" kind="secondary" disabled={busy} onPress={() => { setDraft({ ...DEFAULT_RULES }); setAmountText(DEFAULT_RULES.klvThreshold ? formatKlv(DEFAULT_RULES.klvThreshold) : ''); setDone(''); }} />
     </Screen>
   );
 }

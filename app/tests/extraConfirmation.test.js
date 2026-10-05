@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEFAULT_RULES, EMPTY_HISTORY, reasonsForExtraConfirmation, isRelaxing, parseKlv, formatKlv,
+  DEFAULT_RULES, EMPTY_HISTORY, REPEAT_WINDOW_MS, RULE_SWITCHES, reasonsForExtraConfirmation, isRelaxing, parseKlv, formatKlv,
   groupMatches, pickConfirmGroup, CONFIRM_GROUP_LENGTH, receiversToConfirm, withRequest, withSigned, BURST_WINDOW_MS, receiverKey, checkRules, MAX_RECEIVERS,
   klvCandidates,
 } from '../src/security/extraConfirmation.js';
@@ -85,7 +85,8 @@ test('burst: the third request within 2 minutes', () => {
 
 test('history remembers receivers and apps after signing', () => {
   const h = withSigned(EMPTY_HISTORY, tx(klv(A, '1'), klv(B, '2')), 'com.x', NOW);
-  assert.deepEqual(ids(tx(klv(A, '1')), { ...DEFAULT_RULES, multiTransfer: false }, h, 'com.x'), []);
+  // (repeat off here: this checks that receivers are remembered; repeats are tested below)
+  assert.deepEqual(ids(tx(klv(A, '1')), { ...DEFAULT_RULES, multiTransfer: false, repeat: false }, h, 'com.x'), []);
   // Kept small: only the most recently used receivers
   let big = EMPTY_HISTORY;
   for (let i = 0; i < MAX_RECEIVERS + 20; i += 1) {
@@ -173,4 +174,34 @@ test('the box to type is a random MIDDLE box, never the last one (third review, 
   assert.equal(groupMatches(A, 2, 'kwkv9'), false);
   assert.equal(groupMatches(A, 9, 'yc8xas'), true);
   assert.equal(groupMatches(A, 9, 'v4a0cy'), false); // the ending no longer counts
+});
+
+test('new wallets start with the large-amount rule at 10,000 KLV (owner\'s decision, 5 Oct 2026)', () => {
+  assert.equal(DEFAULT_RULES.klvThreshold, parseKlv('10000').toString());
+  assert.deepEqual(ids(tx(klv(A, '10000'))), []); // exactly the limit: fine
+  assert.deepEqual(ids(tx(klv(A, '10000.000001'))), ['amount']);
+  assert.deepEqual(ids(tx(klv(A, '9999'))), []);
+});
+
+test('the same transfer again within an hour asks for the extra confirmation (double payment; third review, T6)', () => {
+  const first = tx(klv(A, '5'));
+  const after = withSigned(known, first, 'com.hub', NOW);
+  // 10 minutes later, same receiver/token/amount (a new transaction number = a new fingerprint):
+  const again = tx(klv(A, '5'));
+  const later = NOW + 10 * 60 * 1000;
+  assert.deepEqual(ids(again, DEFAULT_RULES, after, 'com.hub', later), ['repeat']);
+  assert.match(reasonsForExtraConfirmation(again, DEFAULT_RULES, after, { appId: 'com.hub', now: later })[0].text, /10 minutes ago/);
+  // A different amount, receiver or token: not a repeat.
+  assert.deepEqual(ids(tx(klv(A, '6')), DEFAULT_RULES, after, 'com.hub', later), []);
+  assert.deepEqual(ids(tx(klv(B, '5')), DEFAULT_RULES, after, 'com.hub', later), []);
+  // After the hour: not a repeat any more.
+  assert.deepEqual(ids(again, DEFAULT_RULES, after, 'com.hub', NOW + REPEAT_WINDOW_MS + 1), []);
+  // Trusted receivers count too (paying them twice is still paying twice).
+  assert.deepEqual(ids(again, { ...DEFAULT_RULES, trusted: [A] }, after, 'com.hub', later), ['repeat']);
+  // Switch it off: nothing; switching it off is "relaxing" (needs the password).
+  assert.deepEqual(ids(again, { ...DEFAULT_RULES, repeat: false }, after, 'com.hub', later), []);
+  assert.equal(isRelaxing(DEFAULT_RULES, { ...DEFAULT_RULES, repeat: false }), true);
+  assert.ok(RULE_SWITCHES.includes('repeat'));
+  // Old saved history without the new list still works.
+  assert.deepEqual(ids(again, DEFAULT_RULES, { ...known, signed: undefined }, 'com.hub', later), []);
 });

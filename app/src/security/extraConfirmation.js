@@ -54,13 +54,17 @@ export const WAIT_CHOICES = [0, 10, 30];
 /** The rules a new Signer starts with: helpful, not annoying. */
 export const DEFAULT_RULES = Object.freeze({
   version: 1,
-  klvThreshold: null,      // smallest units as text, e.g. "100000000" = 100 KLV; null = off
+  // Smallest units as text ("10000000000" = 10,000 KLV); null = off. On by
+  // default since 5 Oct 2026 at 10,000 KLV, about 10 US dollars then (owner's
+  // decision, third review T1). Only for new wallets: saved rules keep theirs.
+  klvThreshold: '10000000000',
   newReceiver: true,
   otherTokens: true,       // on since the second review: token amounts can't always be shown in whole tokens
   nfts: false,
   firstAppRequest: true,
   multiTransfer: true,
   burst: true,
+  repeat: true,            // the same transfer again within an hour (third review, T6)
   waitSeconds: 0,
   trusted: [],             // klv1… addresses
 });
@@ -68,7 +72,21 @@ export const DEFAULT_RULES = Object.freeze({
 // receivers: { last 16 characters of address: time last signed }
 // apps:      { app ID: time last signed }
 // recent:    [{ t: time, h: transaction fingerprint }]  (requests, for the burst rule)
-export const EMPTY_HISTORY = Object.freeze({ receivers: {}, apps: {}, recent: [] });
+// signed:    [{ t: time, k: "receiver|token|amount" }]  (signed transfers, for the repeat rule)
+export const EMPTY_HISTORY = Object.freeze({ receivers: {}, apps: {}, recent: [], signed: [] });
+
+/** The on/off rules (switches on the settings screen), in one place. */
+export const RULE_SWITCHES = Object.freeze(['newReceiver', 'otherTokens', 'nfts', 'firstAppRequest', 'multiTransfer', 'burst', 'repeat']);
+
+/** Repeat rule: the same transfer signed again within this time counts as a possible double payment. */
+export const REPEAT_WINDOW_MS = 60 * 60 * 1000;
+/** How many signed transfers are remembered for the repeat rule. */
+const MAX_SIGNED = 50;
+
+/** "receiver|token|amount": what makes two transfers "the same" for the repeat rule. */
+function transferKey(t) {
+  return `${receiverKey(t.to)}|${t.assetId}|${BigInt(t.amount).toString()}`;
+}
 
 /** How receivers are remembered (see top of file). */
 export function receiverKey(address) {
@@ -192,6 +210,24 @@ export function reasonsForExtraConfirmation(reading, rules, history, { appId, no
     reasons.push({ id: 'multiTransfer', text: `It contains ${reading.transfers.length} transfers in one go.` });
   }
 
+  if (r.repeat) {
+    // The same transfer (receiver, token, amount) signed within the last hour:
+    // e.g. an app says "it failed, approve again", but the first one went
+    // through. A new transaction number makes it a different transaction, so
+    // without this rule both would be paid. Trusted receivers count too.
+    const earlier = (h.signed || []).filter((e) => e && now - e.t >= 0 && now - e.t < REPEAT_WINDOW_MS);
+    const matches = reading.transfers
+      .map((t) => earlier.filter((e) => e.k === transferKey(t)).reduce((latest, e) => Math.max(latest, e.t), 0))
+      .filter((t) => t > 0);
+    if (matches.length > 0) {
+      const minutes = Math.max(1, Math.round((now - Math.max(...matches)) / 60000));
+      reasons.push({
+        id: 'repeat',
+        text: `You signed ${matches.length === reading.transfers.length && matches.length === 1 ? 'exactly this transfer' : 'the same transfer'} (same receiver, token and amount) ${minutes} minute${minutes === 1 ? '' : 's'} ago. If an app says the first one failed, check on Kleverscan first: it may have gone through, and this would pay twice.`,
+      });
+    }
+  }
+
   if (r.burst) {
     // Other requests in the last 2 minutes (the same transaction shown again doesn't count twice).
     const recent = (h.recent || []).filter((e) => e && e.h !== reading.hashHex && now - e.t >= 0 && now - e.t < BURST_WINDOW_MS);
@@ -258,7 +294,7 @@ export function groupMatches(address, index, typed) {
 export function isRelaxing(oldRules, newRules) {
   const o = { ...DEFAULT_RULES, ...(oldRules || {}) };
   const n = { ...DEFAULT_RULES, ...(newRules || {}) };
-  for (const key of ['newReceiver', 'otherTokens', 'nfts', 'firstAppRequest', 'multiTransfer', 'burst']) {
+  for (const key of RULE_SWITCHES) {
     if (o[key] && !n[key]) return true;
   }
   if (o.klvThreshold && (!n.klvThreshold || BigInt(n.klvThreshold) > BigInt(o.klvThreshold))) return true;
@@ -294,7 +330,11 @@ export function withSigned(history, reading, appId, now) {
   for (const t of reading.transfers) receivers[receiverKey(t.to)] = now;
   const apps = { ...(h.apps || {}) };
   if (appId) apps[appId] = now;
-  return { ...h, receivers: newest(receivers, MAX_RECEIVERS), apps: newest(apps, MAX_APPS) };
+  const signed = [
+    ...(h.signed || []).filter((e) => e && now - e.t >= 0 && now - e.t < REPEAT_WINDOW_MS),
+    ...reading.transfers.map((t) => ({ t: now, k: transferKey(t) })),
+  ].slice(-MAX_SIGNED);
+  return { ...h, receivers: newest(receivers, MAX_RECEIVERS), apps: newest(apps, MAX_APPS), signed };
 }
 
 /** Checks saved rules are well-formed (throws if not, so the Signer asks for the extra confirmation to be safe). */
@@ -303,7 +343,7 @@ export function checkRules(rules) {
   const ok = (r.klvThreshold === null || /^[1-9]\d{0,30}$/.test(String(r.klvThreshold)))
     && WAIT_CHOICES.includes(r.waitSeconds)
     && Array.isArray(r.trusted) && r.trusted.every((a) => typeof a === 'string')
-    && ['newReceiver', 'otherTokens', 'nfts', 'firstAppRequest', 'multiTransfer', 'burst'].every((k) => typeof r[k] === 'boolean');
+    && RULE_SWITCHES.every((k) => typeof r[k] === 'boolean');
   if (!ok) throw new Error('The saved extra-confirmation settings are damaged.');
   return r;
 }

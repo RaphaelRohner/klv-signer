@@ -31,7 +31,7 @@ import {
   DEVICE_CHECK_LIMIT, describeKeyStorage, isOfficialCopy, isSigningBlocked, SIGNING_BLOCKED_TEXT,
 } from '../security/deviceChecks.js';
 import { getDeviceSecurity } from '../../modules/klv-signer-requests/index.js';
-import { DEFAULT_RULES, formatKlv } from '../security/extraConfirmation.js';
+import { DEFAULT_RULES, RULE_SWITCHES, formatKlv } from '../security/extraConfirmation.js';
 import { loadRules } from '../storage/signingRules.js';
 import { NETWORK, OFFICIAL_SIGNING_KEY } from '../config.js';
 import appJson from '../../app.json';
@@ -39,7 +39,7 @@ import appJson from '../../app.json';
 /** "6 rules on · over 100 KLV · wait 10 s" — a short summary of the extra-confirmation rules. */
 export function describeRules(saved) {
   const r = { ...DEFAULT_RULES, ...(saved || {}) };
-  const on = ['newReceiver', 'otherTokens', 'nfts', 'firstAppRequest', 'multiTransfer', 'burst'].filter((k) => r[k]).length
+  const on = RULE_SWITCHES.filter((k) => r[k]).length
     + (r.klvThreshold ? 1 : 0);
   const parts = [on === 0 ? 'All rules off' : `${on} ${on === 1 ? 'rule' : 'rules'} on`];
   if (r.klvThreshold) parts.push(`over ${formatKlv(BigInt(r.klvThreshold))} KLV`);

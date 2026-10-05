@@ -685,6 +685,22 @@ No `npm install` needed. Build and install as usual.
 - F21 passed on 5 Oct 2026 for the random box (1, 2). The token/NFT notes (3) wait
   for testnet test assets; their texts are covered by the automatic tests.
 
+**F22. Large-amount default and "The same transfer again"**
+
+No `npm install` needed. Build and install as usual.
+
+- [ ] Settings → Extra confirmation: a new switch **The same transfer
+      again** at the bottom, on. (The large-amount rule stays as you saved
+      it; 10,000 KLV is the default only for new wallets and after **Reset to
+      recommended**, which now fills in 10,000 in the amount box. Your
+      current settings are only changed if you tap Save.)
+- [ ] From the Hub, send 0.1 KLV to a receiver you've sent to before →
+      approve. Then send exactly the same again (same receiver, 0.1 KLV) →
+      the extra confirmation appears: "You signed exactly this transfer …
+      N minutes ago … check on Kleverscan first". Reject it (or approve,
+      it's testnet).
+- [ ] Send 0.2 KLV instead → no repeat warning.
+
 ---
 
 ## Good to know

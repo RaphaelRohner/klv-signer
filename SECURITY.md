@@ -110,6 +110,8 @@ that affects a row above.
 | 5 Oct 2026 | Quick fixes from the third review: signing off when the phone check gets no answer or no startup-check state (fails closed); weak passwords refused; a test that the shipped build is testnet; no more "paste your phrase" tip, warning about the clipboard after a paste | 17 / 6 / 6 |
 | 5 Oct 2026 | Accessibility protection (third review, A1): fingerprint/face only while a risky accessibility app is on; "Allow this app?" needs the password or fingerprint. Accessibility abuse stays Partly (misleading overlays from such an app remain possible) | 17 / 6 / 6 |
 | 5 Oct 2026 | Approval screen (third review, T1/T2/T3/T9): the box to type is a random middle box (not the ending), token amounts say their number of digits, token/NFT transfers carry a royalty note, KLV-looking tickers say "NOT KLV" | 17 / 6 / 6 |
+| 5 Oct 2026 | Large-amount rule on by default for new wallets: over 10,000 KLV (about 10 US dollars) needs the extra confirmation | 17 / 6 / 6 |
+| 5 Oct 2026 | New rule "The same transfer again" (on by default): repeating a transfer signed within the last hour (same receiver, token, amount) needs the extra confirmation, against "it failed, approve again" double payments | 17 / 6 / 6 |
 
 ## Planned fixes (Stage 4)
 
