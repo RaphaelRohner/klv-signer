@@ -117,6 +117,9 @@ object DeviceSecurity {
       "internetPermission" to (context.checkSelfPermission(android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED),
       "signingCertificates" to ownSigningCertificates(context),
       "keyStorage" to walletKeyStorage(),
+      // Android version: from 14 (API 34) the Signer's screens are hidden
+      // from accessibility apps that aren't declared tools.
+      "sdkInt" to Build.VERSION.SDK_INT,
     )
   }
 
@@ -212,6 +215,9 @@ object DeviceSecurity {
           "label" to (service.resolveInfo.loadLabel(pm)?.toString() ?: serviceInfo.packageName),
           "cameWithPhone" to cameWithPhone(serviceInfo.applicationInfo),
           "isTool" to service.isAccessibilityTool,
+          // Installed from Google Play? (Known tools like TalkBack count as
+          // trusted only from there; see deviceChecks.js.)
+          "fromPlayStore" to (installedFrom(pm, serviceInfo.packageName) == PLAY_STORE),
         )
       }
       .distinctBy { it["package"] }

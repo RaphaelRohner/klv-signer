@@ -613,6 +613,7 @@ export default function App() {
           <ConnectAppScreen
             request={request}
             trust={requestTrust}
+            deviceFindings={deviceFindings}
             onAllow={async () => {
               const req = request;
               await saveConnectedApps(withApp(await loadConnectedApps(), req));

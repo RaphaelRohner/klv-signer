@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  describeDeviceSecurity, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED, isOfficialCopy,
+  describeDeviceSecurity, riskyAccessibilityApps, isFingerprintOnly, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED, isOfficialCopy,
   describeKeyStorage,
 } from '../src/security/deviceChecks.js';
 import { OFFICIAL_SIGNING_KEY } from '../src/config.js';
@@ -102,6 +102,7 @@ test('a keyboard you installed yourself is named in a warning', () => {
 test('apps with accessibility access are named, apps that came with the phone are not', () => {
   const f = findingsOf({
     ...SAFE,
+    sdkInt: 34, // Android 14: the Signer's screens are hidden from non-tool apps
     accessibilityApps: [
       { package: 'com.google.android.marvin.talkback', label: 'TalkBack', cameWithPhone: true, isTool: true },
       { package: 'x.cleaner', label: 'Super Cleaner', cameWithPhone: false, isTool: false },
@@ -147,4 +148,31 @@ test('no startup-check answer switches signing off (fails closed; third review, 
     assert.deepEqual(f.map((x) => x.id), ['bootUnknown'], String(missing));
     assert.equal(isSigningBlocked(f), true);
   }
+});
+
+test('accessibility apps that could press buttons switch the Signer to fingerprint-only (third review, A1)', () => {
+  const cleaner = { package: 'x.cleaner', label: 'Super Cleaner', cameWithPhone: false, isTool: false, fromPlayStore: true };
+  const fakeTool = { package: 'x.helper', label: 'Helper', cameWithPhone: false, isTool: true, fromPlayStore: false };
+  const talkbackPlay = { package: 'com.google.android.marvin.talkback', label: 'TalkBack', cameWithPhone: false, isTool: true, fromPlayStore: true };
+  const talkbackSideloaded = { ...talkbackPlay, fromPlayStore: false };
+
+  // Android 12/13 (or unknown version): any app you installed yourself can press buttons.
+  for (const sdkInt of [31, 33, undefined]) {
+    const f = findingsOf({ ...SAFE, sdkInt, accessibilityApps: [cleaner] });
+    assert.deepEqual(f.map((x) => x.id), ['accessibilityRisk'], String(sdkInt));
+    assert.equal(isFingerprintOnly(f), true);
+    assert.equal(isSigningBlocked(f), false); // fingerprint still works
+    assert.match(f[0].text, /Super Cleaner/);
+  }
+  // Android 14+: only apps that call themselves a tool can see the Signer's screens.
+  assert.deepEqual(riskyAccessibilityApps({ sdkInt: 34, accessibilityApps: [cleaner] }), []);
+  assert.deepEqual(riskyAccessibilityApps({ sdkInt: 34, accessibilityApps: [fakeTool] }), [fakeTool]);
+  assert.deepEqual(riskyAccessibilityApps({ sdkInt: 34, accessibilityApps: [{ ...cleaner, isTool: undefined }] }).length, 1);
+  // TalkBack from Google Play is trusted (no warning at all); a side-loaded "TalkBack" is not.
+  assert.deepEqual(ids({ ...SAFE, sdkInt: 33, accessibilityApps: [talkbackPlay] }), []);
+  assert.deepEqual(ids({ ...SAFE, sdkInt: 33, accessibilityApps: [talkbackSideloaded] }), ['accessibilityRisk']);
+  // Came with the phone: fine.
+  assert.deepEqual(ids({ ...SAFE, sdkInt: 33, accessibilityApps: [{ ...cleaner, cameWithPhone: true }] }), []);
+  assert.equal(isFingerprintOnly([]), false);
+  assert.equal(isFingerprintOnly(undefined), false);
 });

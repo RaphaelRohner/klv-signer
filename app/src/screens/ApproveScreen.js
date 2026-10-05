@@ -30,6 +30,14 @@
  * signature, the receivers and the app are remembered (on this phone only),
  * so they aren't "new" next time.
  *
+ * FINGERPRINT-ONLY MODE (third review, 5 Oct 2026)
+ * If an app with accessibility access is on that could press buttons here
+ * (security/deviceChecks.js, riskyAccessibilityApps), such an app could type
+ * the password and tap Approve. Then the password box is gone and only
+ * fingerprint/face can sign (Android's own prompt: no app can fake a
+ * finger). The extra confirmation still applies (typed address ending,
+ * wait), followed by the fingerprint instead of the password.
+ *
  * Screenshots are blocked here (the password can be shown with "Show").
  */
 
@@ -41,7 +49,9 @@ import { usePasswordCheck } from '../security/usePasswordCheck.js';
 import { signTransaction } from '../klever/signTransaction.js';
 import DeviceWarning from '../components/DeviceWarning.js';
 import BiometricButton from '../components/BiometricButton.js';
-import { isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
+import {
+  FINGERPRINT_ONLY_TEXT, isFingerprintOnly, isSigningBlocked, SIGNING_BLOCKED_TEXT,
+} from '../security/deviceChecks.js';
 import { NETWORKS } from '../klever/networks.js';
 import {
   ADDRESS_ENDING_LENGTH, WAIT_CHOICES, endingMatches, reasonsForExtraConfirmation, receiversToConfirm, withRequest, withSigned,
@@ -69,6 +79,11 @@ export default function ApproveScreen({
   // (e.g. if the result changed while Android's fingerprint prompt was open).
   const blockedRef = useRef(blocked);
   useEffect(() => { blockedRef.current = blocked; }, [blocked]);
+  // A risky accessibility app is on: fingerprint/face only (see top of file).
+  // Also kept in a ref, so the LATEST phone check decides at the last moment.
+  const fingerprintOnly = isFingerprintOnly(deviceFindings);
+  const fingerprintOnlyRef = useRef(fingerprintOnly);
+  useEffect(() => { fingerprintOnlyRef.current = fingerprintOnly; }, [fingerprintOnly]);
   usePreventScreenCapture('approve');
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
@@ -85,6 +100,8 @@ export default function ApproveScreen({
   const ready = extra !== null && endingsOk && waitLeft === 0;
   const needExtraRef = useRef(true); // until the rules are known, assume extra is needed
   useEffect(() => { needExtraRef.current = extra === null || needExtra; }, [extra, needExtra]);
+  const readyRef = useRef(false);
+  useEffect(() => { readyRef.current = ready; }, [ready]);
 
   // When the screen opens: check the rules against this Signer's own history,
   // then note this request (for the "many requests quickly" rule).
@@ -128,13 +145,25 @@ export default function ApproveScreen({
   /** Signs with the unlocked key, unless signing was switched off meanwhile. */
   function signWithKey(privateKey) {
     if (blockedRef.current) throw new Error(SIGNING_BLOCKED_TEXT);
-    if (!ready) throw new Error('The extra confirmation isn\'t complete.'); // second guard
+    if (!readyRef.current) throw new Error('The extra confirmation isn\'t complete.'); // second guard
     return signTransaction(reading, privateKey);
   }
 
-  /** Fingerprint/face path: only allowed when no extra confirmation is needed (checked again here). */
+  /** Password path: not while a risky accessibility app is on (checked again at the last moment). */
+  function signWithKeyPassword(privateKey) {
+    if (fingerprintOnlyRef.current) throw new Error(FINGERPRINT_ONLY_TEXT);
+    return signWithKey(privateKey);
+  }
+
+  /**
+   * Fingerprint/face path. Normally only when no extra confirmation is needed
+   * (that one asks for the password). In fingerprint-only mode, the extra
+   * confirmation is done first (address ending, wait), then the fingerprint.
+   */
   function signWithKeyBiometric(privateKey) {
-    if (needExtraRef.current) throw new Error('This transaction needs the extra confirmation with your password.');
+    if (needExtraRef.current && !fingerprintOnlyRef.current) {
+      throw new Error('This transaction needs the extra confirmation with your password.');
+    }
     return signWithKey(privateKey);
   }
 
@@ -155,8 +184,8 @@ export default function ApproveScreen({
   }
 
   async function approve() {
-    if (blocked || !deviceChecked || !ready) return; // the button is hidden/disabled then; this is a second guard
-    const result = await pw.check(password, signWithKey);
+    if (blocked || fingerprintOnly || !deviceChecked || !ready) return; // the button is hidden/disabled then; this is a second guard
+    const result = await pw.check(password, signWithKeyPassword);
     setPassword('');
     if (result.ok) await finish(result.value);
   }
@@ -244,7 +273,7 @@ export default function ApproveScreen({
               ) : null}
               <Body muted>
                 Compare with the full address above, type the last {ADDRESS_ENDING_LENGTH} characters
-                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (the outlined box), then approve with your password.
+                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (the outlined box), then approve with your {fingerprintOnly ? 'fingerprint or face' : 'password'}.
                 (You chose these rules under Settings → Extra confirmation.)
               </Body>
             </Notice>
@@ -264,16 +293,31 @@ export default function ApproveScreen({
             />
           )) : null}
 
-          {extra !== null && !needExtra ? (
+          {fingerprintOnly ? (
+            <Notice kind="warning">
+              <Body>{FINGERPRINT_ONLY_TEXT}</Body>
+              {pw.biometric.loaded && !pw.biometric.enabled ? (
+                <Body>
+                  <Strong>Fingerprint or face isn't switched on in the Signer</Strong> (Settings → Unlocking), so this
+                  can't be signed right now. Reject it, or switch the accessibility app off and try again.
+                </Body>
+              ) : null}
+            </Notice>
+          ) : null}
+          {extra !== null && (!needExtra || fingerprintOnly) ? (
             <BiometricButton
               pw={pw}
-              title="Approve with fingerprint or face"
+              title={waitLeft > 0 ? `Approve in ${waitLeft} s` : 'Approve with fingerprint or face'}
               prompt={several ? `Sign ${reading.transfers.length} transfers` : `Sign: send ${reading.transfers[0].text}`}
               withKey={signWithKeyBiometric}
               onDone={(result) => finish(result.value)}
-              disabled={!deviceChecked}
+              disabled={!deviceChecked || !ready}
             />
           ) : null}
+          {fingerprintOnly ? (
+            <Button title="Reject" kind="danger" onPress={onRejected} disabled={pw.busy} />
+          ) : (
+          <>
           <Field
             label="App password"
             value={password}
@@ -293,6 +337,8 @@ export default function ApproveScreen({
               style={styles.half}
             />
           </View>
+          </>
+          )}
         </>
       )}
       {blocked ? <Button title="Reject" kind="danger" onPress={onRejected} disabled={pw.busy} /> : null}

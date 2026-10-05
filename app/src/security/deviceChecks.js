@@ -53,6 +53,47 @@ export function describeKeyStorage(level) {
   }
 }
 
+/**
+ * Well-known accessibility tools for people who need them (screen reader,
+ * voice and switch control). Trusted only when installed from Google Play
+ * (or when they came with the phone).
+ */
+export const TRUSTED_ACCESSIBILITY_TOOLS = Object.freeze([
+  'com.google.android.marvin.talkback', // TalkBack, Select to Speak, Switch Access
+  'com.google.android.apps.accessibility.voiceaccess', // Voice Access
+  'com.samsung.android.accessibility.talkback', // Samsung's TalkBack
+]);
+
+const isTrustedTool = (a) => TRUSTED_ACCESSIBILITY_TOOLS.includes(a.package) && a.fromPlayStore === true;
+
+/**
+ * riskyAccessibilityApps — apps with accessibility access that could read
+ * AND press the Signer's screens (third review, A1). An app is fine if it
+ * came with the phone, or is a well-known tool from Google Play. On Android
+ * 14+ the Signer's screens are hidden from apps that don't declare
+ * themselves an accessibility tool, so only "tools" count there. Unknown
+ * details count as risky.
+ */
+export function riskyAccessibilityApps(report) {
+  if (!report) return [];
+  const android14 = Number(report.sdkInt) >= 34;
+  return (report.accessibilityApps || []).filter((a) => !a.cameWithPhone
+    && !isTrustedTool(a)
+    && (!android14 || a.isTool !== false));
+}
+
+/**
+ * isFingerprintOnly — true when password signing (and allowing apps with the
+ * password) is switched off because of a risky accessibility app.
+ */
+export function isFingerprintOnly(findings) {
+  return (findings || []).some((f) => f.fingerprintOnly);
+}
+
+/** What the approval and "Allow this app" screens say in fingerprint-only mode. */
+export const FINGERPRINT_ONLY_TEXT =
+  'An app with accessibility access is switched on that could type your password and press buttons here (Settings → This phone). Until you switch its access off, the Signer only accepts your fingerprint or face.';
+
 /** Shown under every warning: what these checks can and can't tell. */
 export const DEVICE_CHECK_LIMIT =
   'Rooting tools can hide from apps, so no warning doesn\'t prove a phone is safe. It only means none of the usual signs were found.';
@@ -63,7 +104,8 @@ export const DEVICE_CHECK_LIMIT =
  * @param {object|null} report  facts from getDeviceSecurity():
  *   { suBinary, testKeys, rootApps: string[], verifiedBootState, flashLocked, screenLockSet }
  *   plus keyboard: { package, label, trusted } | null
- *   and accessibilityApps: { package, label, cameWithPhone, isTool }[]
+ *   and accessibilityApps: { package, label, cameWithPhone, isTool, fromPlayStore }[]
+ *   and sdkInt: Android version number (API level)
  *   and internetPermission: boolean
  *   and signingCertificates: string[] (this copy's seal, SHA-256 hex)
  *   and keyStorage: 'strongbox' | 'tee' | 'secure' | 'software' | 'none' | 'unknown'
@@ -177,7 +219,22 @@ export function describeDeviceSecurity(report) {
   }
 
   // 6. Apps with accessibility access (can read the screen and press buttons)
-  const watchers = (report.accessibilityApps || []).filter((a) => !a.cameWithPhone);
+  //    6a. Ones that could actually press buttons in the Signer: password
+  //        signing is switched off while they're on (fingerprint/face only).
+  const risky = riskyAccessibilityApps(report);
+  if (risky.length > 0) {
+    const names = risky.map((a) => `"${a.label}"`).join(', ');
+    findings.push({
+      id: 'accessibilityRisk',
+      fingerprintOnly: true,
+      title: risky.length > 1
+        ? 'Apps that could press buttons in the Signer are switched on'
+        : 'An app that could press buttons in the Signer is switched on',
+      text: `Accessibility access is switched on for ${names}. Such an app can read the screen and press buttons for you, so it could type your password and tap Approve. While it's on, the Signer signs only with your fingerprint or face (no app can fake those), and allowing a new app needs them too. If you don't need it, switch its access off in Android's settings (Accessibility) to use your password again.`,
+    });
+  }
+  //    6b. The others (e.g. ones the Signer's screens are hidden from): a note.
+  const watchers = (report.accessibilityApps || []).filter((a) => !a.cameWithPhone && !risky.includes(a) && !isTrustedTool(a));
   if (watchers.length > 0) {
     const names = watchers.map((a) => `"${a.label}"`).join(', ');
     const tools = watchers.filter((a) => a.isTool).length;

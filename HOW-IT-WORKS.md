@@ -102,8 +102,9 @@ the unsigned form. Android also tells the Signer which app is asking.
 
 **Step 2 — First time only: "Allow this app?"** If this app has never asked
 before, the Signer shows its name and official ID and asks whether you want
-to allow it to send you signing requests. Your answer is remembered, and you
-can change it later in the Signer's settings. Unknown apps can't even get as
+to allow it to send you signing requests. Allowing needs your password (or
+fingerprint/face), so no other app can tap "Allow" for you. Your answer is
+remembered, and you can change it later in the Signer's settings. Unknown apps can't even get as
 far as the approval screen without your OK.
 
 **Step 3 — The Signer shows you what you're approving.** This is the most

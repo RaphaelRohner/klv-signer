@@ -24,7 +24,8 @@
  *
  * FINGERPRINT / FACE (optional, see storage/biometricStore.js and
  * security/biometricPolicy.js)
- *   pw.biometric = { supported, enabled, blockedReason, ready }
+ *   pw.biometric = { loaded, supported, enabled, blockedReason, ready }
+ *     loaded:    the saved setting has been read (until then, enabled is false)
  *     supported: the phone has strong fingerprint/face set up
  *     enabled:   you switched the option on
  *     blockedReason: why the password is needed this time (restart / 7 days)
@@ -97,6 +98,7 @@ function wasCancelled(error) {
 export function usePasswordCheck() {
   const [attempts, setAttempts] = useState(FRESH_STATE);
   const [bioState, setBioState] = useState(BIOMETRIC_OFF);
+  const [bioLoaded, setBioLoaded] = useState(false); // fingerprint setting read yet?
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   // `() => Date.now()` so the clock is read once, when the screen opens.
@@ -115,7 +117,7 @@ export function usePasswordCheck() {
       .then((a) => setAttempts(restartIfRebooted(a, clock())))
       .catch(() => setAttempts(FRESH_STATE));
     reload();
-    loadBiometricState().then(setBioState);
+    loadBiometricState().then((state) => { setBioState(state); setBioLoaded(true); });
     const sub = AppState.addEventListener('change', (s) => { if (s === 'active') reload(); });
     return () => sub.remove();
   }, []);
@@ -132,6 +134,7 @@ export function usePasswordCheck() {
   const wait = now ? secondsLeft(attempts, clock()) : 0;
   const blockedReason = biometricBlockedReason(bioState, { now, bootCount });
   const biometric = {
+    loaded: bioLoaded,
     supported,
     enabled: bioState.enabled,
     blockedReason: blockedReason === 'off' ? null : blockedReason,

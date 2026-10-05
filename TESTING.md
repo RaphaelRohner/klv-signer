@@ -638,6 +638,26 @@ No `npm install` needed. Build and install as usual.
 - (Testnet-only and the "no answer" case are covered by automatic tests.)
 - F19 passed on 5 Oct 2026 (1 and 2; 3 only applies when restoring a wallet, not tested).
 
+**F20. Accessibility protection and "Allow" with password**
+
+No `npm install` needed. Build and install as usual.
+
+- [ ] Normal use: Home "Ready to sign" (no new warning, unless you have an
+      accessibility app on that you installed yourself), Hub test transfer
+      works with password and with fingerprint as before.
+- [ ] Settings → Connected apps → **Remove** the Hub. In the Hub, tap
+      Connect → "Allow this app?" now has a password box (and the fingerprint
+      button if it's on). Wrong password → refused; right password (or
+      fingerprint) → allowed, the Hub shows your address.
+- [ ] (Optional, if you want to see fingerprint-only mode) Install any app
+      that asks for accessibility access, e.g. an auto-clicker from the Play
+      Store, and switch its access on in Android Settings → Accessibility. Open
+      the Signer: Settings → This phone names it ("could press buttons in the
+      Signer"). Send a Hub test transfer: the approval screen has **no
+      password box**, only "Approve with fingerprint or face" and Reject.
+      Switch the app's access off again (or uninstall it) → the password box
+      is back.
+
 ---
 
 ## Good to know

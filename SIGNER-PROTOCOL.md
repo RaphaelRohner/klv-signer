@@ -20,7 +20,7 @@ Signer does it for Android apps.
 ```
  Your app                         Android                        KLV Signer
  ────────                         ───────                        ──────────
- startActivityForResult ───────►  tells the Signer WHO is calling ─► "Allow this app?" (first time)
+ startActivityForResult ───────►  tells the Signer WHO is calling ─► "Allow this app?" (first time; user confirms with password or fingerprint)
    action + transaction                                               shows the transaction in plain
                                                                       words, asks for the password,
                                                                       signs
