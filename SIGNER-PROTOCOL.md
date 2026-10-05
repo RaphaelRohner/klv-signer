@@ -343,4 +343,8 @@ const hash = await new KleverProvider('testnet')
   Signer is for.
 - Check the Signer's seal before every request (2c), and send nothing if it
   doesn't match.
+- Before broadcasting, check the answer: `signedTransaction` must be exactly
+  the unsigned transaction you sent, followed by `12 40` and the 64-byte
+  signature (hex: your hex + "1240" + 128 hex characters). The Hub's
+  `signedMatches` in `src/api/klvSigner.js` is a ready-made version.
 - Handle "no" gracefully: `rejected` is a normal answer, not a crash.

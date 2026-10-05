@@ -96,8 +96,17 @@ const MAX_NOTE_CHARS = 256;
  * on one letter (stacked marks can draw over other text on screen).
  */
 const NOTE_CHAR = /^[\p{L}\p{N}\p{P}\p{S}\p{M} ]$/u;
-const BLANK_LOOKING = /[\u115F\u1160\u3164\uFFA0]/u;
+// Blank-looking or screen-covering characters (third review, T8): Hangul
+// fillers, the Braille blank, the object-replacement box, the very wide
+// U+FDFD, and "enclosing" marks that draw a circle or box over neighbours.
+const BLANK_LOOKING = /[\u115F\u1160\u3164\uFFA0\u2800\uFFFC\uFDFD]/u;
+const ENCLOSING_MARK = /\p{Me}/u;
 const TOO_MANY_MARKS = /\p{M}{3,}/u;
+// Right-to-left letters (Hebrew, Arabic, Syriac, Thaana, N'Ko …). Mixed with
+// left-to-right text or digits, the screen reorders them, so what you read
+// may not be the order of the bytes (T8). Pure right-to-left notes are fine.
+const RTL_LETTER = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/u;
+const LTR_OR_DIGIT = /[\p{N}]|(?![\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF])\p{L}/u;
 
 /**
  * describeNote — shows an attached note ("Data") as text only if it's short
@@ -118,7 +127,9 @@ export function describeNote(bytes) {
     && [...text].length <= MAX_NOTE_CHARS
     && [...text].every((ch) => NOTE_CHAR.test(ch))
     && !BLANK_LOOKING.test(text)
-    && !TOO_MANY_MARKS.test(text);
+    && !ENCLOSING_MARK.test(text)
+    && !TOO_MANY_MARKS.test(text)
+    && !(RTL_LETTER.test(text) && LTR_OR_DIGIT.test(text));
   if (ok) return { text, readable: true };
   return { text: `data the Signer can't show as text (${bytes.length} bytes)`, readable: false };
 }

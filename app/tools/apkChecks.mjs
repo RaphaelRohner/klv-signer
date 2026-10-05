@@ -177,7 +177,11 @@ export function checkApk({ signer, badging, manifest, ownFingerprints, official,
   if (badging.debuggable) problems.push('This is a debuggable build. Never publish one.');
   const app = findAll(manifest, 'application')[0];
   if (!app) problems.push("Couldn't read the app's manifest.");
-  else if (app.attrs.allowBackup !== 'false') problems.push('Android backup is not switched off (allowBackup).');
+  else {
+    if (app.attrs.allowBackup !== 'false') problems.push('Android backup is not switched off (allowBackup).');
+    // Third review A10: explicit "copy nothing" rules for backup and phone-to-phone transfer.
+    if (!app.attrs.dataExtractionRules) problems.push('The "copy nothing to a new phone" rules are missing (dataExtractionRules; plugins/withSignerHardening.js).');
+  }
 
   // 5. No public entry points: no browsable links, and the request screen
   //    reachable only by exact name (no intent filter).
@@ -187,6 +191,10 @@ export function checkApk({ signer, badging, manifest, ownFingerprints, official,
   const screens = [...findAll(manifest, 'activity'), ...findAll(manifest, 'activity-alias')];
   const browsable = screens.some((a) => findAll(a, 'category').some((c) => c.attrs.name === 'android.intent.category.BROWSABLE'));
   if (browsable) problems.push('A screen of the app has a browsable link filter (a "scheme" in app.json?). The Signer must have none.');
+  // Third review A4: the main screen shares no task with other apps.
+  const mainScreen = findAll(manifest, 'activity').find((a) => /\.MainActivity$/.test(a.attrs.name || ''));
+  if (!mainScreen) problems.push('The main screen (MainActivity) is missing.');
+  else if (mainScreen.attrs.taskAffinity !== '') problems.push('The main screen has no empty taskAffinity (plugins/withSignerHardening.js).');
   const requestScreen = findAll(manifest, 'activity').find((a) => a.attrs.name === REQUEST_ACTIVITY);
   if (!requestScreen) problems.push(`The request screen ${REQUEST_ACTIVITY} is missing.`);
   else if (findAll(requestScreen, 'intent-filter').length > 0) problems.push('The request screen has an intent filter. It must be reachable only by exact name.');

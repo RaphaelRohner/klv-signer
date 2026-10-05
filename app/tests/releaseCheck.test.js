@@ -46,7 +46,7 @@ const badgingOutput = ({ versionCode = 2, extraPerms = [], debuggable = false, p
 ].join('\n');
 
 const A = 'http://schemas.android.com/apk/res/android';
-const manifestOutput = ({ allowBackup = 'false', browsable = false, requestFilter = false, typedBool = false } = {}) => `N: android=${A} (line=2)
+const manifestOutput = ({ allowBackup = 'false', browsable = false, requestFilter = false, typedBool = false, rules = true, affinity = true } = {}) => `N: android=${A} (line=2)
   E: manifest (line=2)
     A: ${A}:versionCode(0x0101021b)=2
     A: ${A}:versionName(0x0101021c)="0.2.0" (Raw: "0.2.0")
@@ -64,8 +64,12 @@ const manifestOutput = ({ allowBackup = 'false', browsable = false, requestFilte
       E: application (line=20)
         A: ${A}:label(0x01010001)=@0x7f0f0001
         A: ${A}:allowBackup(0x01010280)=${typedBool ? (allowBackup === 'false' ? '(type 0x12)0x0' : '(type 0x12)0xffffffff') : allowBackup}
+${rules ? `        A: ${A}:dataExtractionRules(0x0101063a)=@0x7f150000
+` : ''}
           E: activity (line=30)
             A: ${A}:name(0x01010003)="com.raphaelrohner.klvsigner.MainActivity" (Raw: "com.raphaelrohner.klvsigner.MainActivity")
+${affinity ? `            A: ${A}:taskAffinity(0x01010012)="" (Raw: "")
+` : ''}
             A: ${A}:exported(0x01010010)=true
               E: intent-filter (line=35)
                   E: action (line=36)
@@ -159,4 +163,9 @@ test('empty tool output (a tool failed) never passes', () => {
     ownFingerprints: [OFFICIAL], official: OFFICIAL, releasedVersionCodes: [],
   });
   assert.ok(problems.length >= 3);
+});
+
+test('the "copy nothing" rules and the empty taskAffinity must be there (third review, A10/A4)', () => {
+  assert.match(checkApk(facts({ manifest: manifestOutput({ rules: false }) })).join(' '), /copy nothing/);
+  assert.match(checkApk(facts({ manifest: manifestOutput({ affinity: false }) })).join(' '), /taskAffinity/);
 });

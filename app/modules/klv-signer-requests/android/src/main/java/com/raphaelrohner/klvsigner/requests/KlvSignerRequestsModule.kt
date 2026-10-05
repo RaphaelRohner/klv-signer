@@ -15,6 +15,10 @@
  *                                 (see WindowProtection.kt). Also done
  *                                 automatically each time the Signer comes
  *                                 to the front.
+ *   allowScreenshots() / blockScreenshots()
+ *                               → allowed only on the QR code screen; the
+ *                                 screenshot block is re-applied natively
+ *                                 every time the Signer comes to the front.
  *   getElapsedRealtime()        → milliseconds since the phone started (can't
  *                                 be changed by the user; for waiting times).
  *   cancelAutofill()            → ends any password-manager autofill session
@@ -65,6 +69,19 @@ class KlvSignerRequestsModule : Module() {
     // Called by App.js at start too (the first "foreground" can happen before
     // this module exists). Runs on the UI thread, as Android requires.
     AsyncFunction("protectWindow") {
+      applyWindowProtection()
+      true
+    }
+
+    // The QR code screen allows screenshots while it's open (true), and
+    // blocks them again when it closes (false). See WindowProtection.kt, point 5.
+    Function("allowScreenshots") {
+      WindowProtection.screenshotsAllowed = true
+      applyWindowProtection()
+      true
+    }
+    Function("blockScreenshots") {
+      WindowProtection.screenshotsAllowed = false
       applyWindowProtection()
       true
     }

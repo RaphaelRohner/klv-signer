@@ -19,6 +19,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AddressBlocks, Body, Button, Card, Screen, ScreenHeader, colors } from '../components/ui.js';
 import { qrRuns } from '../klever/qr.js';
 import { CAPTURE_KEY } from '../config.js';
+import { setScreenshotsAllowed } from '../../modules/klv-signer-requests/index.js';
 
 /** Size of the QR code on screen (points). */
 const QR_SIZE = 260;
@@ -37,7 +38,11 @@ export default function ReceiveScreen({ address, onBack }) {
   // Blocked again the moment this screen closes.
   useEffect(() => {
     allowScreenCaptureAsync(CAPTURE_KEY).catch(() => {});
-    return () => { preventScreenCaptureAsync(CAPTURE_KEY).catch(() => {}); };
+    setScreenshotsAllowed(true); // the native block (re-applied on every return to the front) too
+    return () => {
+      setScreenshotsAllowed(false);
+      preventScreenCaptureAsync(CAPTURE_KEY).catch(() => {});
+    };
   }, []);
   const cells = code.size + QUIET * 2;
   const unit = QR_SIZE / cells;

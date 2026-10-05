@@ -703,6 +703,25 @@ No `npm install` needed. Build and install as usual.
       "Many requests quickly" appears instead: 3 requests within 2 minutes.)
 - F22 passed on 5 Oct 2026 (test 3 showed the burst rule, as expected within 2 minutes).
 
+**F23. Smaller fixes (screenshots, task, backup rules, notes, Hub check)**
+
+No `npm install` needed. **Build both** the Signer and the Hub (Hub 4.1.2).
+
+- [ ] The Signer opens and **unlocks** as before (the wallet file is now
+      range-checked; your wallet must still open).
+- [ ] Hub test transfer: Signer opens, approve, back in the Hub, "Sent".
+      (The Signer's main screen now runs in its own task; the hand-over
+      between Hub and Signer must work as before.)
+- [ ] Screenshots: blocked on Home and Settings, allowed on the QR code
+      screen, blocked again after leaving it. Then Android Settings → Display
+      → font size: change it, go back to the Signer (it's locked and the
+      screen is rebuilt) → a screenshot on the Unlock screen is still blocked.
+      Set the font size back.
+- [ ] Settings → Connected apps → Remove the Hub, connect again (password),
+      send 0.1 KLV → the extra confirmation names "the first signature this
+      app has asked for".
+- [ ] `node tools/release-check.mjs build-<number>.apk` (the new build) → OK.
+
 ---
 
 ## Good to know

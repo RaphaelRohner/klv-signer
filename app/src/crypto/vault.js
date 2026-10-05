@@ -152,8 +152,24 @@ export function isWeakerThan(vault, stretching) {
   return vault.N < stretching.N || vault.r < stretching.r || vault.p < stretching.p;
 }
 
+/**
+ * checkVaultFormat — refuses a vault that isn't one of ours, or whose stored
+ * settings are out of range (third review, C6). The range matters mostly
+ * upwards: a damaged or tampered file asking for an enormous setting could
+ * otherwise hang the phone. (Lowering them doesn't help an attacker: the key
+ * would come out different and the seal wouldn't open.) The floor (N 1024)
+ * is what the automated tests use; real vaults use 2^17 (older ones 2^15).
+ */
+const HEX = (len) => new RegExp(`^[0-9a-f]{${len}}$`);
 function checkVaultFormat(vault) {
   if (!vault || vault.version !== VAULT_VERSION || vault.kdf !== 'scrypt') {
     throw new Error('This vault was made by a different version of the Signer.');
   }
+  const powerOfTwo = Number.isInteger(vault.N) && vault.N >= 1024 && vault.N <= 2 ** 20 && (vault.N & (vault.N - 1)) === 0;
+  const ok = powerOfTwo
+    && Number.isInteger(vault.r) && vault.r >= 1 && vault.r <= 16
+    && Number.isInteger(vault.p) && vault.p >= 1 && vault.p <= 4
+    && HEX(32).test(vault.salt) && HEX(24).test(vault.nonce) && HEX(96).test(vault.scrambledKey)
+    && typeof vault.address === 'string';
+  if (!ok) throw new Error('The stored wallet file is damaged (its settings are out of range).');
 }

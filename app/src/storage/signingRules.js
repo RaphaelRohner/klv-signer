@@ -4,8 +4,10 @@
  * Both are kept in the phone's secure storage (like the vault), never leave
  * the phone, and are deleted when the wallet is removed.
  *   - RULES: what you chose on the settings screen (security/extraConfirmation.js)
- *   - HISTORY: which receivers and apps this Signer has signed for, and the
- *     times of recent requests (for the "burst" rule). No amounts are kept.
+ *   - HISTORY: which receivers and apps this Signer has signed for, the
+ *     times of recent requests (for the "burst" rule), and the transfers
+ *     signed in the last hour (receiver ending, token, amount; for the
+ *     "same transfer again" rule; older ones are dropped).
  */
 
 import * as SecureStore from 'expo-secure-store';
@@ -36,4 +38,23 @@ export const saveHistory = (history) => SecureStore.setItemAsync(HISTORY, JSON.s
 export async function clearSigningData() {
   await SecureStore.deleteItemAsync(RULES);
   await SecureStore.deleteItemAsync(HISTORY);
+}
+
+/**
+ * forgetApp — forgets that this app ever had something signed, so its next
+ * request counts as "an app's first request" again (third review, T5). Used
+ * when an app is removed, and when it's allowed (again), e.g. after its
+ * certificate changed: a re-installed or different copy starts fresh.
+ * Failing here only means the rule may not ask once more: never stops anything.
+ */
+export async function forgetApp(packageName) {
+  try {
+    const history = await loadHistory();
+    if (!history.apps || !(packageName in history.apps)) return;
+    const apps = { ...history.apps };
+    delete apps[packageName];
+    await saveHistory({ ...history, apps });
+  } catch {
+    // see above
+  }
 }

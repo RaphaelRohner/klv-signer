@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { Body, Card, ListRow, colors } from './ui.js';
 import { loadConnectedApps, saveConnectedApps } from '../storage/connectedApps.js';
+import { forgetApp } from '../storage/signingRules.js';
 import { withoutApp } from '../requests/appTrust.js';
 
 export default function ConnectedAppsList() {
@@ -23,6 +24,7 @@ export default function ConnectedAppsList() {
   async function remove(packageName) {
     const next = withoutApp(apps, packageName);
     await saveConnectedApps(next);
+    await forgetApp(packageName); // allowed again later = "first request" again
     setApps(next);
   }
 

@@ -57,6 +57,17 @@ export async function protectWindow() {
 }
 
 /**
+ * setScreenshotsAllowed — true only while the QR code screen is open. The
+ * native side re-applies the screenshot block whenever the Signer comes to
+ * the front (WindowProtection.kt, point 5), also after Android rebuilt the
+ * screen; this switch is the one exception.
+ */
+export function setScreenshotsAllowed(allowed) {
+  if (!native) return false;
+  return allowed ? native.allowScreenshots() : native.blockScreenshots();
+}
+
+/**
  * hasSigningCertificate — was this app ever signed with this certificate
  * (SHA-256, hex)? Android keeps an app's key history when it legitimately
  * changes its signing key ("key rotation"). False if unknown.

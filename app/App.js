@@ -90,6 +90,7 @@ import {
 } from './src/security/deviceChecks.js';
 import { ACTIONS, ERRORS, addressReply, checkRequest, errorReply, signedReply } from './src/requests/protocol.js';
 import { cleanLabel, trustStatus, withApp } from './src/requests/appTrust.js';
+import { forgetApp } from './src/storage/signingRules.js';
 import { loadConnectedApps, saveConnectedApps } from './src/storage/connectedApps.js';
 import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
 
@@ -617,6 +618,8 @@ export default function App() {
             onAllow={async () => {
               const req = request;
               await saveConnectedApps(withApp(await loadConnectedApps(), req));
+              // Newly (or again) allowed: its next request counts as its first (third review, T5).
+              await forgetApp(req.callerPackage);
               if (stillCurrent(req)) continueAllowedRequest(req);
             }}
             onDeny={() => finishRequest(request, false, errorReply(request, ERRORS.NOT_ALLOWED, 'You did not allow this app to use the Signer.'))}

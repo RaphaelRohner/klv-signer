@@ -29,6 +29,12 @@
  *      Password managers (Google's, Samsung Pass …) never fill in, suggest
  *      or offer to save anything typed in the Signer.
  *
+ *   5. NO SCREENSHOTS OR RECORDINGS (here since the third review, 5 Oct 2026)
+ *      The window is marked "secure" every time it comes to the front, so
+ *      the block also holds after Android rebuilds the screen (font size or
+ *      language changed). Only the QR code screen switches it off
+ *      (screenshotsAllowed, set from ReceiveScreen.js), to share the address.
+ *
  * Everything is set on the window's top view, so it covers every Signer
  * screen at once. None of it changes anything for you in normal use.
  */
@@ -38,9 +44,13 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.view.View
+import android.view.WindowManager
 import android.view.autofill.AutofillManager
 
 object WindowProtection {
+
+  /** True only while the QR code screen is open (see point 5 above). */
+  @Volatile var screenshotsAllowed = false
 
   /**
    * Applies all three protections to this screen's window. Must run on the
@@ -85,7 +95,15 @@ object WindowProtection {
       // Never let a protection crash the app.
     }
 
+    // 5. No screenshots or screen recordings (except on the QR code screen)
+    if (screenshotsAllowed) {
+      window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    } else {
+      window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
     return mapOf(
+      "screenshotsBlocked" to !screenshotsAllowed,
       "autofillOff" to (decor.importantForAutofill == View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS),
       "overlaysHidden" to overlaysHidden,
       "obscuredTapsIgnored" to decor.filterTouchesWhenObscured,

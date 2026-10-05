@@ -274,3 +274,14 @@ test('the Signer is set to TESTNET, and with that setting a mainnet transaction 
   refuses(modified(KLV_TX, (raw) => { raw.ChainID = new TextEncoder().encode('108'); }), /Mainnet/, { network: NETWORK, walletAddress: ME });
   assert.equal(readTransaction(KLV_TX, { network: NETWORK, walletAddress: ME }).transfers.length, 1);
 });
+
+test('notes with blank-looking, covering or mixed-direction characters are not shown as text (third review, T8)', () => {
+  const enc = (t) => new TextEncoder().encode(t);
+  for (const bad of ['pay\u2800me', 'a\u20DDb', 'x\u0489y', 'ok\uFFFC', '\uFDFD', 'send 100 \u05E9\u05DC\u05D5\u05DD 200']) {
+    assert.equal(describeNote(enc(bad)).readable, false, JSON.stringify(bad));
+  }
+  // Still fine: normal text, accents, emoji, and a purely right-to-left note.
+  for (const good of ['Thanks for the NFT!', 'Café crème 2 €', 'gg 🎉', '\u05E9\u05DC\u05D5\u05DD \u05E2\u05D5\u05DC\u05DD']) {
+    assert.equal(describeNote(enc(good)).readable, true, JSON.stringify(good));
+  }
+});

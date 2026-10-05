@@ -222,3 +222,13 @@ test('after a phone restart a running wait starts again; without a stopwatch it 
   // Wall clock only: moving it back an hour can't make the wait longer than 30 s.
   assert.equal(secondsLeft(state, 1_000_000 - 3_600_000), 30);
 });
+
+test('a wallet file with out-of-range settings is refused before any work (third review, C6)', async () => {
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const vault = await lockKey(privateKey, 'maple tunnel orbit ginger', address, { N: 1024, r: 8, p: 1 });
+  for (const bad of [{ N: 2 ** 22 }, { N: 1000 }, { N: 512 }, { r: 64 }, { p: 99 }, { salt: 'zz' }, { scrambledKey: 'ab' }]) {
+    await assert.rejects(unlockKey({ ...vault, ...bad }, 'maple tunnel orbit ginger'), /damaged/, JSON.stringify(bad));
+  }
+  const key = await unlockKey(vault, 'maple tunnel orbit ginger'); // the untouched one still opens
+  assert.equal(key.length, 32);
+});
