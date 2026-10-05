@@ -3,7 +3,7 @@
  * ====================================================
  *
  * Opened from Settings. Here you choose when a transaction needs a second,
- * stricter confirmation (password only, typing the receiver address ending,
+ * stricter confirmation (password only, typing one box of the receiver address,
  * optional wait). The rules themselves and what they mean are explained in
  * security/extraConfirmation.js. Nothing here ever blocks a transaction.
  *
@@ -236,8 +236,9 @@ export default function SigningRulesScreen({ walletAddress, onDone, backRef }) {
     <Screen footer={footer}>
       <ScreenHeader title="Extra confirmation" onBack={pw.busy ? undefined : requestBack} />
       <Body muted>
-        When a transaction matches a rule, the Signer asks for your password (no fingerprint) and the last 6
-        characters of the receiver, and can make you wait first. Nothing is ever blocked.
+        When a transaction matches a rule, the Signer asks for your password (no fingerprint) and 6 characters
+        of the receiver (an outlined box, a different one each time), and can make you wait first. Nothing is
+        ever blocked.
       </Body>
       {loadProblem ? <Notice kind="danger">{loadProblem}</Notice> : null}
       {done ? <Notice kind={done === 'Saved.' ? 'info' : 'danger'}>{done}</Notice> : null}

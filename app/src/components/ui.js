@@ -319,17 +319,18 @@ export function ListRow({ title, subtitle, onPress, toggle, right, last, disable
 
 /**
  * AddressBlocks — a klv1… address shown as little boxes (see addressGroups
- * in klever/format.js: "klv1", 4, then boxes of 6; the last box is the
- * 6 characters typed for the extra confirmation). `markLast` outlines that
- * last box in teal; `muted` shows the text in the normal colour instead of
- * teal. Screen readers get the address in one piece.
+ * in klever/format.js: "klv1", 4, then nine boxes of 6). `markIndex`
+ * outlines one box in teal: the one to type for the extra confirmation
+ * (chosen at random, security/extraConfirmation.js). `muted` shows the text
+ * in the normal colour instead of teal. Screen readers get the address in
+ * one piece.
  */
-export function AddressBlocks({ address, markLast, muted }) {
+export function AddressBlocks({ address, markIndex = null, muted }) {
   const groups = addressGroups(address);
   return (
     <View style={styles.blocks} accessible accessibilityLabel={`Address ${address}`}>
       {groups.map((g, i) => {
-        const marked = markLast && i === groups.length - 1;
+        const marked = markIndex !== null && i === markIndex;
         return (
           <View key={i} style={[styles.block, marked && styles.blockMarked]}>
             <Text style={[styles.blockText, muted && { color: colors.text }, marked && styles.blockTextMarked]}>{g}</Text>

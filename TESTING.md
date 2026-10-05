@@ -667,6 +667,22 @@ No `npm install` needed. Build and install as usual.
   tapping Approve repeatedly never got a transaction signed (the Signer never returned
   to the Hub). Uninstalling the auto-clicker stopped it.
 
+**F21. Approval screen: a random box to type, token notes**
+
+No `npm install` needed. Build and install as usual.
+
+- [ ] Send KLV from the Hub to an address you've never sent to (or tick the
+      large-amount rule) so the extra confirmation appears. The receiver
+      address shows ONE outlined box somewhere in the **middle** (not the
+      last one). The box below is labelled "Outlined box … (box N)". Type
+      those 6 characters → Approve works. Type the last 6 instead → "That
+      doesn't match the outlined box".
+- [ ] Reject, and send the same again: the outlined box is usually a
+      different one (it's random, so now and then it repeats).
+- [ ] Send an NFT (or token) from the Hub: under the amount, a small note
+      says the creator may charge a royalty the Signer can't see; for a
+      token also "A …-digit number, in the token's smallest units".
+
 ---
 
 ## Good to know

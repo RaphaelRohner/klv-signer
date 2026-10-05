@@ -25,8 +25,8 @@
  * EXTRA CONFIRMATION (security/extraConfirmation.js, settings on Home)
  * If the transaction hits one of your rules (large amount, new receiver, an
  * app's first request, …), the screen says why and asks for more: the
- * fingerprint shortcut isn't offered, you type the last 6 characters of each
- * receiver address, and "Approve" may wait a few seconds. After a successful
+ * fingerprint shortcut isn't offered, you type one outlined box (6 characters,
+ * a different box each time) of each receiver address, and "Approve" may wait a few seconds. After a successful
  * signature, the receivers and the app are remembered (on this phone only),
  * so they aren't "new" next time.
  *
@@ -35,7 +35,7 @@
  * (security/deviceChecks.js, riskyAccessibilityApps), such an app could type
  * the password and tap Approve. Then the password box is gone and only
  * fingerprint/face can sign (Android's own prompt: no app can fake a
- * finger). The extra confirmation still applies (typed address ending,
+ * finger). The extra confirmation still applies (typed address box,
  * wait), followed by the fingerprint instead of the password.
  *
  * Screenshots are blocked here (the password can be shown with "Show").
@@ -54,7 +54,8 @@ import {
 } from '../security/deviceChecks.js';
 import { NETWORKS } from '../klever/networks.js';
 import {
-  ADDRESS_ENDING_LENGTH, WAIT_CHOICES, endingMatches, reasonsForExtraConfirmation, receiversToConfirm, withRequest, withSigned,
+  CONFIRM_GROUP_LENGTH, WAIT_CHOICES, groupMatches, pickConfirmGroup, reasonsForExtraConfirmation, receiversToConfirm,
+  withRequest, withSigned,
 } from '../security/extraConfirmation.js';
 import { loadHistory, loadRules, saveHistory } from '../storage/signingRules.js';
 
@@ -92,11 +93,14 @@ export default function ApproveScreen({
   // --- Extra confirmation -------------------------------------------------
   // null = still checking the rules; [] = not needed; otherwise the reasons.
   const [extra, setExtra] = useState(null);
-  const [endings, setEndings] = useState({}); // receiver address → what you typed
+  const [typed, setTyped] = useState({}); // receiver address → what you typed
   const [waitLeft, setWaitLeft] = useState(0);
   const receivers = receiversToConfirm(reading);
+  // Which box of each receiver to type: a random middle box, picked once when
+  // the screen opens (a scammer can't know which one; see extraConfirmation.js).
+  const [askBox] = useState(() => Object.fromEntries(receivers.map((a) => [a, pickConfirmGroup(a)])));
   const needExtra = !!extra && extra.length > 0;
-  const endingsOk = !needExtra || receivers.every((a) => endingMatches(a, endings[a]));
+  const endingsOk = !needExtra || receivers.every((a) => groupMatches(a, askBox[a], typed[a]));
   const ready = extra !== null && endingsOk && waitLeft === 0;
   const needExtraRef = useRef(true); // until the rules are known, assume extra is needed
   useEffect(() => { needExtraRef.current = extra === null || needExtra; }, [extra, needExtra]);
@@ -158,7 +162,7 @@ export default function ApproveScreen({
   /**
    * Fingerprint/face path. Normally only when no extra confirmation is needed
    * (that one asks for the password). In fingerprint-only mode, the extra
-   * confirmation is done first (address ending, wait), then the fingerprint.
+   * confirmation is done first (address box, wait), then the fingerprint.
    */
   function signWithKeyBiometric(privateKey) {
     if (needExtraRef.current && !fingerprintOnlyRef.current) {
@@ -223,9 +227,9 @@ export default function ApproveScreen({
           {t.note ? <Text style={styles.small}>{t.note}</Text> : null}
           <View style={styles.cardDivider} />
           <Text style={styles.cardLabel}>To</Text>
-          {/* In little boxes, easier to compare by eye. When the ending must
-              be typed, the last box (exactly those 6 characters) is outlined. */}
-          <AddressBlocks address={t.to} markLast={needExtra} muted />
+          {/* In little boxes, easier to compare by eye. When a box must be
+              typed, that box (chosen at random) is outlined. */}
+          <AddressBlocks address={t.to} markIndex={needExtra ? askBox[t.to] : null} muted />
         </View>
       ))}
 
@@ -272,8 +276,9 @@ export default function ApproveScreen({
                 <Body><Strong>You can approve in {waitLeft} s.</Strong> Use the time to check the details.</Body>
               ) : null}
               <Body muted>
-                Compare with the full address above, type the last {ADDRESS_ENDING_LENGTH} characters
-                {receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (the outlined box), then approve with your {fingerprintOnly ? 'fingerprint or face' : 'password'}.
+                Compare with the full address above, then type the {CONFIRM_GROUP_LENGTH} characters in the
+                outlined box{receivers.length > 1 ? ' of each receiver (trusted ones too)' : ' of the receiver'} (a
+                different box each time), then approve with your {fingerprintOnly ? 'fingerprint or face' : 'password'}.
                 (You chose these rules under Settings → Extra confirmation.)
               </Body>
             </Notice>
@@ -282,14 +287,14 @@ export default function ApproveScreen({
             <Field
               key={a}
               label={receivers.length > 1
-                ? `Last ${ADDRESS_ENDING_LENGTH} characters of receiver ${i + 1} (${a.slice(0, 8)}…)`
-                : `Last ${ADDRESS_ENDING_LENGTH} characters of the receiver address`}
-              value={endings[a] || ''}
+                ? `Outlined box (box ${askBox[a] + 1}) of receiver ${i + 1} (${a.slice(0, 8)}…)`
+                : `Outlined box of the receiver address (box ${askBox[a] + 1})`}
+              value={typed[a] || ''}
               noLearning
-              maxLength={ADDRESS_ENDING_LENGTH + 2}
-              onChangeText={(t) => setEndings((prev) => ({ ...prev, [a]: t }))}
-              error={(endings[a] || '').trim().length >= ADDRESS_ENDING_LENGTH && !endingMatches(a, endings[a])
-                ? 'That doesn\'t match the end of this address. Look again carefully.' : ''}
+              maxLength={CONFIRM_GROUP_LENGTH + 2}
+              onChangeText={(t) => setTyped((prev) => ({ ...prev, [a]: t }))}
+              error={(typed[a] || '').replace(/\s+/g, '').length >= CONFIRM_GROUP_LENGTH && !groupMatches(a, askBox[a], typed[a])
+                ? 'That doesn\'t match the outlined box of this address. Look again carefully.' : ''}
             />
           )) : null}
 

@@ -39,8 +39,12 @@
  * Pure calculations (no screens, no storage), so the automated tests can check them.
  */
 
-/** How many characters of each receiver address you type. */
-export const ADDRESS_ENDING_LENGTH = 6;
+import { addressGroups } from '../klever/format.js';
+
+/** How many characters of each receiver address you type (one box of the address). */
+export const CONFIRM_GROUP_LENGTH = 6;
+/** How many characters of an address are shown at the end in short messages. */
+const SHORT_END = 6;
 /** Burst rule: this many requests (including the current one) within BURST_WINDOW_MS. */
 export const BURST_COUNT = 3;
 export const BURST_WINDOW_MS = 2 * 60 * 1000;
@@ -126,7 +130,7 @@ export function formatKlv(units) {
 
 /** "klv1abc…xyz" for messages. */
 function short(address) {
-  return `${address.slice(0, 8)}…${address.slice(-ADDRESS_ENDING_LENGTH)}`;
+  return `${address.slice(0, 8)}…${address.slice(-SHORT_END)}`;
 }
 
 /**
@@ -199,15 +203,52 @@ export function reasonsForExtraConfirmation(reading, rules, history, { appId, no
   return reasons;
 }
 
-/** The receiver addresses whose endings you must type (each once). */
+/** The receiver addresses you must confirm by typing one of their boxes (each once). */
 export function receiversToConfirm(reading) {
   return [...new Set(reading.transfers.map((t) => t.to))];
 }
 
-/** Does the typed text match the address ending? (Spaces and capitals don't matter.) */
-export function endingMatches(address, typed) {
-  const t = String(typed || '').trim().toLowerCase();
-  return t.length === ADDRESS_ENDING_LENGTH && address.toLowerCase().endsWith(t);
+/*
+ * WHICH CHARACTERS YOU TYPE (third review, 5 Oct 2026)
+ * An address is shown in boxes: "klv1", 4 characters, then nine boxes of 6
+ * (klever/format.js, addressGroups). You type ONE of the middle 6-character
+ * boxes, chosen at random for every request and outlined on screen.
+ * Why not the last 6 any more: they're a checksum, and a scammer can generate
+ * a look-alike address whose last 6 (or first and last) characters match
+ * yours in minutes. If they can't know WHICH box you'll be asked for, they'd
+ * have to match all of them: practically impossible. The last box is never
+ * asked for, the most commonly copied part of a look-alike.
+ */
+
+/** Index of the first and last box that may be asked for (in addressGroups' list). */
+const FIRST_ASKABLE = 2;
+const LAST_ASKABLE = 9; // box 10 (the last) is excluded on purpose
+
+/**
+ * pickConfirmGroup — which box of this address to ask for: a random middle
+ * box, from the phone's secure random generator. Returns the box's index in
+ * addressGroups(address).
+ * @param {string} address
+ * @param {(n: number) => number} [randomBelow]  for the tests; default: secure random 0..n-1
+ */
+export function pickConfirmGroup(address, randomBelow = secureRandomBelow) {
+  const groups = addressGroups(address);
+  if (groups.length !== 11) return groups.length - 1; // not a normal address (readTransaction refuses those anyway)
+  return FIRST_ASKABLE + randomBelow(LAST_ASKABLE - FIRST_ASKABLE + 1);
+}
+
+/** 0..n-1 from crypto.getRandomValues (n ≤ 256; 8 here, which divides 256 evenly: no bias). */
+function secureRandomBelow(n) {
+  const byte = new Uint8Array(1);
+  globalThis.crypto.getRandomValues(byte);
+  return byte[0] % n;
+}
+
+/** Does the typed text match box `index` of the address? (Spaces and capitals don't matter.) */
+export function groupMatches(address, index, typed) {
+  const group = addressGroups(address)[index];
+  const t = String(typed || '').replace(/\s+/g, '').toLowerCase();
+  return !!group && t.length === group.length && t === group.toLowerCase();
 }
 
 /**

@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_RULES, EMPTY_HISTORY, reasonsForExtraConfirmation, isRelaxing, parseKlv, formatKlv,
-  endingMatches, receiversToConfirm, withRequest, withSigned, BURST_WINDOW_MS, receiverKey, checkRules, MAX_RECEIVERS,
+  groupMatches, pickConfirmGroup, CONFIRM_GROUP_LENGTH, receiversToConfirm, withRequest, withSigned, BURST_WINDOW_MS, receiverKey, checkRules, MAX_RECEIVERS,
   klvCandidates,
 } from '../src/security/extraConfirmation.js';
 import { validAddressOrNull } from '../src/klever/address.js';
@@ -126,9 +126,6 @@ test('KLV amounts and address endings', () => {
   assert.deepEqual(klvCandidates('12,50'), [12500000n]); // 2 decimals: clear
   assert.deepEqual(klvCandidates('1,0,0'), []);
   assert.equal(formatKlv(12500000n), '12.5');
-  assert.equal(endingMatches(A, 'v4a0cy'), true);
-  assert.equal(endingMatches(A, ' V4A0CY '), true);
-  assert.equal(endingMatches(A, '4a0cy'), false);
   assert.deepEqual(receiversToConfirm(tx(klv(A, '1'), klv(A, '2'), klv(B, '1'))), [A, B]);
 });
 
@@ -157,4 +154,23 @@ test('the network fee counts towards the KLV amount setting (second review)', ()
   assert.match(text, /100\.1 KLV \(network fee included\)/);
   // Only trusted receivers: the fee alone doesn't trigger it.
   assert.deepEqual(ids(withFee(tx(klv(A, '1')), '0.4'), { ...rules, klvThreshold: '1', trusted: [A] }), []);
+});
+
+test('the box to type is a random MIDDLE box, never the last one (third review, T3)', () => {
+  // A = klv1 rr0k kwkv9v ar3as2 0unaae k57cyr mt2msz vp757l jchmat yc8xas v4a0cy
+  assert.equal(CONFIRM_GROUP_LENGTH, 6);
+  const seen = new Set();
+  for (let r = 0; r < 8; r += 1) seen.add(pickConfirmGroup(A, () => r));
+  assert.deepEqual([...seen].sort((x, y) => x - y), [2, 3, 4, 5, 6, 7, 8, 9]); // boxes 3–10 of 11; not klv1, not the last
+  // With the real (secure) random generator: always within that range, and it varies.
+  const picks = new Set(Array.from({ length: 200 }, () => pickConfirmGroup(A)));
+  for (const i of picks) assert.ok(i >= 2 && i <= 9, String(i));
+  assert.ok(picks.size >= 4, 'random enough to vary');
+  // Matching: the right box only; spaces and capitals don't matter.
+  assert.equal(groupMatches(A, 2, 'kwkv9v'), true);
+  assert.equal(groupMatches(A, 2, ' KWK V9V '), true);
+  assert.equal(groupMatches(A, 2, 'ar3as2'), false); // the next box
+  assert.equal(groupMatches(A, 2, 'kwkv9'), false);
+  assert.equal(groupMatches(A, 9, 'yc8xas'), true);
+  assert.equal(groupMatches(A, 9, 'v4a0cy'), false); // the ending no longer counts
 });

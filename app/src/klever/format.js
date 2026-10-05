@@ -35,6 +35,21 @@ export function formatUnits(amount, decimals) {
 }
 
 /**
+ * Shown with every token and NFT transfer (third review, T2). On Klever, a
+ * token's or NFT collection's creator can set a royalty that is charged to
+ * the SENDER on transfers, and can change it later. It lives on the
+ * blockchain, which the offline Signer can't read, so the fee shown doesn't
+ * include it. Hence "may": most tokens charge none.
+ */
+export const ROYALTY_NOTE =
+  'Its creator may charge a royalty on transfers, taken from your wallet on top of the network fee. The Signer works offline and can\'t see it.';
+
+/** "KLV-AB12", "KFI…": tickers that could be mistaken for KLV or KFI (third review, T9). */
+function looksLikeKlv(asset) {
+  return /^(KLV|KFI)/i.test(asset) && !(asset in KNOWN_DECIMALS);
+}
+
+/**
  * describeAmount — the plain-words version of "Amount of AssetID".
  *
  * @param {bigint} amount
@@ -51,11 +66,17 @@ export function describeAmount(amount, assetId) {
     const collection = asset.slice(0, slash);
     const number = asset.slice(slash + 1);
     const copies = amount === 1n ? '' : ` (× ${amount.toString()})`;
-    return { text: `NFT ${collection} #${number}${copies}`, note: null, isNft: true };
+    const notKlv = looksLikeKlv(collection) ? `This is the NFT collection ${collection}, NOT KLV. ` : '';
+    return { text: `NFT ${collection} #${number}${copies}`, note: `${notKlv}${ROYALTY_NOTE}`, isNft: true };
   }
+  // Other tokens: the amount in the token's smallest units (decimal places
+  // unknown offline). No thousands separators (owner's decision, 30 Sep),
+  // so the number of digits is said in words to make its size easy to judge.
+  const digits = amount.toString().replace('-', '').length;
+  const notKlv = looksLikeKlv(asset) ? `This is the token ${asset}, NOT KLV. ` : '';
   return {
     text: `${amount.toString()} units of ${asset}`,
-    note: `The Signer works offline, so it can't look up how many decimal places ${asset} has. This is the amount in the token's smallest units.`,
+    note: `${notKlv}A ${digits}-digit number, in the token's smallest units: the Signer works offline, so it can't look up how many decimal places ${asset} has. ${ROYALTY_NOTE}`,
     isNft: false,
   };
 }
@@ -110,8 +131,9 @@ export function shortAddress(address) {
 /**
  * addressGroups — a klv1… address cut into boxes for comparing by eye.
  * Every Klever address is exactly 62 characters ("klv1" + 58), so it's cut
- * as: "klv1", the next 4, then nine boxes of 6. The LAST box is then always
- * exactly the 6 characters you type for the extra confirmation.
+ * as: "klv1", the next 4, then nine boxes of 6. For the extra confirmation
+ * you type one of the middle boxes, chosen at random each time
+ * (security/extraConfirmation.js, pickConfirmGroup).
  * Anything that isn't a normal address is cut into plain boxes of 4.
  */
 export function addressGroups(address) {

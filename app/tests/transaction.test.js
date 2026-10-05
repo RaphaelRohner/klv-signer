@@ -191,6 +191,13 @@ test('amounts are shown in plain words without rounding', () => {
   const token = describeAmount(250n, 'ABC-1234');
   assert.equal(token.text, '250 units of ABC-1234');
   assert.match(token.note, /decimal places/);
+  assert.match(token.note, /A 3-digit number/);
+  assert.match(token.note, /royalty/); // third review, T2
+  assert.match(describeAmount(1n, 'DVKNFT-1SW5/4821').note, /royalty/);
+  assert.equal(describeAmount(1500000n, 'KLV').note, null); // KLV itself: no royalty note
+  assert.match(describeAmount(10n ** 18n, 'USDT-ABCD').note, /A 19-digit number/);
+  assert.match(describeAmount(5n, 'KLV-AB12').note, /NOT KLV/); // look-alike ticker (T9)
+  assert.doesNotMatch(describeAmount(5n, 'ABC-1234').note, /NOT KLV/);
 });
 
 test('notes are shown as text only if they are plain readable text', () => {
