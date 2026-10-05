@@ -547,20 +547,21 @@ Then build and install as usual.
 
 No `npm install` needed.
 
-- [ ] Settings → About → **Before you start** → the four points (as is, own
+- [x] Settings → About → **Before you start** → the four points (as is, own
       risk; only funds you could afford to lose; harder to steal, not
       impossible; scams; your responsibility) → **Done** returns to Settings.
-- [ ] Leave the Signer from that screen → locked, like every other screen.
-- [ ] (Only if you set up a test wallet again some day) Welcome → Create or
+- [x] Leave the Signer from that screen → locked, like every other screen.
+- [x] (Only if you set up a test wallet again some day) Welcome → Create or
       Restore → the same screen first, with **I understand** to continue and
       Back to return.
-- [ ] **Screenshots blocked everywhere:** try a screenshot on Unlock, Home and
+- [x] **Screenshots blocked everywhere:** try a screenshot on Unlock, Home and
       Settings → blocked (black, or Android says it isn't allowed). On the
       **QR code** screen → the screenshot works. Back on Home → blocked again.
-- [ ] The app switcher (square button) shows the Signer as a blank card.
-- [ ] Settings → About → **Share info for support** → the share sheet shows
+- [x] The app switcher (square button) shows the Signer as a blank card.
+- [x] Settings → About → **Share info for support** → the share sheet shows
       a short text: version, Android, phone checks, extra confirmation summary,
       signing key. No address, nothing secret. (The Signer locks, as always.)
+- F15 passed on 5 Oct 2026 (app switcher shows a white card with the icon only).
 
 ---
 
