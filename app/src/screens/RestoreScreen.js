@@ -92,6 +92,11 @@ export default function RestoreScreen({ onRestored, onBack }) {
       <Title>Restore a wallet</Title>
       <Body>Type your recovery words, one per box, in the order written on your paper.</Body>
       <Body muted>Tip: a space jumps to the next box. You can also paste the whole phrase into box 1.</Body>
+      {/* Explains the red highlighting, so nobody wonders how the Signer "knows". */}
+      <Body muted>
+        Each word is checked against the official list of 2,048 recovery words (the BIP-39 standard Klever uses),
+        which is built into the Signer. Nothing is sent anywhere: the Signer has no internet.
+      </Body>
 
       {/* 24 / 12 words choice */}
       <View style={styles.countRow}>
