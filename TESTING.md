@@ -671,17 +671,19 @@ No `npm install` needed. Build and install as usual.
 
 No `npm install` needed. Build and install as usual.
 
-- [ ] Send KLV from the Hub to an address you've never sent to (or tick the
+- [x] Send KLV from the Hub to an address you've never sent to (or tick the
       large-amount rule) so the extra confirmation appears. The receiver
       address shows ONE outlined box somewhere in the **middle** (not the
       last one). The box below is labelled "Outlined box … (box N)". Type
       those 6 characters → Approve works. Type the last 6 instead → "That
       doesn't match the outlined box".
-- [ ] Reject, and send the same again: the outlined box is usually a
+- [x] Reject, and send the same again: the outlined box is usually a
       different one (it's random, so now and then it repeats).
 - [ ] Send an NFT (or token) from the Hub: under the amount, a small note
       says the creator may charge a royalty the Signer can't see; for a
       token also "A …-digit number, in the token's smallest units".
+- F21 passed on 5 Oct 2026 for the random box (1, 2). The token/NFT notes (3) wait
+  for testnet test assets; their texts are covered by the automatic tests.
 
 ---
 
