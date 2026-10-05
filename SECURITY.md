@@ -123,7 +123,7 @@ that affects a row above.
 - [x] Second AI review of the whole app (REVIEW-2026-10.md)
 - [ ] Independent human review (community feedback after publishing; a professional one before real money)
 - [x] Release process, part 1: signing key moved off Expo, encrypted backups, official fingerprint published, release check script with checksums (RELEASING.md)
-- [ ] Release process, part 2: build provenance (GitHub Actions), reproducible build
+- [ ] Release process, part 2: build provenance (GitHub Actions builds unsigned, signing stays on the Mac), reproducible build. Planned for the first public release (RELEASING.md, "Later")
 - [x] Two-factor authentication on GitHub and Expo (authenticator app, 1 Oct 2026); Google Play when that account exists
 
 ## Sources

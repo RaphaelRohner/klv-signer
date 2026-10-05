@@ -62,7 +62,18 @@ installing updates until a new, re-keyed Signer is announced.
 
 ## Later
 
-- Build releases on GitHub itself (GitHub Actions) and attach "build
-  provenance", so anyone can check an APK was made from this code.
-- Reproducible builds (anyone can rebuild the exact same APK).
+- **To do, with the first public release** (decided 5 Oct 2026), when the
+  repository goes public. As far as we know, GitHub's provenance
+  certificates are free for public repositories only.
+  - **Build provenance:** pushing a version tag (e.g. `v0.2.0`) makes GitHub
+    Actions build the APK **unsigned** and publish a certificate ("built by
+    GitHub from commit X"). Raphael downloads it and **signs it on the Mac**
+    as now. The signing key never goes to GitHub, so the 1 Oct decision
+    stays. `tools/release-check.mjs` then also checks that the signed APK's
+    contents match GitHub's build. Adds one step: wait ~15–20 min, download.
+  - **Reproducible builds:** anyone building from the source code gets the
+    same APK (apart from the seal). Fiddly with Expo/React Native (dates and
+    file order in the build must be pinned); work on Claude's side plus a
+    few test builds. No change to the workflow.
+  - Day-to-day testing (local preview builds) doesn't change.
 - Google Play / F-Droid (see the Developer FAQ).
