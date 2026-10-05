@@ -96,3 +96,7 @@ From the `app` folder:
    → one version each, the ones in the table above.
 4. `npm test` → all tests pass (includes the "no internet" and crypto checks).
 5. Update the table above if a version changed, with the date.
+6. If `expo-secure-store` changed: check its Keystore name is still
+   `AES/GCM/NoPadding:key_v1:keystoreUnauthenticated` (its `AESEncryptor.kt`).
+   DeviceSecurity.kt looks for exactly that name to report where the wallet's
+   lock is kept; if it changed, Settings → This phone shows "Couldn't check".

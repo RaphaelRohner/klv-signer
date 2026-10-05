@@ -27,6 +27,11 @@
  *   special permission or <queries> entry is needed for these two.)
  *   - Seal: which signing certificate THIS installed copy carries (Android
  *     reports it; compared with the official one in deviceChecks.js).
+ *   - Wallet lock: where Android keeps the key that encrypts the stored
+ *     wallet (expo-secure-store's Keystore key): a separate security chip
+ *     ("StrongBox"), the phone's secure area ("TEE"), or only software. In
+ *     hardware the key can be used but never copied out, so a copy of the
+ *     wallet file is useless off this phone.
  *   - Internet: whether THIS copy of the Signer is allowed to use the
  *     internet. The Signer is built without that permission on purpose
  *     (app.json, blockedPermissions), so Android itself stops it from ever
@@ -50,11 +55,16 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.security.keystore.KeyInfo
+import android.security.keystore.KeyProperties
 import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
 import java.io.File
+import java.security.KeyStore
 import java.security.MessageDigest
+import javax.crypto.SecretKey
+import javax.crypto.SecretKeyFactory
 import java.util.concurrent.TimeUnit
 
 object DeviceSecurity {
@@ -104,6 +114,7 @@ object DeviceSecurity {
       "accessibilityApps" to accessibilityApps(context),
       "internetPermission" to (context.checkSelfPermission(android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED),
       "signingCertificates" to ownSigningCertificates(context),
+      "keyStorage" to walletKeyStorage(),
     )
   }
 
@@ -113,6 +124,36 @@ object DeviceSecurity {
    * Compared with the official one in deviceChecks.js. Empty if Android
    * wouldn't say.
    */
+  /**
+   * The Keystore name ("alias") under which expo-secure-store keeps the key
+   * that encrypts everything the Signer stores without fingerprint, the
+   * wallet vault included. Taken from expo-secure-store's source
+   * (AESEncryptor: "<cipher>:<keychainService>:keystoreUnauthenticated",
+   * default keychainService "key_v1"). If a future expo-secure-store renames
+   * it, this check answers "none" and Settings shows "Couldn't check" (see
+   * DEPENDENCIES.md).
+   */
+  private const val VAULT_KEY_ALIAS = "AES/GCM/NoPadding:key_v1:keystoreUnauthenticated"
+
+  /** Where that key lives: "strongbox" | "tee" | "secure" | "software" | "none" | "unknown". */
+  private fun walletKeyStorage(): String {
+    return try {
+      val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+      val key = keyStore.getKey(VAULT_KEY_ALIAS, null) as? SecretKey ?: return "none"
+      val info = SecretKeyFactory.getInstance(key.algorithm, "AndroidKeyStore")
+        .getKeySpec(key, KeyInfo::class.java) as KeyInfo
+      when (info.securityLevel) { // Android 12+, which the Signer requires
+        KeyProperties.SECURITY_LEVEL_STRONGBOX -> "strongbox"
+        KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT -> "tee"
+        KeyProperties.SECURITY_LEVEL_UNKNOWN_SECURE -> "secure"
+        KeyProperties.SECURITY_LEVEL_SOFTWARE -> "software"
+        else -> "unknown"
+      }
+    } catch (e: Exception) {
+      "unknown"
+    }
+  }
+
   private fun ownSigningCertificates(context: Context): List<String> = try {
     val info = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
     val signers = info.signingInfo?.apkContentsSigners ?: emptyArray()

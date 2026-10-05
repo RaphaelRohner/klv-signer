@@ -188,7 +188,10 @@ You chose **a separate app password.** Here's what happens behind the scenes.
    standard, well-tested method called AES-GCM, which also detects if the
    stored data was tampered with.
 4. Only the scrambled key is saved. It's kept in Android's own secure storage
-   (the **Keystore**), which adds a second lock on top of ours.
+   (the **Keystore**), which adds a second lock on top of ours. The key for
+   that second lock lives in the phone's security chip and can't be copied
+   out, so the saved file is useless on any other device. Settings → This
+   phone shows where it's kept.
    **Your password itself is never saved anywhere.**
 
 **When you sign:**

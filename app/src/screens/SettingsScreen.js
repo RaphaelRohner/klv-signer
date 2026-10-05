@@ -8,7 +8,8 @@
  *   SIGNING       Extra confirmation (with a one-line summary of your rules),
  *                 Connected apps (with Remove buttons)
  *   THIS PHONE    the phone-safety check results (root, bootloader, screen
- *                 lock, keyboard, accessibility apps), explained
+ *                 lock, keyboard, accessibility apps), explained, and where
+ *                 the lock on the stored wallet is kept (security chip or not)
  *   ABOUT         version, the seal (signing key) THIS copy carries as Android
  *                 reports it, whether it matches the official one, how long the
  *                 last unlock took (test info), "Before you start" (risks
@@ -26,7 +27,9 @@ import {
 import BiometricSetting from '../components/BiometricSetting.js';
 import ConnectedAppsList from '../components/ConnectedAppsList.js';
 import RemoveWallet from '../components/RemoveWallet.js';
-import { DEVICE_CHECK_LIMIT, isOfficialCopy, isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
+import {
+  DEVICE_CHECK_LIMIT, describeKeyStorage, isOfficialCopy, isSigningBlocked, SIGNING_BLOCKED_TEXT,
+} from '../security/deviceChecks.js';
 import { getDeviceSecurity } from '../../modules/klv-signer-requests/index.js';
 import { DEFAULT_RULES, formatKlv } from '../security/extraConfirmation.js';
 import { loadRules } from '../storage/signingRules.js';
@@ -63,10 +66,20 @@ export default function SettingsScreen({
   const [rulesSummary, setRulesSummary] = useState('');
   const [showRemove, setShowRemove] = useState(false);
   const blocked = isSigningBlocked(deviceFindings);
-  // The seal THIS copy carries, as Android reports it (null = not known yet / unknown).
+  // The seal THIS copy carries, as Android reports it (null = not known yet / unknown),
+  // and where the key locking the stored wallet lives (security chip or software).
   const [ownSeal, setOwnSeal] = useState(null);
+  const [keyStorage, setKeyStorage] = useState(null);
   useEffect(() => {
-    getDeviceSecurity().then((r) => setOwnSeal((r && r.signingCertificates) || [])).catch(() => setOwnSeal([]));
+    getDeviceSecurity()
+      .then((r) => {
+        setOwnSeal((r && r.signingCertificates) || []);
+        setKeyStorage((r && r.keyStorage) || 'unknown');
+      })
+      .catch(() => {
+        setOwnSeal([]);
+        setKeyStorage('unknown');
+      });
   }, []);
   const official = ownSeal ? isOfficialCopy(ownSeal) : null;
 
@@ -106,7 +119,9 @@ export default function SettingsScreen({
             ))}
           </>
         )}
-        <Text style={styles.small}>{DEVICE_CHECK_LIMIT}</Text>
+        <Text style={[styles.key, styles.spaced]}>Where the lock on your stored wallet is kept</Text>
+        <Text style={styles.value}>{keyStorage === null ? 'Checking…' : describeKeyStorage(keyStorage)}</Text>
+        <Text style={[styles.small, styles.spaced]}>{DEVICE_CHECK_LIMIT}</Text>
       </Card>
 
       <SectionLabel>About</SectionLabel>
@@ -137,7 +152,7 @@ export default function SettingsScreen({
         <ListRow
           title="Share info for support"
           subtitle="Version, phone checks and settings as text; no address, nothing secret. Opens the share sheet (the Signer locks)."
-          onPress={() => Share.share({ message: supportInfo(deviceFindings, rulesSummary, ownSeal) }).catch(() => {})}
+          onPress={() => Share.share({ message: supportInfo(deviceFindings, rulesSummary, ownSeal, keyStorage) }).catch(() => {})}
         />
         <ListRow
           title="Sign a test transaction"
@@ -165,7 +180,7 @@ export default function SettingsScreen({
  * check results, the extra-confirmation summary, and this copy's seal
  * compared with the official one (public, not secret).
  */
-export function supportInfo(findings, rulesSummary, ownSeal) {
+export function supportInfo(findings, rulesSummary, ownSeal, keyStorage) {
   const official = ownSeal ? isOfficialCopy(ownSeal) : null;
   return [
     'KLV Signer support info',
@@ -173,6 +188,7 @@ export function supportInfo(findings, rulesSummary, ownSeal) {
     `Android: ${Platform.OS === 'android' ? `API ${Platform.Version}` : Platform.OS}`,
     `Phone checks: ${findings.length === 0 ? 'no problems found' : findings.map((f) => f.title).join('; ')}`,
     `Extra confirmation: ${rulesSummary || 'unknown'}`,
+    `Wallet lock kept: ${describeKeyStorage(keyStorage)}`,
     `This copy's signing key: ${ownSeal && ownSeal.length ? ownSeal.join(', ') : 'unknown'}`,
     `Official key: ${OFFICIAL_SIGNING_KEY} (${official === true ? 'matches' : official === false ? 'DOES NOT MATCH' : 'not checked'})`,
     '(No address, keys, recovery words or passwords are included.)',

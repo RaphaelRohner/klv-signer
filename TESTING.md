@@ -587,6 +587,20 @@ No `npm install` needed. Build and install the new APK as usual.
   switching signing off. The automatic tests cover this case.)
 - F16 passed on 5 Oct 2026 (the "does not match" case is covered by the automatic tests only).
 
+**F17. Where the wallet's lock is kept**
+
+No `npm install` needed. Build and install the new APK.
+
+- [ ] Settings → This phone → under the check results: **Where the lock on
+      your stored wallet is kept** with one of: "In a separate security chip
+      (StrongBox), the strongest kind" or "In the phone's secure area (TEE),
+      separate from Android". (Note which one your phone shows.)
+- [ ] Home shows no new warning.
+- [ ] Settings → About → **Share info for support** → a new line "Wallet lock
+      kept: …" with the same words.
+- (Not testable on a normal phone: "Only in software" with a warning. The
+  automatic tests cover it.)
+
 ---
 
 ## Good to know

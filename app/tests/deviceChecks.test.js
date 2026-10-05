@@ -9,6 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   describeDeviceSecurity, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED, isOfficialCopy,
+  describeKeyStorage,
 } from '../src/security/deviceChecks.js';
 import { OFFICIAL_SIGNING_KEY } from '../src/config.js';
 
@@ -123,4 +124,17 @@ test('a copy signed with another key gets a warning (not a block); the official 
   assert.equal(isSigningBlocked(other), false);
   assert.equal(isOfficialCopy([]), null); // Android didn't say: nothing claimed
   assert.deepEqual(findingsOf({ ...SAFE, signingCertificates: [] }), []);
+});
+
+test('a wallet key kept only in software gets a warning (not a block); hardware none', () => {
+  for (const level of ['strongbox', 'tee', 'secure', 'none', 'unknown', undefined]) {
+    assert.deepEqual(findingsOf({ ...SAFE, keyStorage: level }), [], String(level));
+  }
+  const soft = findingsOf({ ...SAFE, keyStorage: 'software' });
+  assert.deepEqual(soft.map((f) => f.id), ['softwareKeystore']);
+  assert.equal(isSigningBlocked(soft), false);
+  assert.match(describeKeyStorage('strongbox'), /StrongBox/);
+  assert.match(describeKeyStorage('tee'), /secure area/);
+  assert.match(describeKeyStorage('software'), /no security chip/);
+  assert.equal(describeKeyStorage(undefined), 'Couldn\'t check');
 });

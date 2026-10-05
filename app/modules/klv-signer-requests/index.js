@@ -16,7 +16,8 @@
  *   getDeviceSecurity()               (async) facts about the phone's own protections:
  *        { suBinary, testKeys, rootApps, verifiedBootState, flashLocked, screenLockSet,
  *          keyboard, accessibilityApps, internetPermission,
- *          signingCertificates (the seal of THIS installed copy, SHA-256) }
+ *          signingCertificates (the seal of THIS installed copy, SHA-256),
+ *          keyStorage (where the wallet's lock key lives: strongbox/tee/software…) }
  *        see DeviceSecurity.kt; turned into words by src/security/deviceChecks.js
  *
  * If the native part isn't there (e.g. in the automated tests on a computer),

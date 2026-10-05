@@ -38,6 +38,21 @@ export function isOfficialCopy(signingCertificates) {
   return signingCertificates.length === 1 && plainFingerprint(signingCertificates[0]) === plainFingerprint(OFFICIAL_SIGNING_KEY);
 }
 
+/**
+ * describeKeyStorage — where Android keeps the key that locks the stored
+ * wallet, in words (Settings → This phone, and the support text).
+ */
+export function describeKeyStorage(level) {
+  switch (level) {
+    case 'strongbox': return 'In a separate security chip (StrongBox), the strongest kind';
+    case 'tee': return 'In the phone\'s secure area (TEE), separate from Android';
+    case 'secure': return 'In secure hardware';
+    case 'software': return 'Only in software: this phone has no security chip for app keys';
+    case 'none': return 'Not created yet (no wallet on this phone)';
+    default: return 'Couldn\'t check';
+  }
+}
+
 /** Shown under every warning: what these checks can and can't tell. */
 export const DEVICE_CHECK_LIMIT =
   'Rooting tools can hide from apps, so no warning doesn\'t prove a phone is safe. It only means none of the usual signs were found.';
@@ -51,6 +66,7 @@ export const DEVICE_CHECK_LIMIT =
  *   and accessibilityApps: { package, label, cameWithPhone, isTool }[]
  *   and internetPermission: boolean
  *   and signingCertificates: string[] (this copy's seal, SHA-256 hex)
+ *   and keyStorage: 'strongbox' | 'tee' | 'secure' | 'software' | 'none' | 'unknown'
  * @returns {{ checked: boolean, findings: { id: string, title: string, text: string, blocks?: boolean }[] }}
  *   checked = false when the check couldn't run (e.g. in the tests on a computer)
  */
@@ -125,6 +141,17 @@ export function describeDeviceSecurity(report) {
       id: 'unofficial',
       title: 'This copy of the Signer isn\'t signed with the official key',
       text: 'Android says this copy carries a different seal than the official KLV Signer (Settings → About shows both). If you built it yourself from the source code, that\'s expected. Otherwise it may be a fake: don\'t use it with real funds, uninstall it, install the Signer from its official source and restore your wallet from your recovery words.',
+    });
+  }
+
+  // The key that locks the stored wallet is only in software (no security
+  // chip): a copy of the phone's storage could be attacked on a computer by
+  // guessing passwords. Warning only: the password still protects it.
+  if (report.keyStorage === 'software') {
+    findings.push({
+      id: 'softwareKeystore',
+      title: 'This phone has no security chip for app keys',
+      text: 'Android keeps the extra lock on your stored wallet in software instead of a security chip. Your password still protects the wallet, but someone who copies the phone\'s storage could try to guess it on a computer. For real funds, use a phone with a security chip (almost all current phones have one).',
     });
   }
 
