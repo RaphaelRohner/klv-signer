@@ -568,12 +568,12 @@ No `npm install` needed.
 
 No `npm install` needed. Build and install the new APK as usual.
 
-- [ ] Settings → About → under Version: **This copy is signed with (as
+- [x] Settings → About → under Version: **This copy is signed with (as
       Android reports it)**, a long code in pairs (`82:D0:9D:…`), then a teal
       dot and **Matches the official KLV Signer key.** Below it the official
       key: both codes are the same.
-- [ ] Home shows **no** new warning (the official copy gets none).
-- [ ] Settings → About → **Share info for support** → the text has two new
+- [x] Home shows **no** new warning (the official copy gets none).
+- [x] Settings → About → **Share info for support** → the text has two new
       lines: "This copy's signing key: 82D09D…" and "Official key: 82:D0:…
       (matches)".
 - [x] **Screen recording before the Signer starts:** start Android's screen
@@ -585,6 +585,7 @@ No `npm install` needed. Build and install the new APK as usual.
 - (Not testable with the official APK: a copy signed with another key shows a
   red "Does NOT match" line in About and a warning on Home, without
   switching signing off. The automatic tests cover this case.)
+- F16 passed on 5 Oct 2026 (the "does not match" case is covered by the automatic tests only).
 
 ---
 
