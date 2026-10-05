@@ -39,6 +39,15 @@ security alerts (below).
   (High / Medium / Low) and a plain-words explanation.
 - Nothing is changed in the repository.
 
+## When a report says "Something needs a look" or "Act now"
+
+The check doesn't fix anything itself (on purpose: no change to a wallet app
+without the owner seeing and testing it). Open a chat in the claude.ai
+project "KLV Signer App", paste the report (or its summary), and Claude
+checks it against the code, fixes what's needed, runs the tests and commits;
+the owner builds, tests on the phone and pushes, as usual. "All fine" needs
+nothing.
+
 ## The instruction the scheduled task runs
 
 (Used as the scheduled task's prompt. Every run starts with no memory of
