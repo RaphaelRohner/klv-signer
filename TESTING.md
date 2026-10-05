@@ -624,10 +624,10 @@ something isn't committed; that's on purpose).
 
 No `npm install` needed. Build and install as usual.
 
-- [ ] The Signer opens normally: Home says "Ready to sign" (or the same
+- [x] The Signer opens normally: Home says "Ready to sign" (or the same
       warnings as before). Nothing new should appear on your phone; the
       change only matters when Android gives no answer.
-- [ ] Settings → **Change password** → current password, then try
+- [x] Settings → **Change password** → current password, then try
       `password1234` as the new one (and repeat it) → the box says "Too easy
       to guess" and **Change password** stays greyed out. Then **Back**
       (don't change it, unless you want to: a password like
@@ -636,6 +636,7 @@ No `npm install` needed. Build and install as usual.
       longer suggests pasting. If you do paste several words into box 1, a
       yellow warning about the clipboard appears.
 - (Testnet-only and the "no answer" case are covered by automatic tests.)
+- F19 passed on 5 Oct 2026 (1 and 2; 3 only applies when restoring a wallet, not tested).
 
 ---
 
