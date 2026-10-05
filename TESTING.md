@@ -649,14 +649,19 @@ No `npm install` needed. Build and install as usual.
       Connect → "Allow this app?" now has a password box (and the fingerprint
       button if it's on). Wrong password → refused; right password (or
       fingerprint) → allowed, the Hub shows your address.
-- [ ] (Optional, if you want to see fingerprint-only mode) Install any app
-      that asks for accessibility access, e.g. an auto-clicker from the Play
-      Store, and switch its access on in Android Settings → Accessibility. Open
-      the Signer: Settings → This phone names it ("could press buttons in the
-      Signer"). Send a Hub test transfer: the approval screen has **no
-      password box**, only "Approve with fingerprint or face" and Reject.
-      Switch the app's access off again (or uninstall it) → the password box
-      is back.
+- [ ] (Optional) Install an app that asks for accessibility access, e.g. an
+      auto-clicker from the Play Store, and switch its access on in Android
+      Settings → Accessibility. Then Settings → This phone in the Signer:
+      - **Android 14 or newer** (most auto-clickers don't call themselves an
+        accessibility tool): "An app can read and control the screen", a
+        note only. The password box stays, because Android hides the
+        Signer's screens from such apps. Check it: start a Hub test transfer,
+        type your password, then let the auto-clicker tap Approve. The Signer
+        should ignore its taps (nothing signed). If it signs, tell Claude.
+      - **Android 12/13**, or an app that calls itself a tool: "…could press
+        buttons in the Signer", and the approval screen has **no password
+        box**, only "Approve with fingerprint or face" and Reject.
+      Switch the app's access off again (or uninstall it) afterwards.
 
 ---
 
