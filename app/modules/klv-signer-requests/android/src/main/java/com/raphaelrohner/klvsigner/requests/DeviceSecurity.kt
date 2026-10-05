@@ -25,6 +25,8 @@
  *     which is exactly what banking trojans misuse.
  *   (Android shows keyboards and accessibility apps to every app, so no
  *   special permission or <queries> entry is needed for these two.)
+ *   - Seal: which signing certificate THIS installed copy carries (Android
+ *     reports it; compared with the official one in deviceChecks.js).
  *   - Internet: whether THIS copy of the Signer is allowed to use the
  *     internet. The Signer is built without that permission on purpose
  *     (app.json, blockedPermissions), so Android itself stops it from ever
@@ -52,6 +54,7 @@ import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
 import java.io.File
+import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
 object DeviceSecurity {
@@ -100,7 +103,24 @@ object DeviceSecurity {
       "keyboard" to activeKeyboard(context),
       "accessibilityApps" to accessibilityApps(context),
       "internetPermission" to (context.checkSelfPermission(android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED),
+      "signingCertificates" to ownSigningCertificates(context),
     )
+  }
+
+  /**
+   * The seal (signing certificate) THIS installed copy of the Signer carries,
+   * as Android reports it: SHA-256 fingerprints in capitals, no colons.
+   * Compared with the official one in deviceChecks.js. Empty if Android
+   * wouldn't say.
+   */
+  private fun ownSigningCertificates(context: Context): List<String> = try {
+    val info = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+    val signers = info.signingInfo?.apkContentsSigners ?: emptyArray()
+    signers.map { sig ->
+      MessageDigest.getInstance("SHA-256").digest(sig.toByteArray()).joinToString("") { b -> "%02X".format(b) }
+    }
+  } catch (e: Exception) {
+    emptyList()
   }
 
   /**

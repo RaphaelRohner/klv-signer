@@ -35,7 +35,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Fake client app | A harmful app asks the Signer to sign something bad. | Android tells the Signer which app is asking (id + certificate). Each app must be allowed once, and every request shows the transaction as the Signer reads it. | Protected |
 | Fake Signer catching requests | A harmful app pretends to be the Signer to catch requests or answers. | Apps must call the Signer exactly by name (package + screen); since the second review the Signer has no public "intent filter" other apps could also claim. Answers go only to the asking app. But a fake app installed under the Signer's name (from an unofficial source) would be called instead. Planned: publish the Signer's certificate fingerprint, so client apps can check they're talking to the real Signer before sending anything. | Partly |
 | Task hijacking (StrandHogg) | A harmful app puts a fake Signer screen in front, to catch the password. | The known StrandHogg tricks were fixed by Android (StrandHogg 2.0 in Android 11, plus later hardening); the Signer requires Android 12 or newer. Not every variant can be ruled out on every phone maker's Android. | Protected |
-| Fake copy of the Signer | A look-alike app from an unofficial source steals the recovery phrase. | Only install the Signer from its official source. Planned: publish the signing certificate fingerprint and file checksums. | Your side |
+| Fake copy of the Signer | A look-alike app from an unofficial source steals the recovery phrase. | Only install the Signer from its official source. The official signing key fingerprint and file checksums are published (README, RELEASING.md). Since 5 Oct 2026 the Signer reads the seal of the installed copy from Android, shows it in Settings → About with "Matches the official KLV Signer key" (or a red "Does NOT match"), includes it in "Share info for support", and warns (without blocking: self-built copies are allowed) when it differs. This catches a changed copy that kept the check; a fake written from scratch can simply leave it out, so it doesn't replace installing from the official source. | Your side |
 
 ## 2. Someone with the phone in hand
 
@@ -103,6 +103,7 @@ that affects a row above.
 | 30 Sep 2026 | Extra confirmation settings (amount, new receivers, tokens/NFTs, an app's first request, several transfers, bursts; trusted receivers): password only, type the address ending, optional wait. Relaxing needs the password | 17 / 6 / 6 (look-alike addresses reduced, still Partly) |
 | 1 Oct 2026 | Signing key moved from Expo to the owner's Mac with encrypted backups; official fingerprint published; release check script. Rows stay "Your side" (they depend on keeping the key and accounts safe) | 16 / 7 / 6 |
 | 1 Oct 2026 | Second AI review (REVIEW-2026-10.md): no signing bypass found; 30+ smaller problems fixed (see the report). "Fake Signer" moved to Partly: honest rating until client apps can check the Signer's certificate | 16 / 7 / 6 |
+| 5 Oct 2026 | The Signer shows its own seal (signing key) as Android reports it, compared with the official one, in Settings → About and the support text; warning if it differs. Helps spot a re-signed copy; "Fake copy" stays Your side | 16 / 7 / 6 |
 
 ## Planned fixes (Stage 4)
 

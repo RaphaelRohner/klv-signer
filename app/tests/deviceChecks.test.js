@@ -8,8 +8,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  describeDeviceSecurity, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED,
+  describeDeviceSecurity, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED, isOfficialCopy,
 } from '../src/security/deviceChecks.js';
+import { OFFICIAL_SIGNING_KEY } from '../src/config.js';
 
 const SAFE = {
   suBinary: false, testKeys: false, rootApps: [], verifiedBootState: 'green', flashLocked: '1', screenLockSet: true,
@@ -111,4 +112,15 @@ test('apps with accessibility access are named, apps that came with the phone ar
 
 test('if the phone check itself fails, signing is switched off (fails closed; second review)', () => {
   assert.equal(isSigningBlocked([DEVICE_CHECK_FAILED]), true);
+});
+
+test('a copy signed with another key gets a warning (not a block); the official one none', () => {
+  const official = OFFICIAL_SIGNING_KEY.replace(/:/g, '');
+  assert.deepEqual(findingsOf({ ...SAFE, signingCertificates: [official] }), []);
+  assert.equal(isOfficialCopy([official.toLowerCase()]), true);
+  const other = findingsOf({ ...SAFE, signingCertificates: ['AB'.repeat(32)] });
+  assert.deepEqual(other.map((f) => f.id), ['unofficial']);
+  assert.equal(isSigningBlocked(other), false);
+  assert.equal(isOfficialCopy([]), null); // Android didn't say: nothing claimed
+  assert.deepEqual(findingsOf({ ...SAFE, signingCertificates: [] }), []);
 });

@@ -9,7 +9,8 @@
  *                 Connected apps (with Remove buttons)
  *   THIS PHONE    the phone-safety check results (root, bootloader, screen
  *                 lock, keyboard, accessibility apps), explained
- *   ABOUT         version, the official signing-key fingerprint, how long the
+ *   ABOUT         version, the seal (signing key) THIS copy carries as Android
+ *                 reports it, whether it matches the official one, how long the
  *                 last unlock took (test info), "Before you start" (risks
  *                 and terms), "Share info for support" (plain text instead
  *                 of screenshots, which the Signer blocks), and the
@@ -25,7 +26,8 @@ import {
 import BiometricSetting from '../components/BiometricSetting.js';
 import ConnectedAppsList from '../components/ConnectedAppsList.js';
 import RemoveWallet from '../components/RemoveWallet.js';
-import { DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
+import { DEVICE_CHECK_LIMIT, isOfficialCopy, isSigningBlocked, SIGNING_BLOCKED_TEXT } from '../security/deviceChecks.js';
+import { getDeviceSecurity } from '../../modules/klv-signer-requests/index.js';
 import { DEFAULT_RULES, formatKlv } from '../security/extraConfirmation.js';
 import { loadRules } from '../storage/signingRules.js';
 import { NETWORK, OFFICIAL_SIGNING_KEY } from '../config.js';
@@ -61,6 +63,12 @@ export default function SettingsScreen({
   const [rulesSummary, setRulesSummary] = useState('');
   const [showRemove, setShowRemove] = useState(false);
   const blocked = isSigningBlocked(deviceFindings);
+  // The seal THIS copy carries, as Android reports it (null = not known yet / unknown).
+  const [ownSeal, setOwnSeal] = useState(null);
+  useEffect(() => {
+    getDeviceSecurity().then((r) => setOwnSeal((r && r.signingCertificates) || [])).catch(() => setOwnSeal([]));
+  }, []);
+  const official = ownSeal ? isOfficialCopy(ownSeal) : null;
 
   useEffect(() => {
     loadRules().then((r) => setRulesSummary(describeRules(r))).catch(() => setRulesSummary('Couldn\'t read your rules'));
@@ -107,9 +115,15 @@ export default function SettingsScreen({
           <Text style={styles.key}>Version</Text>
           <Text style={styles.value}>{appJson.expo.version} · {NETWORK === 'testnet' ? 'testnet preview' : 'mainnet'}</Text>
         </View>
+        <Text style={[styles.key, styles.spaced]}>This copy is signed with (as Android reports it)</Text>
+        <Text selectable style={styles.mono}>
+          {ownSeal === null ? 'Checking…' : ownSeal.length === 0 ? 'Android didn\'t say' : ownSeal.map((c) => c.match(/../g).join(':')).join('\n')}
+        </Text>
+        {official === true ? <Line color={colors.accent} text="Matches the official KLV Signer key." /> : null}
+        {official === false ? <Line color={colors.danger} text="Does NOT match the official key. If you didn't build this copy yourself, it may be a fake." /> : null}
         <Text style={[styles.key, styles.spaced]}>Official signing key (SHA-256)</Text>
         <Text selectable style={styles.mono}>{OFFICIAL_SIGNING_KEY}</Text>
-        <Text style={styles.small}>Compare it with the one in the README and the release notes.</Text>
+        <Text style={styles.small}>Also published in the README and the release notes.</Text>
         {unlockInfo ? (
           <Text style={[styles.small, styles.spaced]}>
             {unlockInfo.engine === 'fingerprint or face'
@@ -123,7 +137,7 @@ export default function SettingsScreen({
         <ListRow
           title="Share info for support"
           subtitle="Version, phone checks and settings as text; no address, nothing secret. Opens the share sheet (the Signer locks)."
-          onPress={() => Share.share({ message: supportInfo(deviceFindings, rulesSummary) }).catch(() => {})}
+          onPress={() => Share.share({ message: supportInfo(deviceFindings, rulesSummary, ownSeal) }).catch(() => {})}
         />
         <ListRow
           title="Sign a test transaction"
@@ -148,16 +162,19 @@ export default function SettingsScreen({
  * supportInfo — a plain-text summary for asking for help (e.g. on the forum),
  * instead of screenshots (which the Signer blocks). Contains NO address,
  * keys, words or passwords: only the version, Android version, the phone
- * check results and the extra-confirmation summary.
+ * check results, the extra-confirmation summary, and this copy's seal
+ * compared with the official one (public, not secret).
  */
-export function supportInfo(findings, rulesSummary) {
+export function supportInfo(findings, rulesSummary, ownSeal) {
+  const official = ownSeal ? isOfficialCopy(ownSeal) : null;
   return [
     'KLV Signer support info',
     `Version: ${appJson.expo.version} (${NETWORK})`,
     `Android: ${Platform.OS === 'android' ? `API ${Platform.Version}` : Platform.OS}`,
     `Phone checks: ${findings.length === 0 ? 'no problems found' : findings.map((f) => f.title).join('; ')}`,
     `Extra confirmation: ${rulesSummary || 'unknown'}`,
-    `Expected signing key: ${OFFICIAL_SIGNING_KEY}`,
+    `This copy's signing key: ${ownSeal && ownSeal.length ? ownSeal.join(', ') : 'unknown'}`,
+    `Official key: ${OFFICIAL_SIGNING_KEY} (${official === true ? 'matches' : official === false ? 'DOES NOT MATCH' : 'not checked'})`,
     '(No address, keys, recovery words or passwords are included.)',
   ].join('\n');
 }

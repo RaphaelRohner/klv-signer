@@ -24,6 +24,20 @@
  * check them on a computer.
  */
 
+import { OFFICIAL_SIGNING_KEY } from '../config.js';
+
+/** "82:D0:…" → "82D0…": fingerprints compared without colons, in capitals. */
+export const plainFingerprint = (fp) => String(fp || '').replace(/:/g, '').toUpperCase();
+
+/**
+ * isOfficialCopy — does THIS installed copy carry the official seal?
+ * true / false, or null if Android didn't say (then nothing is claimed).
+ */
+export function isOfficialCopy(signingCertificates) {
+  if (!Array.isArray(signingCertificates) || signingCertificates.length === 0) return null;
+  return signingCertificates.length === 1 && plainFingerprint(signingCertificates[0]) === plainFingerprint(OFFICIAL_SIGNING_KEY);
+}
+
 /** Shown under every warning: what these checks can and can't tell. */
 export const DEVICE_CHECK_LIMIT =
   'Rooting tools can hide from apps, so no warning doesn\'t prove a phone is safe. It only means none of the usual signs were found.';
@@ -36,6 +50,7 @@ export const DEVICE_CHECK_LIMIT =
  *   plus keyboard: { package, label, trusted } | null
  *   and accessibilityApps: { package, label, cameWithPhone, isTool }[]
  *   and internetPermission: boolean
+ *   and signingCertificates: string[] (this copy's seal, SHA-256 hex)
  * @returns {{ checked: boolean, findings: { id: string, title: string, text: string, blocks?: boolean }[] }}
  *   checked = false when the check couldn't run (e.g. in the tests on a computer)
  */
@@ -98,6 +113,18 @@ export function describeDeviceSecurity(report) {
       blocks: true,
       title: 'This copy of the Signer can use the internet',
       text: 'The Signer is built without internet access on purpose, so it can never send anything anywhere. This copy has it, so it was built wrongly or has been changed. Install the Signer from its official source.',
+    });
+  }
+
+  // Not the official seal: a copy built by someone else (or by you, from the
+  // source code). Warning only: building it yourself is allowed (GPL). A fake
+  // copy could of course leave this check out; Settings → About shows the
+  // seal Android reports, to compare with the README.
+  if (isOfficialCopy(report.signingCertificates) === false) {
+    findings.push({
+      id: 'unofficial',
+      title: 'This copy of the Signer isn\'t signed with the official key',
+      text: 'Android says this copy carries a different seal than the official KLV Signer (Settings → About shows both). If you built it yourself from the source code, that\'s expected. Otherwise it may be a fake: don\'t use it with real funds, uninstall it, install the Signer from its official source and restore your wallet from your recovery words.',
     });
   }
 

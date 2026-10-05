@@ -14,7 +14,9 @@
  *   addClosedListener(fn)             fn(id) when a request goes away unanswered
  *                                     (e.g. you switched back to the calling app)
  *   getDeviceSecurity()               (async) facts about the phone's own protections:
- *        { suBinary, testKeys, rootApps, verifiedBootState, flashLocked, screenLockSet }
+ *        { suBinary, testKeys, rootApps, verifiedBootState, flashLocked, screenLockSet,
+ *          keyboard, accessibilityApps, internetPermission,
+ *          signingCertificates (the seal of THIS installed copy, SHA-256) }
  *        see DeviceSecurity.kt; turned into words by src/security/deviceChecks.js
  *
  * If the native part isn't there (e.g. in the automated tests on a computer),

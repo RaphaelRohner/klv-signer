@@ -563,9 +563,39 @@ No `npm install` needed.
       signing key. No address, nothing secret. (The Signer locks, as always.)
 - F15 passed on 5 Oct 2026 (app switcher shows a white card with the icon only).
 
+
+**F16. The Signer checks its own seal**
+
+No `npm install` needed. Build and install the new APK as usual.
+
+- [ ] Settings → About → under Version: **This copy is signed with (as
+      Android reports it)**, a long code in pairs (`82:D0:9D:…`), then a teal
+      dot and **Matches the official KLV Signer key.** Below it the official
+      key: both codes are the same.
+- [ ] Home shows **no** new warning (the official copy gets none).
+- [ ] Settings → About → **Share info for support** → the text has two new
+      lines: "This copy's signing key: 82D09D…" and "Official key: 82:D0:…
+      (matches)".
+- [x] **Screen recording before the Signer starts:** start Android's screen
+      recorder (quick settings), then open the Signer and go through Unlock,
+      Home and Settings; then open the QR code screen. Stop the recording and
+      watch it: the Signer's screens should be black (or missing), except the
+      QR code screen. Passed 5 Oct 2026: blank; only the recorder's own tap
+      dots were visible (see "Good to know" below).
+- (Not testable with the official APK: a copy signed with another key shows a
+  red "Does NOT match" line in About and a warning on Home, without
+  switching signing off. The automatic tests cover this case.)
+
 ---
 
 ## Good to know
+
+- **Screen recordings show tap dots.** Android's screen recorder can draw a
+  dot wherever you touch, on top of the blank Signer. While typing a
+  password, someone watching such a recording could guess keys from where
+  the dots are. Only you can start a recording (Android asks every time and
+  shows a recording icon), so: don't record while typing a password, turn
+  "Show touches" off in the recorder, or unlock with fingerprint/face.
 
 - **Uninstalling the Signer deletes the wallet from the phone** (Android
   deletes an app's saved data with it). Your recovery phrase brings it back.
