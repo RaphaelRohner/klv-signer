@@ -10,3 +10,6 @@ credentials/
 *.jks
 *.keystore
 *.apk.sha256
+
+# Private notes (never in git)
+Infos.rtf
