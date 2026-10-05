@@ -608,13 +608,15 @@ No `npm install` needed. Build as usual (the build now refuses to start if
 something isn't committed; that's on purpose).
 
 - [ ] The Signer opens, unlocks and signs a Hub test transfer as before.
-- [ ] In Terminal, in the `app` folder, on ONE line (the new build's number):
+- [x] In Terminal, in the `app` folder, on ONE line (the new build's number):
 
       ```
       node tools/release-check.mjs build-<number>.apk
       ```
 
-      → ends with **OK** and shows "versionCode 1". If it says it can't find Android's build tools, tell
+      → ends with **OK** and shows "versionCode 1".
+      Passed 5 Oct 2026 on the Mac (build-tools 36.0.0), after fixing a false
+      alarm in the check (Expo's <queries> entry for web browsers). If it says it can't find Android's build tools, tell
       Claude what it printed.
 
 ---
