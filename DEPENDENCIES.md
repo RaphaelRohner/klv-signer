@@ -11,10 +11,12 @@ The app on your phone contains our own code, Expo and React Native (the
 toolkit it's built with), and a short list of crypto libraries. All packages
 come from the official npm registry and are locked to exact versions with
 integrity hashes (`package-lock.json`), so a build can't silently pick up a
-changed package. `npm audit` finds **no high or critical problems**. It does
-find 11 "moderate" ones, and all of them are the same single issue in a build
-tool for iPhone projects that never goes into the app. And since the Signer has
-no internet permission, even a harmful package couldn't send anything out.
+changed package. `npm audit` finds **no problems in anything that goes into
+the app.** It does list 24 findings (17 "high", 7 "moderate", re-checked 5 Oct
+2026), but they all come from two issues in Expo's command-line build tool
+(`@expo/cli`), which runs on the Mac and never ends up in the app (see
+finding 1). And since the Signer has no internet permission, even a harmful
+package couldn't send anything out.
 
 ## What ends up in the app
 
@@ -32,7 +34,8 @@ no internet permission, even a harmful package couldn't send anything out.
 | `@klever/connect-encoding` / `-core` | 0.1.3 / 0.1.4 | Pulled in by connect-crypto (address format). Not used directly: its transfer reader has a bug, so the Signer uses its own reader | Klever | exact |
 | `@noble/hashes` | 1.8.0 | scrypt (backup engine), blake2b (transaction fingerprint), SHA | Paul Miller (noble, independently audited) | exact |
 | `@noble/ciphers` | 1.3.0 | AES-256-GCM, the vault's scrambling | Paul Miller (noble, audited) | exact |
-| `@noble/ed25519`, `@noble/curves`, `@scure/bip32`, `@scure/base` | 2.3.0 / 1.9.7 / 1.7.0 / 2.4.0 | Used inside connect-crypto (signatures, key derivation, encodings) | Paul Miller (audited) | locked |
+| `@noble/ed25519`, `@noble/curves`, `@scure/bip32` | 2.3.0 / 1.9.7 / 1.7.0 | Used inside connect-crypto (signatures, key derivation) | Paul Miller (audited) | locked |
+| `@scure/base` | 2.4.0 (+ 1.2.6 inside bip32/bip39) | Address encoding (bech32): used directly by `src/klever/address.js`, and by connect-crypto | Paul Miller (audited) | exact (2.4.0) / locked |
 | `@scure/bip39` | 1.6.0 | Recovery-word list and checks | Paul Miller (audited) | exact |
 | `react-native-quick-crypto` | 1.1.7 | The fast scrypt engine (checked against noble on every start) | Margelo | exact |
 | ↳ OpenSSL (`io.github.ronickg:openssl-static`) | 3.6.2-2 | The native crypto code inside quick-crypto (Android library from Maven) | community build of OpenSSL | fixed in quick-crypto's build file |
@@ -47,12 +50,24 @@ no internet permission, even a harmful package couldn't send anything out.
 
 ## Findings
 
-1. **`npm audit` (app packages): 0 critical, 0 high, 11 moderate.** All 11 are
-   one advisory: [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq)
-   in `uuid` 7.0.3, used by `xcode` (a tool that edits iPhone project files)
-   inside Expo's build tools. It never goes into the Android app, and the
-   bug needs a caller that passes its own buffer. **No action;** it goes away
-   when Expo updates that tool.
+1. **`npm audit` (re-checked 5 Oct 2026): 0 critical, 17 high, 7 moderate,
+   none in the app itself.** All come from three advisories in build tools:
+   - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+     in `braces` 3.0.3 (a deeply nested file pattern can crash it), used by
+     `micromatch` → `@expo/metro-file-map` → `@expo/cli`, the tool that
+     bundles the app on the Mac;
+   - [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv)
+     in `node-forge` 1.4.0 (RSA signature checking), used by `@expo/cli` for
+     Expo's update-signing feature, which the Signer doesn't use;
+   - [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq)
+     in `uuid` 7.0.3, inside an iPhone-project tool (the 7 moderate ones).
+
+   `npm audit` lists `expo`, `react-native`, `metro` and even
+   `react-native-quick-crypto` as "high" only because they *depend on*
+   `@expo/cli`; `npm ls braces node-forge --omit=dev` shows both sit only
+   under `@expo/cli`. **No action; never run `npm audit fix --force`**: it
+   would "fix" this by installing Expo 44 from 2021 and break the app. They go
+   away when Expo updates these tools.
 2. **Everything comes from the official npm registry, each with an integrity
    hash.** No packages from Git links or other servers.
 3. **Only one package runs a script when installed:** `unrs-resolver`, part
@@ -89,11 +104,15 @@ no internet permission, even a harmful package couldn't send anything out.
 
 From the `app` folder:
 
-1. `npm audit --omit=dev` → no high or critical findings. Anything
-   moderate: check whether it's in the app (like finding 1) or only in build tools.
+0. Install exactly what package-lock.json says: `npm ci` (not `npm install`;
+   some of Klever's packages allow version ranges, only the lock file fixes them).
+1. `npm audit --omit=dev` → nothing critical, and nothing high or moderate
+   in a package that goes into the app. For each finding, `npm ls <package>
+   --omit=dev` shows where it sits; build tools only (like finding 1) is fine.
+   **Never `npm audit fix --force`.**
 2. `git diff package-lock.json` → every changed package is one you expected.
-3. `npm ls @noble/hashes @noble/ciphers @scure/bip39 @klever/connect-crypto`
-   → one version each, the ones in the table above.
+3. `npm ls @noble/hashes @noble/ciphers @noble/curves @noble/ed25519 @scure/bip39 @scure/base @klever/connect-crypto`
+   → the versions in the table above (@scure/base: 2.4.0, plus 1.2.6 inside bip32/bip39).
 4. `npm test` → all tests pass (includes the "no internet" and crypto checks).
 5. Update the table above if a version changed, with the date.
 6. If `expo-secure-store` changed: check its Keystore name is still

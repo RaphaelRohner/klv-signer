@@ -48,7 +48,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `DEPENDENCIES.md` | What the app is built from: every important add-on package, the review findings, and the checks to repeat before each release. |
 | `AGENTS.md` | Notes for AI helpers (like Claude) who work on this project later. |
 | `app/` | The actual Expo app. Everything below is inside it. |
-| `app/app.json` | The app's settings: name, Android ID, link address (`klvsigner://`), cloud backup off, no internet and no other unneeded permissions. |
+| `app/app.json` | The app's settings: name, Android ID, version number for updates (`versionCode`), cloud backup off, no internet and no other unneeded permissions. |
 | `app/package.json` | The list of building blocks (libraries) the app uses, and the `npm test` command. |
 | `app/index.js` | The first file that runs. Sets up secure randomness, then starts the app. |
 | `app/App.js` | The "traffic controller": decides which screen you see. Has a map of all screens at the top. |
@@ -62,8 +62,8 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `app/src/components/` | Shared looks (`ui.js`), the "remove wallet" box (`RemoveWallet.js`), the phone-safety box (`DeviceWarning.js`), connected apps, and the fingerprint/face switch and button (`BiometricSetting.js`, `BiometricButton.js`). |
 | `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. Also the phone-safety checks (`DeviceSecurity.kt`) and the window protections against overlays and accessibility misuse (`WindowProtection.kt`). |
 | `app/src/requests/` | The rules for requests from other apps: `protocol.js` (request checks and answers) and `appTrust.js` (which apps you've allowed). |
-| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (105 checks). Run with `npm test`. |
-| `app/eas.json` | Build settings (same as the Hub's). |
+| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (117 checks). Run with `npm test`. |
+| `app/eas.json` | Build settings: the signing key comes from this Mac only (`credentialsSource: local`), and builds only from committed code. |
 | `app/eslint.config.js` | Settings for the code checker (`npx expo lint`). |
 
 ## Key facts at a glance
@@ -90,5 +90,21 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `react-native-quick-crypto` | Runs the slow password recipe in the phone's fast built-in crypto code. |
 | `expo-secure-store` | Saves the scrambled wallet in Android's Keystore-protected storage. |
 | `expo-crypto` | The phone's secure random number generator. |
-| `expo-screen-capture` | Blocks screenshots while a recovery phrase is on screen. |
+| `expo-screen-capture` | Blocks screenshots and screen recordings on every screen except the QR code of your address. |
 | `react-native-safe-area-context` | Keeps screens clear of the notch and status bar. |
+
+## Licence
+
+Copyright (C) 2026 Raphael Rohner.
+
+KLV Signer is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. It is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
+
+It includes open-source packages under their own licences (MIT, ISC, BSD,
+Apache-2.0 and others): see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+A copy you build yourself carries your own signing key, not the official one,
+so Android and client apps can tell it apart from the official Signer.

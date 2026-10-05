@@ -25,13 +25,27 @@ test('app.json blocks the internet permission and adds no extra permissions', ()
   for (const p of [
     'android.permission.INTERNET',
     'android.permission.ACCESS_NETWORK_STATE',
+    'android.permission.ACCESS_WIFI_STATE',
     'android.permission.SYSTEM_ALERT_WINDOW',
+    'android.permission.READ_EXTERNAL_STORAGE',
+    'android.permission.WRITE_EXTERNAL_STORAGE',
+    'android.permission.VIBRATE',
     'android.permission.READ_MEDIA_IMAGES',
     'android.permission.READ_MEDIA_VIDEO',
   ]) {
     assert.ok(android.blockedPermissions.includes(p), `${p} must be blocked`);
   }
   assert.equal(android.allowBackup, false);
+});
+
+test('no link scheme (it would give the Signer a public entry point); a version code for updates', () => {
+  const expo = JSON.parse(readFileSync(join(APP, 'app.json'), 'utf8')).expo;
+  // Third review (A6/R8): a "scheme" makes Expo add a public, browsable link
+  // filter to the main screen. Requests come only by exact name (SIGNER-PROTOCOL 2b).
+  assert.equal(expo.scheme, undefined, 'no "scheme" in app.json');
+  // Third review (R3): Android uses versionCode to refuse installing an older
+  // version over a newer one. Must be a whole number, raised with every release.
+  assert.ok(Number.isInteger(expo.android.versionCode) && expo.android.versionCode >= 1);
 });
 
 /** All .js/.kt files under a folder. */

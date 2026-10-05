@@ -64,7 +64,8 @@ Android has a built-in way for one app to **ask another app for a result**:
 the first app opens the second, the second does its job, and Android hands
 the answer straight back to the first app. (Developers call it
 "start activity for result". Expo apps can use it through the standard
-`expo-intent-launcher` module, with no special code.)
+`expo-intent-launcher` module, plus a tiny native check that it's the real
+Signer: SIGNER-PROTOCOL.md 2c.)
 
 We use this instead of web-style links in both directions, because Android
 itself provides two guarantees:
@@ -226,17 +227,19 @@ You chose **a separate app password.** Here's what happens behind the scenes.
 
 ## 7. What a client app has to do
 
-Using the Devikins Legacy Hub as the example (it doesn't do any of this yet):
+Using the Devikins Legacy Hub as the example (it does all of this since
+version 4.1; the seal check since 4.1.1):
 
 | Piece | What it does |
 |---|---|
 | A "Send" (or "Buy", "Sign in"…) button | Starts the action, e.g. on an NFT's detail screen. |
 | A transaction helper | Asks Klever to prepare the unsigned transaction, and later sends the signed one. |
 | The request to the Signer | Asks Android to open the Signer with the unsigned transaction (with `expo-intent-launcher` in an Expo app), then waits for the answer. |
+| Checking the Signer | Before every request: is the installed Signer the official one (its seal)? If not, send nothing. |
 | Handling the answer | Signature → send to Klever. "Rejected" → tell the user nothing happened. Signer not installed → explain where to get it. |
 
-The exact request and answer formats will be written down in
-**SIGNER-PROTOCOL.md** (Stage 3), so any developer can follow them.
+The exact request and answer formats are in **SIGNER-PROTOCOL.md**, so any
+developer can follow them.
 
 ---
 

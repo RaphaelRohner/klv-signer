@@ -1,6 +1,7 @@
 {
   "name": "klv-signer",
   "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
   "main": "index.js",
   "dependencies": {
     "@klever/connect-crypto": "0.2.0",

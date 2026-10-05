@@ -5,11 +5,11 @@ signs transactions for other apps, only after the user approves each one
 with their password. This file lists the common attacks on Android wallet and
 signer apps, and where the Signer stands against each.
 
-> **Status: in development, testnet only.** The Signer has had two AI
-> reviews (the second one: REVIEW-2026-10.md), but no independent human
+> **Status: in development, testnet only.** The Signer has had three AI
+> reviews (the latest: REVIEW-2026-10-05.md), but no independent human
 > security review yet. Don't use it with real funds.
 
-Of 29 common attacks, the Signer blocks **16** today, partly covers **7**, and
+Of 29 common attacks, the Signer blocks **17** today, partly covers **6**, and
 **6** depend on the user or on how releases are published.
 
 **Status:** **Protected** = the Signer blocks it today · **Partly** = reduced,
@@ -35,14 +35,14 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Fake client app | A harmful app asks the Signer to sign something bad. | Android tells the Signer which app is asking (id + certificate). Each app must be allowed once, and every request shows the transaction as the Signer reads it. | Protected |
 | Fake Signer catching requests | A harmful app pretends to be the Signer to catch requests or answers. | Apps must call the Signer exactly by name (package + screen); since the second review the Signer has no public "intent filter" other apps could also claim. Answers go only to the asking app. A fake app installed under the Signer's name is caught by the client app's seal check (SIGNER-PROTOCOL.md 2c): before every request it asks Android whether the installed Signer carries the official signing certificate, and sends nothing if not. The Devikins Legacy Hub does this since 4.1.1. Other client apps are protected only if they follow 2c too; the Signer can't enforce that for them. | Protected (for apps following 2c) |
 | Task hijacking (StrandHogg) | A harmful app puts a fake Signer screen in front, to catch the password. | The known StrandHogg tricks were fixed by Android (StrandHogg 2.0 in Android 11, plus later hardening); the Signer requires Android 12 or newer. Not every variant can be ruled out on every phone maker's Android. | Protected |
-| Fake copy of the Signer | A look-alike app from an unofficial source steals the recovery phrase. | Only install the Signer from its official source. The official signing key fingerprint and file checksums are published (README, RELEASING.md). Since 5 Oct 2026 the Signer reads the seal of the installed copy from Android, shows it in Settings → About with "Matches the official KLV Signer key" (or a red "Does NOT match"), includes it in "Share info for support", and warns (without blocking: self-built copies are allowed) when it differs. This catches a changed copy that kept the check; a fake written from scratch can simply leave it out, so it doesn't replace installing from the official source. | Your side |
+| Fake copy of the Signer | A look-alike app from an unofficial source steals the recovery phrase. | Only install the Signer from its official source. The official signing key fingerprint is published (README, RELEASING.md, SIGNER-PROTOCOL.md), and every release lists its file checksum. Since 5 Oct 2026 the Signer reads the seal of the installed copy from Android, shows it in Settings → About with "Matches the official KLV Signer key" (or a red "Does NOT match"), includes it in "Share info for support", and warns (without blocking: self-built copies are allowed) when it differs. This catches a changed copy that kept the check; a fake written from scratch can simply leave it out, so it doesn't replace installing from the official source. | Your side |
 
 ## 2. Someone with the phone in hand
 
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
 | Guessing the password in the app | A thief tries password after password on the lock screen. | 4 free tries, then waits of 30 s, 1 min, 2 min … up to 1 hour, kept even if the app is closed. Since the second review: waits are timed with a stopwatch that changing the phone's clock doesn't affect, each try is counted before it's checked (so killing the app mid-check doesn't help), and only one check runs at a time. | Protected |
-| Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt N=2^17, OWASP's recommended minimum, + AES-256-GCM) inside Android Keystore-protected storage, whose key sits in the phone's security chip (secure area or StrongBox) and can't be copied out: a copy of the vault taken off the phone can't even be attacked by guessing. Since 5 Oct 2026 Settings → This phone shows where that key is kept, with a warning on the rare phone that keeps it only in software. New passwords need 12+ characters, with a strength hint. Older wallets are upgraded automatically. A weak password is still the one way in, so pick a strong one. | Protected |
+| Offline guessing of a copied vault | Forensic tools copy the scrambled key off the phone and guess on a computer. | Scrambled with the password (scrypt N=2^17, OWASP's recommended minimum, + AES-256-GCM) inside Android Keystore-protected storage, whose key sits in the phone's security chip (secure area or StrongBox) and can't be copied out: a copy of the vault file taken off the phone can't even be attacked by guessing. (Code already running as the Signer on a rooted or exploited phone can use that chip key, though, and then guess passwords against the password lock alone; that's what the slow scrypt and a strong password are for.) Since 5 Oct 2026 Settings → This phone shows where that key is kept, with a warning on the rare phone that keeps it only in software. New passwords need 12+ characters, with a strength hint. Older wallets are upgraded automatically. A weak password is still the one way in, so pick a strong one. | Protected |
 | Rooted or hacked phone | Tools with full control of the phone read memory or change how the app runs. | The key is only unscrambled for a moment and wiped straight after. The Signer warns when it finds signs of root, an unlocked bootloader or no screen lock. Signing is switched off on signs of root, an unlocked bootloader or a failed startup check (address and wallet removal still work; the recovery words restore the funds elsewhere). The warning is on the Unlock screen every time you open the Signer. Rooting tools can hide, so no warning isn't proof. No app can fully protect itself on a compromised phone. | Partly |
 | Backup extraction | The wallet is copied out through Android or cloud backups. | Android backup is switched off; storage is tied to the phone's Keystore. | Protected |
 | Shoulder surfing | Someone watches the password being typed or reads the recovery words. | Passwords are hidden by default (Show/Hide); the optional fingerprint/face shortcut avoids typing in public. Keep the recovery words private. | Your side |
@@ -71,15 +71,15 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
 | Malicious node or man-in-the-middle | A fake or hacked server prepares a different transaction, or shows false balances. | Whatever the server prepared, the Signer shows what the transaction really does before signing. Client apps should use HTTPS. | Protected |
-| The Signer going online | A bug or a harmful library sends data out. | The Signer has no internet permission at all (every build), so Android itself blocks any attempt to go online. Unneeded permissions ("display over other apps", storage, vibration) are removed too. Automated tests fail if the permission or any network code comes back, and a copy of the Signer that has the permission refuses to sign. | Protected |
+| The Signer going online | A bug or a harmful library sends data out. | The Signer has no internet permission at all (every build), so Android itself blocks any attempt to go online. Unneeded permissions ("display over other apps", storage, vibration) are removed too. Automated tests fail if the permission or any network code comes back, the release check (`tools/release-check.mjs`) refuses an APK that has it, and a copy of the Signer that has the permission refuses to sign. | Protected |
 
 ## 6. Supply chain and releases
 
 | Attack | What happens | KLV Signer today | Status |
 | --- | --- | --- | --- |
-| Harmful library | A dependency is taken over and ships malicious code in an update. | Reviewed 30 Sep 2026 (DEPENDENCIES.md): all from the npm registry with integrity hashes, no high/critical audit findings, no install scripts in app packages. Crypto and native libraries pinned exactly; new ones saved exactly. And with no internet permission, a harmful library couldn't send anything out. Needs repeating before each release. | Partly |
-| Stolen signing key or build machine | Someone with the app-signing key or the build machine publishes a harmful "update". | Since 1 Oct 2026 the signing key exists only on the owner's Mac (disk encrypted) and in encrypted backups; it was deleted from Expo's servers, so an Expo account takeover can't sign updates. The official key fingerprint is published (README, RELEASING.md), and `tools/release-check.mjs` refuses APKs signed with any other key. | Your side |
-| Tampered download | The APK people download differs from the source code here. | Planned: published checksums, build provenance from GitHub Actions, and ideally reproducible builds. | Your side |
+| Harmful library | A dependency is taken over and ships malicious code in an update. | Reviewed 30 Sep and 5 Oct 2026 (DEPENDENCIES.md): all from the npm registry with integrity hashes, no audit findings in anything that goes into the app (the 17 "high" ones are in Expo's build tool on the Mac), no install scripts in app packages. Crypto and native libraries pinned exactly; new ones saved exactly. And with no internet permission, a harmful library couldn't send anything out. Needs repeating before each release. | Partly |
+| Stolen signing key or build machine | Someone with the app-signing key or the build machine publishes a harmful "update". | Since 1 Oct 2026 the signing key exists only on the owner's Mac (disk encrypted) and in two offline backups (a USB stick and the password manager); it was deleted from Expo's servers, so an Expo account takeover can't sign updates. The official key fingerprint is published (README, RELEASING.md), and `tools/release-check.mjs` uses Android's own `apksigner` to refuse any APK whose signature isn't valid or isn't made with the official key. | Your side |
+| Tampered download | The APK people download differs from the source code here. | Every release lists its SHA-256 checksum (written by the release check, only when all its checks pass) and the official key, so a changed download can be spotted. Builds use only committed code (`requireCommit`), and each release is tagged. Planned with the first public release: build provenance from GitHub Actions, later reproducible builds (RELEASING.md). | Your side |
 | Account takeover | Someone gets into the GitHub, Expo or Google Play account and replaces the app or code. | GitHub and Expo use two-factor authentication with an authenticator app (1 Oct 2026); Google Play will too. The signing key isn't on any of these accounts. | Your side |
 
 ---
@@ -95,7 +95,7 @@ that affects a row above.
 | 30 Sep 2026 | Android 12 minimum: task hijacking closed | 14 / 9 / 6 |
 | 30 Sep 2026 | Phone-safety warnings (root, bootloader, screen lock), shown on the Unlock screen | 14 / 9 / 6 (rooted phones: still Partly, no app can fully fix that) |
 | 30 Sep 2026 | Overlays hidden and covered taps ignored: tapjacking closed. Also: signing off on rooted/unlocked phones, screens hidden from non-tool accessibility apps, keyboard and accessibility-app warnings | 15 / 8 / 6 (rooted phones, accessibility and keyboard stay Partly) |
-| 30 Sep 2026 | Optional fingerprint/face (strong biometrics only; copy destroyed if a fingerprint is added; password after restart and every 7 days): less typing for keyloggers and onlookers | 15 / 8 / 6 |
+| 30 Sep 2026 | Optional fingerprint/face (strong biometrics only; copy made permanently unusable if a fingerprint is added; password after restart and every 7 days): less typing for keyloggers and onlookers | 15 / 8 / 6 |
 | 30 Sep 2026 | Change password from Home (re-scrambles the key with a fresh salt; switches fingerprint/face off) | 15 / 8 / 6 |
 | 30 Sep 2026 | Stronger passwords: 4× heavier password check (scrypt 2^17), 12-character minimum, strength hint, older wallets upgraded automatically. Offline guessing closed | 16 / 7 / 6 |
 | 30 Sep 2026 | No internet permission (plus "display over other apps", storage, vibration removed); signing refused by any copy that has it; tests guard against it coming back. The Signer going online closed | 17 / 6 / 6 |
@@ -106,6 +106,7 @@ that affects a row above.
 | 5 Oct 2026 | The Signer shows its own seal (signing key) as Android reports it, compared with the official one, in Settings → About and the support text; warning if it differs. Helps spot a re-signed copy; "Fake copy" stays Your side | 16 / 7 / 6 |
 | 5 Oct 2026 | Client apps check the Signer's seal before every request (SIGNER-PROTOCOL.md 2c, with a ready-made Expo module); the Hub does it since 4.1.1. "Fake Signer catching requests" → Protected for apps that follow it | 17 / 6 / 6 |
 | 5 Oct 2026 | Settings → This phone shows where the key locking the stored wallet is kept (StrongBox, secure area, or software only, with a warning); checked that expo-secure-store already keeps it in the phone's security hardware | 17 / 6 / 6 |
+| 5 Oct 2026 | Third AI review (REVIEW-2026-10-05.md), release housekeeping: GPL-3.0-or-later licence, leftover `klvsigner://` link scheme removed (no public entry point at all now), versionCode for updates, release check with Android's own tools (valid signature, permissions, not debuggable, backup off, no link filters; checksum only when OK), builds from committed code only, `requestId` echoed on every answer, third-party notices | 17 / 6 / 6 |
 
 ## Planned fixes (Stage 4)
 
@@ -136,4 +137,4 @@ that affects a row above.
 - [WalletScrutiny: Methodology](https://walletscrutiny.com/methodology/)
 - [Google Play: Cryptocurrency Exchanges and Software Wallets policy](https://support.google.com/googleplay/android-developer/answer/16329703?hl=en)
 
-_Last updated 30 Sep 2026._
+_Last updated 5 Oct 2026._

@@ -150,12 +150,25 @@ class SignRequestActivity : Activity() {
     val data = Intent()
     requestId?.let { data.putExtra(SignerProtocol.EXTRA_SIGNER_REQUEST_ID, it) }
     for ((key, value) in extras) data.putExtra(key, value)
+    // The caller's own requestId goes back unchanged on EVERY answer, also on
+    // the errors produced here before the JS side ever saw the request
+    // (SIGNER-PROTOCOL.md 3; third review R12). Only if it's within the limit.
+    if (!extras.containsKey(SignerProtocol.EXTRA_REQUEST_ID)) {
+      callerRequestId()?.let { data.putExtra(SignerProtocol.EXTRA_REQUEST_ID, it) }
+    }
     data.putExtra(SignerProtocol.EXTRA_PROTOCOL_VERSION, SignerProtocol.PROTOCOL_VERSION)
     setResult(if (ok) RESULT_OK else RESULT_CANCELED, data)
     finish()
   }
 
   // ---- Helpers --------------------------------------------------------------------
+
+  /** The requestId the calling app sent (≤ 200 characters), or null. Never throws. */
+  private fun callerRequestId(): String? = try {
+    intent?.getStringExtra(SignerProtocol.EXTRA_REQUEST_ID)?.takeIf { it.length <= 200 }
+  } catch (e: Exception) {
+    null
+  }
 
   /** The calling app's visible name (e.g. "DLH"). Note: any app can pick any name; the package id is what's unique. */
   private fun appLabel(pkg: String): String = try {

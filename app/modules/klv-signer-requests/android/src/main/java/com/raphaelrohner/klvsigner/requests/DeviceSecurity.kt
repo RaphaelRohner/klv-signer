@@ -4,8 +4,10 @@
  *
  * Collects a few signs that the phone's own protections have been switched
  * off. The Signer shows a warning when it finds any (see
- * src/security/deviceChecks.js for the plain-words version). It never blocks
- * you: it's your phone and your decision.
+ * src/security/deviceChecks.js for the plain-words version). Most are
+ * warnings only (your phone, your decision); signs of root, an unlocked
+ * bootloader, a failed startup check or an internet permission switch
+ * signing off, because then the Signer can't protect the key.
  *
  * WHAT IT LOOKS FOR
  *   - Root: a "su" program in the usual places, or a known rooting app

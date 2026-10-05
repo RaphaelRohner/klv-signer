@@ -40,24 +40,48 @@ installing updates until a new, re-keyed Signer is announced.
 
 ## Making a release
 
-1. **Tests:** in `app`: `npm test` → `# fail 0`.
-2. **Version:** raise `"version"` in `app/app.json` (e.g. 0.1.0 → 0.2.0) and
-   note what changed.
-3. **Build:** `npx eas-cli@latest build --platform android --profile preview --local`
-4. **Name it and check it:** `cp build-<number>.apk klv-signer-0.2.0.apk`, then
+Do these in order, from the `app` folder unless noted. Version `0.2.0` is the
+example; use the real one.
+
+1. **Clean start:** `git status` shows nothing to commit (builds refuse
+   uncommitted changes anyway: `requireCommit` in eas.json). Then `npm ci`
+   (installs exactly what package-lock.json says).
+2. **Checks:** `npm test` → `# fail 0`, and the checklist "Before every
+   release" in DEPENDENCIES.md (audit, versions). **Never `npm audit fix
+   --force`**: it would install a years-old Expo and break the app.
+3. **Version:** in `app/app.json` raise `"version"` (e.g. 0.1.0 → 0.2.0) **and**
+   `"android" → "versionCode"` by one (e.g. 1 → 2). Android uses the
+   versionCode to refuse installing an older version over a newer one. Note
+   what changed. Commit.
+4. **Notices:** `node tools/third-party-notices.mjs` → updates
+   `THIRD-PARTY-NOTICES.md` (licences of the packages inside the app). Commit
+   if it changed.
+5. **Build:** `npx eas-cli@latest build --platform android --profile preview --local`
+6. **Name it and check it:** `cp build-<number>.apk klv-signer-0.2.0.apk`, then
    `node tools/release-check.mjs klv-signer-0.2.0.apk`
-   → must end with **OK: signed with the official KLV Signer key**. It also
-   writes `klv-signer-0.2.0.apk.sha256`.
-5. **Phone test:** install it over the previous version (`adb install -r …`):
+   → must end with **OK**. It uses Android's own tools from the Android SDK
+   (apksigner, aapt2) and checks: valid signature with the official key, no
+   internet or other removed permissions, not a debug build, backup off, no
+   link filters, versionCode higher than every earlier release. Only then
+   does it write `klv-signer-0.2.0.apk.sha256`. If it says STOP: don't publish.
+7. **Phone test:** install it over the previous version (`adb install -r …`):
    wallet still there, unlock, one Hub test transfer.
-6. **GitHub release** (repository → Releases → Draft a new release):
-   - Tag: `v0.2.0` (the version), title "KLV Signer 0.2.0 (testnet preview)".
-   - Upload `klv-signer-0.2.0.apk` and `klv-signer-0.2.0.apk.sha256`.
-   - Notes: what changed, the checksum, the official key fingerprint,
-     "testnet only, no independent audit yet", and the "Before you start"
-     text from the README (as is, own risk, only funds you could afford to lose).
+8. **Tag the commit:** in the project folder, `git tag v0.2.0` and
+   `git push origin v0.2.0` (so everyone can see exactly which code it is).
+9. **GitHub release** (repository → Releases → Draft a new release):
+   - Tag: `v0.2.0`, title "KLV Signer 0.2.0 (testnet preview)".
+   - Upload `klv-signer-0.2.0.apk`, `klv-signer-0.2.0.apk.sha256` and
+     `THIRD-PARTY-NOTICES.md`.
+   - Notes: what changed, the commit hash (`git rev-parse v0.2.0`), the
+     checksum, the official key fingerprint, "testnet only, no independent
+     audit yet", and the "Before you start" text from the README (as is, own
+     risk, only funds you could afford to lose).
    - Tick **Set as a pre-release** while it's testnet.
-7. **Announce** (Klever forum) with a link to the release, never to a file
+10. **Record it:** add `{ "version": "0.2.0", "versionCode": 2 }` to
+   `app/tools/released-versions.json` (the release check prints the line)
+   and commit. From then on, a build with the same or a lower versionCode
+   is refused.
+11. **Announce** (Klever forum) with a link to the release, never to a file
    hosted anywhere else.
 
 ## Later

@@ -3,7 +3,6 @@
     "name": "KLV Signer",
     "slug": "klv-signer",
     "version": "0.1.0",
-    "scheme": "klvsigner",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -11,6 +10,7 @@
       "supportsTablet": false
     },
     "android": {
+      "versionCode": 1,
       "package": "com.raphaelrohner.klvsigner",
       "allowBackup": false,
       "permissions": [],
