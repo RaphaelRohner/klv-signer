@@ -620,6 +620,23 @@ something isn't committed; that's on purpose).
       Claude what it printed.
 - F18 passed on 5 Oct 2026.
 
+**F19. Quick security fixes from the third review**
+
+No `npm install` needed. Build and install as usual.
+
+- [ ] The Signer opens normally: Home says "Ready to sign" (or the same
+      warnings as before). Nothing new should appear on your phone; the
+      change only matters when Android gives no answer.
+- [ ] Settings → **Change password** → current password, then try
+      `password1234` as the new one (and repeat it) → the box says "Too easy
+      to guess" and **Change password** stays greyed out. Then **Back**
+      (don't change it, unless you want to: a password like
+      "maple tunnel orbit ginger" is accepted).
+- [ ] (Only if you set up a test wallet again some day) Restore: the tip no
+      longer suggests pasting. If you do paste several words into box 1, a
+      yellow warning about the clipboard appears.
+- (Testnet-only and the "no answer" case are covered by automatic tests.)
+
 ---
 
 ## Good to know

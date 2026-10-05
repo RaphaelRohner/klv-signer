@@ -178,6 +178,9 @@ export default function App() {
     const refresh = () => {
       getDeviceSecurity()
         .then((report) => {
+          // No answer at all from the native check counts as "couldn't check",
+          // not as "safe" (third review, A2): signing off until it works.
+          if (!report) throw new Error('The phone check returned nothing.');
           const findings = describeDeviceSecurity(report).findings;
           signingBlockedRef.current = isSigningBlocked(findings);
           setDeviceFindings(findings);

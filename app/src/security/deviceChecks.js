@@ -91,6 +91,17 @@ export function describeDeviceSecurity(report) {
 
   // 2. Android's startup check (verified boot)
   const boot = report.verifiedBootState;
+  // Every Android 12+ phone reports its startup check. No answer means the
+  // check was blocked or tampered with, so it isn't treated as "fine"
+  // (third review, A2: fail closed).
+  if (!boot) {
+    findings.push({
+      id: 'bootUnknown',
+      blocks: true,
+      title: 'Android didn\'t report its startup check',
+      text: 'The Signer couldn\'t find out whether Android\'s startup check (verified boot) is on. Every normal phone reports it, so this is unusual: signing is switched off. Close the Signer completely and open it again; if it stays, the phone\'s system may have been changed.',
+    });
+  }
   if (boot === 'orange' || report.flashLocked === '0') {
     findings.push({
       id: 'bootloader',

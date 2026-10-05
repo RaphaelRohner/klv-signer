@@ -21,6 +21,7 @@ import { decodeMessage, encodeMessage, bytesToHex, hexToBytes, writeVarint } fro
 import { UnsignedTransactionSchema, TransferContractSchema } from '../src/klever/schema.js';
 import { formatUnits, describeAmount, describeNote } from '../src/klever/format.js';
 import { walletFromPhrase } from '../src/crypto/wallet.js';
+import { NETWORK } from '../src/config.js';
 
 // The famous PUBLIC test phrase (never holds anything of value).
 const PUBLIC_TEST_PHRASE =
@@ -255,4 +256,14 @@ test('notes that could fake or hide screen content are not shown as text', () =>
 
 test('an oversized input is refused before it is even converted', () => {
   assert.throws(() => readTransaction('00'.repeat(40000), EXPECT), /far too large/);
+});
+
+// --- The shipped setting ---------------------------------------------------------
+
+test('the Signer is set to TESTNET, and with that setting a mainnet transaction is refused (third review, T7)', () => {
+  // Switching to mainnet is a deliberate decision (HOW-IT-WORKS, SECURITY.md):
+  // whoever makes it has to change this test too, on purpose.
+  assert.equal(NETWORK, 'testnet');
+  refuses(modified(KLV_TX, (raw) => { raw.ChainID = new TextEncoder().encode('108'); }), /Mainnet/, { network: NETWORK, walletAddress: ME });
+  assert.equal(readTransaction(KLV_TX, { network: NETWORK, walletAddress: ME }).transfers.length, 1);
 });

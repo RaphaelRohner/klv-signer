@@ -17,6 +17,7 @@ import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title } from '../components/ui.js';
 import { MIN_PASSWORD_LENGTH } from '../config.js';
 import PasswordStrength from '../components/PasswordStrength.js';
+import { isAcceptablePassword } from '../security/passwordStrength.js';
 
 /**
  * @param {object} props
@@ -33,8 +34,9 @@ export default function SetPasswordScreen({ onSubmit, onBack }) {
 
   // Work out what (if anything) is still wrong, to show under the boxes.
   const tooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+  const tooWeak = !tooShort && password.length > 0 && !isAcceptablePassword(password);
   const different = repeat.length > 0 && repeat !== password;
-  const ready = password.length >= MIN_PASSWORD_LENGTH && repeat === password;
+  const ready = isAcceptablePassword(password) && repeat === password;
 
   async function save() {
     setBusy(true);
@@ -65,7 +67,7 @@ export default function SetPasswordScreen({ onSubmit, onBack }) {
         secret
         editable={!busy}
         onChangeText={setPassword}
-        error={tooShort ? `Please use at least ${MIN_PASSWORD_LENGTH} characters.` : ''}
+        error={tooShort ? `Please use at least ${MIN_PASSWORD_LENGTH} characters.` : tooWeak ? 'Too easy to guess. Please choose a stronger one (see the hint below).' : ''}
       />
       <PasswordStrength password={password} />
       <Field

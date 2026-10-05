@@ -3,8 +3,10 @@
  * =====================================================
  *
  * Shown under the password box when you choose or change the app password.
- * It's a HINT, not a rule: the only hard rule is the minimum length
- * (config.js, MIN_PASSWORD_LENGTH). Everything else is advice.
+ * Two hard rules (isAcceptablePassword): the minimum length (config.js,
+ * MIN_PASSWORD_LENGTH), and not "weak" (since the third review, 5 Oct 2026:
+ * "password1234" or "111111111111" were accepted before). "Fair" is allowed;
+ * "strong" is recommended.
  *
  * Three levels:
  *   - weak:   too short, a well-known password, or very repetitive
@@ -90,4 +92,14 @@ export function passwordStrength(password) {
     level: 'fair',
     hint: 'OK, but could be stronger. Tip: 4 random words ("maple tunnel orbit ginger") are strong and easy to remember.',
   };
+}
+
+/**
+ * isAcceptablePassword — may this be the new app password? Long enough and
+ * not rated "weak". (Existing passwords keep working; this only applies when
+ * choosing or changing one.)
+ */
+export function isAcceptablePassword(password) {
+  const pw = String(password || '');
+  return pw.length >= MIN_PASSWORD_LENGTH && passwordStrength(pw).level !== 'weak';
 }

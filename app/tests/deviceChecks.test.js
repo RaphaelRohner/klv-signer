@@ -40,11 +40,13 @@ test('any sign of root gives one root warning naming what was found', () => {
 
 test('bootloader states map to the right warning', () => {
   assert.deepEqual(ids({ ...SAFE, verifiedBootState: 'orange' }), ['bootloader']);
-  assert.deepEqual(ids({ ...SAFE, verifiedBootState: null, flashLocked: '0' }), ['bootloader']);
+  assert.deepEqual(ids({ ...SAFE, verifiedBootState: null, flashLocked: '0' }), ['bootUnknown', 'bootloader']);
   assert.deepEqual(ids({ ...SAFE, verifiedBootState: 'yellow' }), ['customOs']);
   assert.deepEqual(ids({ ...SAFE, verifiedBootState: 'red' }), ['bootFailed']);
-  // Unreadable values (null) are not treated as a problem.
-  assert.deepEqual(ids({ ...SAFE, verifiedBootState: null, flashLocked: null }), []);
+  // An unreadable boot state is NOT treated as fine any more (third review, A2);
+  // an unreadable flash-lock flag alone is (some phones don't report it).
+  assert.deepEqual(ids({ ...SAFE, verifiedBootState: null, flashLocked: null }), ['bootUnknown']);
+  assert.deepEqual(ids({ ...SAFE, flashLocked: null }), []);
 });
 
 test('a missing screen lock is warned about', () => {
@@ -137,4 +139,12 @@ test('a wallet key kept only in software gets a warning (not a block); hardware 
   assert.match(describeKeyStorage('tee'), /secure area/);
   assert.match(describeKeyStorage('software'), /no security chip/);
   assert.equal(describeKeyStorage(undefined), 'Couldn\'t check');
+});
+
+test('no startup-check answer switches signing off (fails closed; third review, A2)', () => {
+  for (const missing of [null, undefined, '']) {
+    const f = findingsOf({ ...SAFE, verifiedBootState: missing });
+    assert.deepEqual(f.map((x) => x.id), ['bootUnknown'], String(missing));
+    assert.equal(isSigningBlocked(f), true);
+  }
 });

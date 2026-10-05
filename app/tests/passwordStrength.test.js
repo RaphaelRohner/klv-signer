@@ -6,7 +6,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { passwordStrength } from '../src/security/passwordStrength.js';
+import { isAcceptablePassword, passwordStrength } from '../src/security/passwordStrength.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_STRETCHING } from '../src/config.js';
 import { isWeakerThan } from '../src/crypto/vault.js';
 
@@ -51,4 +51,13 @@ test('older, lighter vaults are recognised for upgrading', () => {
   assert.equal(isWeakerThan({ N: 32768, r: 8, p: 1 }, PASSWORD_STRETCHING), true);
   assert.equal(isWeakerThan({ N: 131072, r: 8, p: 1 }, PASSWORD_STRETCHING), false);
   assert.equal(isWeakerThan(null, PASSWORD_STRETCHING), false);
+});
+
+test('weak passwords are refused as a new password; fair and strong are accepted (third review, C1)', () => {
+  for (const pw of ['111111111111', 'password1234', 'qwertyuiop12', 'klever123456', 'abcdefghijkl', 'short']) {
+    assert.equal(isAcceptablePassword(pw), false, pw);
+  }
+  for (const pw of ['maple tunnel orbit ginger', 'Raphael-Dublin-77', 'cobalt4Lantern!']) {
+    assert.equal(isAcceptablePassword(pw), true, pw);
+  }
 });
