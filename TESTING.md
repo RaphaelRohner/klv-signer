@@ -642,14 +642,14 @@ No `npm install` needed. Build and install as usual.
 
 No `npm install` needed. Build and install as usual.
 
-- [ ] Normal use: Home "Ready to sign" (no new warning, unless you have an
+- [x] Normal use: Home "Ready to sign" (no new warning, unless you have an
       accessibility app on that you installed yourself), Hub test transfer
       works with password and with fingerprint as before.
-- [ ] Settings → Connected apps → **Remove** the Hub. In the Hub, tap
+- [x] Settings → Connected apps → **Remove** the Hub. In the Hub, tap
       Connect → "Allow this app?" now has a password box (and the fingerprint
       button if it's on). Wrong password → refused; right password (or
       fingerprint) → allowed, the Hub shows your address.
-- [ ] (Optional) Install an app that asks for accessibility access, e.g. an
+- [x] (Optional) Install an app that asks for accessibility access, e.g. an
       auto-clicker from the Play Store, and switch its access on in Android
       Settings → Accessibility. Then Settings → This phone in the Signer:
       - **Android 14 or newer** (most auto-clickers don't call themselves an
@@ -662,6 +662,10 @@ No `npm install` needed. Build and install as usual.
         buttons in the Signer", and the approval screen has **no password
         box**, only "Approve with fingerprint or face" and Reject.
       Switch the app's access off again (or uninstall it) afterwards.
+- F20 passed on 5 Oct 2026 (Android 15). With an auto-clicker on, the Signer showed the
+  milder note and kept the password box (as intended on Android 14+); the auto-clicker
+  tapping Approve repeatedly never got a transaction signed (the Signer never returned
+  to the Hub). Uninstalling the auto-clicker stopped it.
 
 ---
 
