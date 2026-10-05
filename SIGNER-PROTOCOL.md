@@ -76,26 +76,95 @@ The Signer has no public "intent filter" (since 1 Oct 2026): it can **only**
 be called this way, by exact name. Requests without the class name don't
 reach it.
 
-### 2c. Check that it's the real Signer (recommended)
+### 2c. Check that it's the real Signer (strongly recommended)
 
-A fake app installed under the Signer's package name (from an unofficial
-source) would receive your requests. Before the first request, check the
-installed Signer's signing certificate against the official fingerprint:
-
-```kotlin
-val official = hexToBytes("82D09DD7D327A48DDB97EE05FEEC0A8CF414C4817F0FB7268B8A88F0257E8611")
-val genuine = context.packageManager.hasSigningCertificate(
-    "com.raphaelrohner.klvsigner", official, PackageManager.CERT_INPUT_SHA256)
-if (!genuine) { /* don't send requests; tell the user the Signer isn't the official one */ }
-```
+Addressing the Signer by name (2b) stops other apps from catching your
+requests, but not a fake app *installed under the Signer's name* (from an
+unofficial source). Every Android app carries a seal: the certificate it was
+signed with, which nobody else can copy. So **before every request**, ask
+Android whether the installed Signer carries the official seal, and send
+nothing if it doesn't. The Devikins Legacy Hub does this since version 4.1.1.
 
 The official fingerprint (SHA-256 of the Signer's signing certificate):
 
 `82:D0:9D:D7:D3:27:A4:8D:DB:97:EE:05:FE:EC:0A:8C:F4:14:C4:81:7F:0F:B7:26:8B:8A:88:F0:25:7E:86:11`
 
+Without colons: `82D09DD7D327A48DDB97EE05FEEC0A8CF414C4817F0FB7268B8A88F0257E8611`.
 It's also in the README and in every release's notes. If it ever changes,
 that will be announced loudly; until then, treat any other fingerprint as a
 fake Signer.
+
+**Rules**
+
+- Check before **every** request, not only once at start-up (the Signer
+  could be replaced in between).
+- **Fail closed:** if the check says "different", or can't run at all, don't
+  send the request. Tell the user in plain words: the Signer on the phone
+  isn't the official one; uninstall it, install it from the official source
+  and restore the wallet from the recovery words.
+- Use `hasSigningCertificate` (below), not your own comparison of
+  `signatures`: it also accepts a legitimate future key change, which Android
+  records in the app's key history.
+- No permission is needed; the `<queries>` entry from 2a is enough.
+
+**Kotlin (native Android apps)**
+
+```kotlin
+val official = "82D09DD7D327A48DDB97EE05FEEC0A8CF414C4817F0FB7268B8A88F0257E8611"
+    .chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+val pm = context.packageManager
+val genuine = try {
+    pm.getPackageInfo("com.raphaelrohner.klvsigner", 0) // throws if not installed
+    pm.hasSigningCertificate("com.raphaelrohner.klvsigner", official, PackageManager.CERT_INPUT_SHA256)
+} catch (e: PackageManager.NameNotFoundException) {
+    false // not installed: show "please install the KLV Signer"
+}
+if (!genuine) { /* don't send the request */ }
+```
+
+**Expo / React Native**
+
+JavaScript can't ask Android this directly, so add a tiny local Expo module
+(Expo links anything in your app's `modules/` folder automatically; no npm
+package, no `npm install`). Copy it from the Hub, which is the reference:
+
+```
+modules/klv-signer-check/
+  expo-module.config.json   lists the Kotlin class
+  android/build.gradle      plain Expo module build file
+  android/src/main/java/…/KlvSignerCheckModule.kt
+                            signerStatus(package, certSha256Hex) →
+                            "official" | "different" | "not_installed" | "unknown"
+  index.js                  signerStatus(…), "unavailable" when the native
+                            part is missing (e.g. Expo Go)
+```
+
+The Kotlin part is about 20 lines: `getPackageInfo` (not installed?) and
+then `hasSigningCertificate`, exactly as in the Kotlin example above, inside
+`Function("signerStatus") { packageName: String, certSha256Hex: String -> … }`.
+Change the Kotlin package name to your own app's. Then, in JavaScript, call it
+first in every request (section 5 shows where):
+
+```js
+import { signerStatus } from '../modules/klv-signer-check';
+
+const OFFICIAL_SIGNER_CERT_SHA256 = '82D09DD7D327A48DDB97EE05FEEC0A8CF414C4817F0FB7268B8A88F0257E8611';
+
+function verifySigner() {
+  const status = signerStatus('com.raphaelrohner.klvsigner', OFFICIAL_SIGNER_CERT_SHA256);
+  if (status === 'official') return;
+  if (status === 'not_installed') throw Object.assign(new Error('The KLV Signer app is not installed.'), { code: 'NOT_INSTALLED' });
+  if (status === 'different') throw Object.assign(new Error("The KLV Signer on this phone isn't the official one."), { code: 'SIGNER_NOT_OFFICIAL' });
+  throw Object.assign(new Error("Couldn't check the KLV Signer, so nothing was sent."), { code: 'SIGNER_CHECK_FAILED' });
+}
+```
+
+Because it's native code, it works in a real build (APK), not in Expo Go;
+there `verifySigner` refuses, on purpose.
+
+**Building the Signer yourself?** A copy you build from the source code
+carries *your* seal, not the official one. For your own testing, add your
+fingerprint to the list your app accepts, and never ship that to users.
 
 ---
 
@@ -205,6 +274,7 @@ const ACTION = {
 };
 
 async function askSigner(action, extra = {}) {
+  verifySigner(); // section 2c: the real Signer, or nothing at all
   let result;
   try {
     result = await IntentLauncher.startActivityAsync(action, {
@@ -227,6 +297,7 @@ const { signedTransaction } = await askSigner(ACTION.SIGN_TRANSACTION, { transac
 ## 6. Example: Kotlin
 
 ```kotlin
+// First: the seal check from section 2c. Not genuine → stop here.
 val intent = Intent("com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION").apply {
   setClassName("com.raphaelrohner.klvsigner", "com.raphaelrohner.klvsigner.requests.SignRequestActivity")
   putExtra("protocolVersion", "1")
@@ -270,4 +341,6 @@ const hash = await new KleverProvider('testnet')
   Signer shows it again, from its own reading.
 - Never ask users for their recovery phrase or private key. That's what the
   Signer is for.
+- Check the Signer's seal before every request (2c), and send nothing if it
+  doesn't match.
 - Handle "no" gracefully: `rejected` is a normal answer, not a crash.

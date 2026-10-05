@@ -75,10 +75,13 @@ itself provides two guarantees:
 - **The answer goes back only to the app that asked.** No other app can
   catch it on the way.
 
-One gap remains: a fake app installed under the Signer's own name (from an
-unofficial source) would be asked instead. Once the Signer is published, its
-certificate fingerprint lets client apps check they're talking to the real
-one (SIGNER-PROTOCOL.md, 2c).
+- **The asking app checks it's talking to the real Signer.** A fake app
+  installed under the Signer's own name (from an unofficial source) would
+  otherwise be asked instead. So, before every request, the asking app asks
+  Android whether the installed Signer carries the official seal (signing
+  certificate), and sends nothing if it doesn't (SIGNER-PROTOCOL.md, 2c).
+  The Devikins Legacy Hub does this since version 4.1.1; other apps should
+  too, and the protocol gives them a ready-made recipe.
 
 Other developers will get a short, public description of how to ask the
 Signer (the **Signer protocol**), so they can add "Sign with KLV Signer" to
