@@ -51,6 +51,14 @@ const manifestOutput = ({ allowBackup = 'false', browsable = false, requestFilte
     A: ${A}:versionCode(0x0101021b)=2
     A: ${A}:versionName(0x0101021c)="0.2.0" (Raw: "0.2.0")
     A: package="com.raphaelrohner.klvsigner" (Raw: "com.raphaelrohner.klvsigner")
+      E: queries (line=8)
+          E: intent (line=9)
+              E: action (line=9)
+                A: ${A}:name(0x01010003)="android.intent.action.VIEW" (Raw: "android.intent.action.VIEW")
+              E: category (line=9)
+                A: ${A}:name(0x01010003)="android.intent.category.BROWSABLE" (Raw: "android.intent.category.BROWSABLE")
+              E: data (line=9)
+                A: ${A}:scheme(0x01010027)="https" (Raw: "https")
       E: uses-permission (line=10)
         A: ${A}:name(0x01010003)="android.permission.HIDE_OVERLAY_WINDOWS" (Raw: "android.permission.HIDE_OVERLAY_WINDOWS")
       E: application (line=20)
@@ -107,7 +115,7 @@ test('the tools\' output is read correctly', () => {
   assert.equal(plainHex('82:d0:9d'), '82D09D');
 });
 
-test('a good APK passes every rule', () => {
+test('a good APK passes every rule (a <queries> entry for web browsers is fine)', () => {
   assert.deepEqual(checkApk(facts()), []);
   // Older aapt2 versions print booleans as "(type 0x12)0x0".
   assert.deepEqual(checkApk(facts({ manifest: manifestOutput({ typedBool: true }) })), []);

@@ -181,8 +181,12 @@ export function checkApk({ signer, badging, manifest, ownFingerprints, official,
 
   // 5. No public entry points: no browsable links, and the request screen
   //    reachable only by exact name (no intent filter).
-  const browsable = findAll(manifest, 'category').some((c) => c.attrs.name === 'android.intent.category.BROWSABLE');
-  if (browsable) problems.push('The app has a browsable link filter (a "scheme" in app.json?). The Signer must have none.');
+  // Only the app's own screens count (activity / activity-alias). A
+  // <queries> entry with "BROWSABLE" just says the app may look for web
+  // browsers on the phone (Expo adds one); it opens no way in.
+  const screens = [...findAll(manifest, 'activity'), ...findAll(manifest, 'activity-alias')];
+  const browsable = screens.some((a) => findAll(a, 'category').some((c) => c.attrs.name === 'android.intent.category.BROWSABLE'));
+  if (browsable) problems.push('A screen of the app has a browsable link filter (a "scheme" in app.json?). The Signer must have none.');
   const requestScreen = findAll(manifest, 'activity').find((a) => a.attrs.name === REQUEST_ACTIVITY);
   if (!requestScreen) problems.push(`The request screen ${REQUEST_ACTIVITY} is missing.`);
   else if (findAll(requestScreen, 'intent-filter').length > 0) problems.push('The request screen has an intent filter. It must be reachable only by exact name.');
