@@ -689,17 +689,19 @@ No `npm install` needed. Build and install as usual.
 
 No `npm install` needed. Build and install as usual.
 
-- [ ] Settings → Extra confirmation: a new switch **The same transfer
+- [x] Settings → Extra confirmation: a new switch **The same transfer
       again** at the bottom, on. (The large-amount rule stays as you saved
       it; 10,000 KLV is the default only for new wallets and after **Reset to
       recommended**, which now fills in 10,000 in the amount box. Your
       current settings are only changed if you tap Save.)
-- [ ] From the Hub, send 0.1 KLV to a receiver you've sent to before →
+- [x] From the Hub, send 0.1 KLV to a receiver you've sent to before →
       approve. Then send exactly the same again (same receiver, 0.1 KLV) →
       the extra confirmation appears: "You signed exactly this transfer …
       N minutes ago … check on Kleverscan first". Reject it (or approve,
       it's testnet).
-- [ ] Send 0.2 KLV instead → no repeat warning.
+- [x] Send 0.2 KLV instead → no repeat warning. (Wait 2 minutes first, otherwise
+      "Many requests quickly" appears instead: 3 requests within 2 minutes.)
+- F22 passed on 5 Oct 2026 (test 3 showed the burst rule, as expected within 2 minutes).
 
 ---
 
