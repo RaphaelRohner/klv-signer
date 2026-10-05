@@ -84,6 +84,14 @@ example; use the real one.
 11. **Announce** (Klever forum) with a link to the release, never to a file
    hosted anywhere else.
 
+## Right after the repository goes public
+
+- Switch on the **weekly check** (WEEKLY-CHECK.md): ask Claude to "set up
+  the weekly check from WEEKLY-CHECK.md". Every Monday it tests, checks the
+  packages and reviews the week's changes, and emails a short report.
+- GitHub → Settings → Code security: switch on **Dependabot alerts** and
+  **Secret scanning** (both free).
+
 ## Later
 
 - **To do, with the first public release** (decided 5 Oct 2026), when the
