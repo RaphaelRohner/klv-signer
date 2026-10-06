@@ -751,10 +751,11 @@ Then install the APK it made: `adb install -r build-<number>.apk`.
 
 No `npm install` needed. Build and install the Signer.
 
-- [ ] Normal use unchanged: the example app and the Hub connect and send as
+- [x] Normal use unchanged: the example app and the Hub connect and send as
       before. (The refused case, an app passing on a request it got from
       another app, can't be produced with the apps we have; it's a one-line
       check in SignRequestActivity.kt.)
+- F25 passed on 6 Oct 2026 (requesting, rejecting and signing as before).
 
 ---
 
