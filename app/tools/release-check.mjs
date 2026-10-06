@@ -190,5 +190,6 @@ writeFileSync(`${file}.sha256`, `${checksum}  ${basename(file)}\n`);
 console.log(`Checksum (SHA-256):  ${checksum}`);
 console.log(`Checksum file:       ${basename(file)}.sha256 (upload it with the APK)\n`);
 console.log('OK: valid signature with the official KLV Signer key, no internet or other removed permissions,');
-console.log('    not debuggable, backup off, no public entry points, version higher than every earlier release.');
+console.log('    not debuggable, backup off, Android 12 or newer, no public entry points (no extra open');
+console.log('    screens, services, receivers or providers), version higher than every earlier release.');
 console.log(`After publishing: add { "version": "${badging.versionName}", "versionCode": ${badging.versionCode} } to tools/released-versions.json.\n`);

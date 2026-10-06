@@ -1,3 +1,4 @@
 [
-  { "version": "0.1.0", "versionCode": 1, "date": "2026-10-06", "commit": "1db246edc09c30d03927641803ea78aa81d6e877", "sha256": "28db047cfe4a57f7d511a1093c830f45f58b4905a484f82dadcdbc20953ab90b" }
+  { "version": "0.1.0", "versionCode": 1, "date": "2026-10-06", "commit": "1db246edc09c30d03927641803ea78aa81d6e877", "sha256": "28db047cfe4a57f7d511a1093c830f45f58b4905a484f82dadcdbc20953ab90b" },
+  { "version": "0.1.1", "versionCode": 2, "date": "2026-10-06", "commit": "40961527a97e2fbd3b9edff5de58c146f3b5e33c", "sha256": "4fc7ab4653a99eed7df79509dbad1480e8bcbcbaa0b616d4d8c327c2ead04091" }
 ]
