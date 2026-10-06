@@ -175,7 +175,7 @@ fingerprint to the list your app accepts, and never ship that to users.
 ## 3. Requests
 
 Ask the Signer **directly** from your own app: a request that another app
-passes on (`FLAG_ACTIVITY_FORWARD_RESULT`) is refused with `invalid_request`.
+passes on (`FLAG_ACTIVITY_FORWARD_RESULT`) is refused with `INVALID_REQUEST`.
 
 Every request needs the extra **`protocolVersion` = `"1"`** (text). You may
 add **`requestId`** (any text up to 200 characters). It's sent back unchanged,
@@ -256,7 +256,7 @@ was closed by the system), treat it as "rejected".
 | `NOT_ALLOWED` | The user didn't allow your app to use the Signer. |
 | `NO_WALLET` | No wallet is set up in the Signer yet. Only sent to apps the user has allowed; others get `NOT_ALLOWED` first. |
 | `INVALID_TRANSACTION` | The Signer refused the transaction; `message` says why. Among the reasons: a fee over 100 KLV, more than 5 notes, token names that aren't plain capital letters and digits. |
-| `INVALID_REQUEST` | Required values missing or too long. |
+| `INVALID_REQUEST` | Required values missing or too long, or the request was passed on by another app. |
 | `UNSUPPORTED_PROTOCOL` | `protocolVersion` missing or unknown. |
 | `UNKNOWN_ACTION` | Unknown action. |
 | `UNSAFE_DEVICE` | Signing is switched off because the phone looks rooted, its bootloader is unlocked, its startup check failed, or the Signer couldn't run its phone check. `GET_ADDRESS` still works. Tell the user to check the Signer. |
