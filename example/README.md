@@ -31,5 +31,10 @@ app ("Generate a new Android Keystore?" → yes). Expo keeps that key: it's a
 different key from the Signer's, and it protects nothing valuable (the app
 holds no wallet; every transaction still needs approval in the Signer).
 
-Its package id is `com.raphaelrohner.klvsignerexample`. Licence: GPL-3.0-or-later,
+Its package id is `com.raphaelrohner.klvsignerexample`, and the official
+example app is signed with this key (SHA-256, created by Expo on 6 Oct 2026):
+
+`D3:A5:AE:6C:38:39:F0:DF:44:42:23:BE:4D:27:0D:7F:04:10:2E:B4:AD:8B:BE:38:68:EA:39:FF:93:C1:A6:AF`
+
+(Not the Signer's key: that one is `82:D0:9D:…:7E:86:11`, see ../README.md.) Licence: GPL-3.0-or-later,
 like the Signer (see ../LICENSE).

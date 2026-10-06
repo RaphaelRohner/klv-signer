@@ -13,6 +13,11 @@
     },
     "plugins": [
       "./plugins/withKlvSigner"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f93a4e4a-a249-4076-8cad-4454cb8ccf64"
+      }
+    }
   }
 }

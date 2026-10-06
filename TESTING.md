@@ -738,13 +738,14 @@ automatically create an EAS project…?" → yes) and a signing key for the
 example app ("Generate a new Android Keystore?" → yes). Expo keeps that key.
 Then install the APK it made: `adb install -r build-<number>.apk`.
 
-- [ ] The app "KLV Signer Example" opens: title, yellow TESTNET badge.
-- [ ] **Connect KLV Signer** → the Signer asks "Allow this app?" for
+- [x] The app "KLV Signer Example" opens: title, yellow TESTNET badge.
+- [x] **Connect KLV Signer** → the Signer asks "Allow this app?" for
       "KLV Signer Example" (`com.raphaelrohner.klvsignerexample`) with your
       password → back in the example app with your address and balance.
-- [ ] Send 0.1 KLV to a known address → the Signer shows it, approve →
+- [x] Send 0.1 KLV to a known address → the Signer shows it, approve →
       "✔ Sent to the testnet", the Kleverscan link opens the transfer.
-- [ ] Reject in the Signer once → "Cancelled in the KLV Signer: nothing was sent."
+- [x] Reject in the Signer once → "Cancelled in the KLV Signer: nothing was sent."
+- F24 passed on 6 Oct 2026. Example app key (by Expo): D3:A5:AE:…:C1:A6:AF.
 
 ---
 
