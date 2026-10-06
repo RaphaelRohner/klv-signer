@@ -762,19 +762,20 @@ No `npm install` needed. Build and install the Signer.
 No `npm install` needed for either app. Build and install the Signer
 (in `app`) and the example app (in `example`).
 
-- [ ] Normal use unchanged: the example app and the Hub connect, send and
+- [x] Normal use unchanged: the example app and the Hub connect, send and
       reject as before. (If the history of earlier signatures is fine, no
       new extra confirmation appears.)
-- [ ] Settings → Change password: try `Passw0rd1234` → refused as weak, and the red
+- [x] Settings → Change password: try `Passw0rd1234` → refused as weak, and the red
       message under the box says why ("Built on a very common password…")
       and how to make a strong one (4 random words).
       Then change to a strong new password → works; lock the Signer and
       open it with the new password.
-- [ ] Example app: send 0.1 KLV → as before. (The new check, that the
+- [x] Example app: send 0.1 KLV → as before. (The new check, that the
       testnet node prepared exactly what you typed, only speaks up if the
       node changed something, which a normal node doesn't do.)
 - The other items (notes, app names, damaged history, release check) are
   covered by the automatic checks (`npm test`, 134 checks).
+- F26 passed on 6 Oct 2026.
 
 ---
 
