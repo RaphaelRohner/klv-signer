@@ -1,0 +1,9 @@
+# Installed packages and generated build folders (made again by npm install / the build)
+node_modules/
+/.expo/
+/android/
+/ios/
+/dist/
+*.apk
+*.aab
+*.apk.sha256

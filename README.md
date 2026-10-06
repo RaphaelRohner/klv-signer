@@ -43,6 +43,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `TESTING.md` | Step-by-step: build the APK, then test each feature on your phone. |
 | `REVIEW-2026-10.md` | The second (AI) review: what was checked, what was found, what was fixed and what's still open. |
 | `RELEASING.md` | How a release is made: the signing key, backups, the release check, publishing on GitHub. |
+| `example/` | **KLV Signer Example**: the smallest app that uses the Signer (connect, balance, send KLV on testnet). For trying the Signer and as a working example for developers. See example/README.md. |
 | `WEEKLY-CHECK.md` | The automatic weekly check (tests, packages, review of changes, email report), switched on after going public. |
 | `SECURITY.md` | The common attacks on Android wallet apps, where the Signer stands against each, the planned fixes, and how to report a vulnerability privately. |
 | `SIGNER-PROTOCOL.md` | **For developers:** exactly how any Android app asks the Signer for an address or a signature, with examples. |

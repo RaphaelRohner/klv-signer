@@ -723,6 +723,29 @@ No `npm install` needed. **Build both** the Signer and the Hub (Hub 4.1.2).
 - [x] `node tools/release-check.mjs build-<number>.apk` (the new build) → OK.
 - F23 passed on 5 Oct 2026.
 
+**F24. The example app (KLV Signer Example)**
+
+**This one needs `npm install`** (a new app with its own packages):
+
+```
+cd ~/Documents/"KLV Signer App"/example
+npm install
+npx eas-cli@latest build --platform android --profile preview --local
+```
+
+The first build asks you to create an Expo project ("Would you like to
+automatically create an EAS project…?" → yes) and a signing key for the
+example app ("Generate a new Android Keystore?" → yes). Expo keeps that key.
+Then install the APK it made: `adb install -r build-<number>.apk`.
+
+- [ ] The app "KLV Signer Example" opens: title, yellow TESTNET badge.
+- [ ] **Connect KLV Signer** → the Signer asks "Allow this app?" for
+      "KLV Signer Example" (`com.raphaelrohner.klvsignerexample`) with your
+      password → back in the example app with your address and balance.
+- [ ] Send 0.1 KLV to a known address → the Signer shows it, approve →
+      "✔ Sent to the testnet", the Kleverscan link opens the transfer.
+- [ ] Reject in the Signer once → "Cancelled in the KLV Signer: nothing was sent."
+
 ---
 
 ## Good to know

@@ -15,6 +15,10 @@ Signer does it for Android apps.
 
 ---
 
+> **Working example:** the folder `example/` in this repository is a small,
+> complete Expo app that does everything below (seal check, requests, answer
+> check, sending on testnet). Copy from it.
+
 ## 1. How it works in one picture
 
 ```

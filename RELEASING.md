@@ -72,6 +72,12 @@ example; use the real one.
    - Tag: `v0.2.0`, title "KLV Signer 0.2.0 (testnet preview)".
    - Upload `klv-signer-0.2.0.apk`, `klv-signer-0.2.0.apk.sha256` and
      `THIRD-PARTY-NOTICES.md`.
+   - Also the example app, so testers can try the Signer: build it in
+     `example/` (see example/README.md), name it
+     `klv-signer-example-0.1.0.apk`, make its checksum with
+     `shasum -a 256 klv-signer-example-0.1.0.apk > klv-signer-example-0.1.0.apk.sha256`
+     and upload both. (The release check is for the Signer itself; the
+     example app has its own key, kept by Expo, and no wallet.)
    - Notes: what changed, the commit hash (`git rev-parse v0.2.0`), the
      checksum, the official key fingerprint, "testnet only, no independent
      audit yet", and the "Before you start" text from the README (as is, own

@@ -1,0 +1,20 @@
+{
+  "name": "klv-signer-example",
+  "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android"
+  },
+  "dependencies": {
+    "@klever/connect-provider": "0.2.2",
+    "@klever/connect-transactions": "0.1.8",
+    "expo": "~57.0.26",
+    "expo-intent-launcher": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  }
+}
