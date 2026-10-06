@@ -89,8 +89,10 @@ example; use the real one.
 - Switch on the **weekly check** (WEEKLY-CHECK.md): ask Claude to "set up
   the weekly check from WEEKLY-CHECK.md". Every Monday it tests, checks the
   packages and reviews the week's changes, and emails a short report.
-- GitHub → Settings → Code security: switch on **Dependabot alerts** and
-  **Secret scanning** (both free).
+- GitHub → Settings → Code security: **Dependabot alerts** (switched on
+  6 Oct 2026) and **Secret scanning**: only offered for public repositories
+  on a free account, so check it right after going public (GitHub usually
+  switches it on by itself then).
 
 ## Later
 
