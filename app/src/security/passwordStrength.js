@@ -84,6 +84,9 @@ function wordCount(text) {
   return text.split(/[\s\-_.]+/).filter((w) => /^[\p{L}]{3,}$/u.test(w)).length;
 }
 
+/** How to make a strong one: shown with "fair" and with "too easy to guess". */
+export const STRONG_TIP = 'Tip: 4 random words ("maple tunnel orbit ginger") are strong and easy to remember.';
+
 /**
  * passwordStrength
  * @param {string} password
@@ -115,7 +118,7 @@ export function passwordStrength(password) {
   }
   return {
     level: 'fair',
-    hint: 'OK, but could be stronger. Tip: 4 random words ("maple tunnel orbit ginger") are strong and easy to remember.',
+    hint: `OK, but could be stronger. ${STRONG_TIP}`,
   };
 }
 
