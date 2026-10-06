@@ -12,6 +12,28 @@ their own app instead. The **Devikins Legacy Hub** is the first app that will us
 whole idea in plain English, with a build plan and a glossary.
 **Building and testing on your phone:** [TESTING.md](TESTING.md).
 
+## Try it (testnet preview)
+
+> **Testnet only, no independent security audit yet.** Use a fresh test
+> wallet, never your real one.
+
+1. Download from the [Releases page](https://github.com/RaphaelRohner/klv-signer/releases):
+   `klv-signer-<version>.apk` (the Signer) and `klv-signer-example-<version>.apk`
+   (a small app to try it with), plus their `.sha256` files.
+2. Optional but recommended, check them on a computer:
+   `shasum -a 256 -c klv-signer-<version>.apk.sha256` must say **OK**, and
+   after installing, the Signer's Settings → About must say "Matches the
+   official KLV Signer key" (fingerprint below).
+3. Install both on an Android 12+ phone (allow "install unknown apps" for
+   your browser or file manager when Android asks).
+4. In the Signer: create a new test wallet (write down the words), set a
+   password. In the example app: **Connect KLV Signer**, allow it, and send
+   a little testnet KLV to another test address.
+
+You'll need some testnet KLV on the test wallet (Klever's testnet has no
+real value). Questions and feedback: the Klever forum thread for the KLV
+Signer, or a GitHub issue.
+
 ## Before you start
 
 KLV Signer is free, open-source software, provided **as is**, without any
