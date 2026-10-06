@@ -66,6 +66,17 @@ class SignRequestActivity : Activity() {
       return
     }
 
+    // 1b. Passed on by another app? With Android's "forward result" flag, an
+    //     app that was itself opened by an allowed app (e.g. a file picker the
+    //     Hub opened) can hand a request on, and Android then names the ALLOWED
+    //     app as the caller. Real client apps never do this, so such requests
+    //     are refused (weekly check, 6 Oct 2026).
+    if (((intent?.flags ?: 0) and Intent.FLAG_ACTIVITY_FORWARD_RESULT) != 0) {
+      answer(false, errorExtras(SignerProtocol.ERROR_INVALID_REQUEST,
+        "Requests passed on from another app aren't accepted. The app must ask the Signer directly."))
+      return
+    }
+
     val action = intent?.action
     if (action != SignerProtocol.ACTION_GET_ADDRESS && action != SignerProtocol.ACTION_SIGN_TRANSACTION) {
       answer(false, errorExtras(SignerProtocol.ERROR_UNKNOWN_ACTION, "Unknown request type: $action"))

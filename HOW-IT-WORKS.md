@@ -221,8 +221,10 @@ You chose **a separate app password.** Here's what happens behind the scenes.
   on phones with a secure face sensor. Phones without one don't get the option.
 - If anyone adds a fingerprint or face to the phone (or all are removed, or
   the screen lock is switched off), Android makes that copy unusable. The Signer then asks for the password and you can switch it on again.
-- The password always works too, and is asked instead after a phone restart
-  and when you haven't used it for 7 days, so you don't forget it.
+- The password always works too (except for signing while an accessibility
+  app is on that could press buttons in the Signer: then only fingerprint or
+  face, see SECURITY.md), and is asked instead after a phone restart and when
+  you haven't used it for 7 days, so you don't forget it.
 
 ---
 

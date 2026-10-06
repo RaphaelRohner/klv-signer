@@ -12,7 +12,7 @@ toolkit it's built with), and a short list of crypto libraries. All packages
 come from the official npm registry and are locked to exact versions with
 integrity hashes (`package-lock.json`), so a build can't silently pick up a
 changed package. `npm audit` finds **no problems in anything that goes into
-the app.** It does list 24 findings (17 "high", 7 "moderate", re-checked 5 Oct
+the app.** It does list 25 findings (18 "high", 7 "moderate", re-checked 6 Oct
 2026), but they all come from two issues in Expo's command-line build tool
 (`@expo/cli`), which runs on the Mac and never ends up in the app (see
 finding 1). And since the Signer has no internet permission, even a harmful
@@ -50,7 +50,7 @@ package couldn't send anything out.
 
 ## Findings
 
-1. **`npm audit` (re-checked 5 Oct 2026): 0 critical, 17 high, 7 moderate,
+1. **`npm audit` (re-checked 6 Oct 2026): 0 critical, 18 high, 7 moderate,
    none in the app itself.** All come from three advisories in build tools:
    - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
      in `braces` 3.0.3 (a deeply nested file pattern can crash it), used by

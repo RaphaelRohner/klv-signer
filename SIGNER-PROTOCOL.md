@@ -174,6 +174,9 @@ fingerprint to the list your app accepts, and never ship that to users.
 
 ## 3. Requests
 
+Ask the Signer **directly** from your own app: a request that another app
+passes on (`FLAG_ACTIVITY_FORWARD_RESULT`) is refused with `invalid_request`.
+
 Every request needs the extra **`protocolVersion` = `"1"`** (text). You may
 add **`requestId`** (any text up to 200 characters). It's sent back unchanged,
 so you can match answers to requests. All extras are **text (strings)**.

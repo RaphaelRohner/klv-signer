@@ -52,8 +52,10 @@ Settings → About.
 **Stage 1 — Wallet + password: done and tested on the phone (29 Sep 2026).**
 **Stage 2 — Reading and signing: done and tested (30 Sep 2026)**, including a real testnet transfer.
 **Stage 3 — Other apps asking: done and tested (30 Sep 2026).** The Hub (4.1.0) is the first app using it.
-**Stage 4 — Safety polish: in progress.** Most protections are done and tested; a second
-AI review was done on 1 Oct 2026 ([REVIEW-2026-10.md](REVIEW-2026-10.md)).
+**Stage 4 — Safety polish: in progress.** Most protections are done and tested; AI
+reviews on 1 Oct ([REVIEW-2026-10.md](REVIEW-2026-10.md)) and 5 Oct 2026
+([REVIEW-2026-10-05.md](REVIEW-2026-10-05.md)), and a weekly automatic check since
+6 Oct (WEEKLY-CHECK.md). **First public testnet preview: 0.1.0, 6 Oct 2026.**
 The Signer is set to **testnet** and hasn't had an independent human review yet.
 
 ## What's in this folder
@@ -64,6 +66,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `HOW-IT-WORKS.md` | The plain-English guide: what the Signer does, why, and the build plan. |
 | `TESTING.md` | Step-by-step: build the APK, then test each feature on your phone. |
 | `REVIEW-2026-10.md` | The second (AI) review: what was checked, what was found, what was fixed and what's still open. |
+| `REVIEW-2026-10-05.md` | The third (AI) review, before the first public release, and what was done about it. |
 | `RELEASING.md` | How a release is made: the signing key, backups, the release check, publishing on GitHub. |
 | `example/` | **KLV Signer Example**: the smallest app that uses the Signer (connect, balance, send KLV on testnet). For trying the Signer and as a working example for developers. See example/README.md. |
 | `WEEKLY-CHECK.md` | The automatic weekly check (tests, packages, review of changes, email report), switched on after going public. |
@@ -86,7 +89,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `app/src/components/` | Shared looks (`ui.js`), the "remove wallet" box (`RemoveWallet.js`), the phone-safety box (`DeviceWarning.js`), connected apps, and the fingerprint/face switch and button (`BiometricSetting.js`, `BiometricButton.js`). |
 | `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. Also the phone-safety checks (`DeviceSecurity.kt`) and the window protections against overlays and accessibility misuse (`WindowProtection.kt`). |
 | `app/src/requests/` | The rules for requests from other apps: `protocol.js` (request checks and answers) and `appTrust.js` (which apps you've allowed). |
-| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (117 checks). Run with `npm test`. |
+| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (127 checks). Run with `npm test`. |
 | `app/eas.json` | Build settings: the signing key comes from this Mac only (`credentialsSource: local`), and builds only from committed code. |
 | `app/eslint.config.js` | Settings for the code checker (`npx expo lint`). |
 

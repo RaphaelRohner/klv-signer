@@ -747,6 +747,15 @@ Then install the APK it made: `adb install -r build-<number>.apk`.
 - [x] Reject in the Signer once → "Cancelled in the KLV Signer: nothing was sent."
 - F24 passed on 6 Oct 2026. Example app key (by Expo): D3:A5:AE:…:C1:A6:AF.
 
+**F25. Requests passed on by another app are refused**
+
+No `npm install` needed. Build and install the Signer.
+
+- [ ] Normal use unchanged: the example app and the Hub connect and send as
+      before. (The refused case, an app passing on a request it got from
+      another app, can't be produced with the apps we have; it's a one-line
+      check in SignRequestActivity.kt.)
+
 ---
 
 ## Good to know
