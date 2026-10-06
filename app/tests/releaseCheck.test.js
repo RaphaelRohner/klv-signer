@@ -30,9 +30,9 @@ Signer #1 certificate SHA-1 digest: 0000000000000000000000000000000000000000
 Signer #1 certificate MD5 digest: 00000000000000000000000000000000
 `;
 
-const badgingOutput = ({ versionCode = 2, extraPerms = [], debuggable = false, pkg = 'com.raphaelrohner.klvsigner', overlay = true } = {}) => [
+const badgingOutput = ({ versionCode = 2, extraPerms = [], debuggable = false, pkg = 'com.raphaelrohner.klvsigner', overlay = true, minSdk = 31 } = {}) => [
   `package: name='${pkg}' versionCode='${versionCode}' versionName='0.2.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'`,
-  "minSdkVersion:'31'",
+  minSdk === null ? '' : `minSdkVersion:'${minSdk}'`,
   "targetSdkVersion:'36'",
   "uses-permission: name='android.permission.USE_BIOMETRIC'",
   "uses-permission: name='android.permission.USE_FINGERPRINT'",
@@ -46,7 +46,7 @@ const badgingOutput = ({ versionCode = 2, extraPerms = [], debuggable = false, p
 ].join('\n');
 
 const A = 'http://schemas.android.com/apk/res/android';
-const manifestOutput = ({ allowBackup = 'false', browsable = false, requestFilter = false, typedBool = false, rules = true, affinity = true } = {}) => `N: android=${A} (line=2)
+const manifestOutput = ({ allowBackup = 'false', browsable = false, requestFilter = false, typedBool = false, rules = true, affinity = true, extra = '' } = {}) => `N: android=${A} (line=2)
   E: manifest (line=2)
     A: ${A}:versionCode(0x0101021b)=2
     A: ${A}:versionName(0x0101021c)="0.2.0" (Raw: "0.2.0")
@@ -91,7 +91,14 @@ ${requestFilter ? `              E: intent-filter (line=55)
                     A: ${A}:name(0x01010003)="com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION" (Raw: "com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION")
 ` : ''}          E: activity (line=60)
             A: ${A}:name(0x01010003)="expo.modules.devlauncher.Other" (Raw: "expo.modules.devlauncher.Other")
-`;
+          E: receiver (line=147)
+            A: ${A}:name(0x01010003)="androidx.profileinstaller.ProfileInstallReceiver" (Raw: "androidx.profileinstaller.ProfileInstallReceiver")
+            A: ${A}:permission(0x01010006)="android.permission.DUMP" (Raw: "android.permission.DUMP")
+            A: ${A}:exported(0x01010010)=true
+              E: intent-filter (line=150)
+                  E: action (line=151)
+                    A: ${A}:name(0x01010003)="androidx.profileinstaller.action.INSTALL_PROFILE" (Raw: "androidx.profileinstaller.action.INSTALL_PROFILE")
+${extra}`;
 
 function facts(overrides = {}) {
   return {
@@ -168,4 +175,30 @@ test('empty tool output (a tool failed) never passes', () => {
 test('the "copy nothing" rules and the empty taskAffinity must be there (third review, A10/A4)', () => {
   assert.match(checkApk(facts({ manifest: manifestOutput({ rules: false }) })).join(' '), /copy nothing/);
   assert.match(checkApk(facts({ manifest: manifestOutput({ affinity: false }) })).join(' '), /taskAffinity/);
+});
+
+test('oldest Android: must be 12 (SDK 31) or newer (weekly check, 6 Oct 2026)', () => {
+  assert.equal(parseBadging(badgingOutput()).minSdk, 31);
+  assert.match(checkApk(facts({ badging: badgingOutput({ minSdk: 26 }) })).join(' '), /older than 12/);
+  assert.match(checkApk(facts({ badging: badgingOutput({ minSdk: null }) })).join(' '), /No minimum Android version/);
+});
+
+test('no other open entry points, e.g. added by a library (weekly check, 6 Oct 2026)', () => {
+  const part = (kind, name, attrs = '', filter = false) => `          E: ${kind} (line=200)
+            A: ${A}:name(0x01010003)="${name}" (Raw: "${name}")
+${attrs}${filter ? `              E: intent-filter (line=201)
+                  E: action (line=202)
+                    A: ${A}:name(0x01010003)="x.y.Z" (Raw: "x.y.Z")
+` : ''}`;
+  const exported = `            A: ${A}:exported(0x01010010)=true\n`;
+  // An open service, an open provider, a receiver with only a filter: stopped.
+  assert.match(checkApk(facts({ manifest: manifestOutput({ extra: part('service', 'lib.Sync', exported) }) })).join(' '), /service lib\.Sync/);
+  assert.match(checkApk(facts({ manifest: manifestOutput({ extra: part('provider', 'lib.Files', exported) }) })).join(' '), /provider lib\.Files/);
+  assert.match(checkApk(facts({ manifest: manifestOutput({ extra: part('receiver', 'lib.Push', '', true) }) })).join(' '), /receiver lib\.Push/);
+  // Guarded by an ordinary permission any app can ask for: still stopped.
+  const weak = `            A: ${A}:permission(0x01010006)="lib.SOME_PERMISSION" (Raw: "lib.SOME_PERMISSION")\n${exported}`;
+  assert.match(checkApk(facts({ manifest: manifestOutput({ extra: part('receiver', 'lib.R', weak) }) })).join(' '), /guarded only by lib\.SOME_PERMISSION/);
+  // Closed parts are fine.
+  const closed = `            A: ${A}:exported(0x01010010)=false\n`;
+  assert.deepEqual(checkApk(facts({ manifest: manifestOutput({ extra: part('service', 'lib.Inner', closed, true) }) })), []);
 });

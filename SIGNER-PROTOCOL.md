@@ -346,6 +346,11 @@ const hash = await new KleverProvider('testnet')
 - Ask for `GET_ADDRESS` once and remember the address; don't call it every time.
 - Show your users what they're about to sign before opening the Signer. The
   Signer shows it again, from its own reading.
+- If a Klever node prepares the transaction for you, read it back and check
+  it does exactly what your user asked (receiver, token, amount) before
+  sending it to the Signer. A broken or hostile node could change it. The
+  example app's `readTransfer` / `checkPrepared` in `example/src/kleverTx.js`
+  are a ready-made version for single transfers.
 - Never ask users for their recovery phrase or private key. That's what the
   Signer is for.
 - Check the Signer's seal before every request (2c), and send nothing if it

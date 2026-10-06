@@ -173,3 +173,19 @@ function checkVaultFormat(vault) {
     && typeof vault.address === 'string';
   if (!ok) throw new Error('The stored wallet file is damaged (its settings are out of range).');
 }
+
+/**
+ * lockKeyChecked — lockKey, then opens the new vault once with the same
+ * password and compares, BEFORE it's saved over the old one (weekly check,
+ * 6 Oct 2026). If anything went wrong in between, the old vault stays and
+ * nobody has to fall back on the recovery words. Costs one extra password
+ * check (a second or so).
+ */
+export async function lockKeyChecked(privateKey, password, address, stretching) {
+  const vault = await lockKey(privateKey, password, address, stretching);
+  const reopened = await unlockKey(vault, password);
+  const same = reopened.length === privateKey.length && reopened.every((b, i) => b === privateKey[i]);
+  wipeBytes(reopened);
+  if (!same) throw new Error('The new lock could not be opened again, so it was not saved. Nothing changed.');
+  return vault;
+}

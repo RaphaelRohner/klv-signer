@@ -15,7 +15,7 @@ are in [SIGNER-PROTOCOL.md](../SIGNER-PROTOCOL.md).
 | `src/klvSigner.js` | Asks the Signer for the address and signatures (`expo-intent-launcher`); checks the Signer's seal before every request and the signed answer before sending | 2b, 2c, 3, 4, 8 |
 | `modules/klv-signer-check/` | Tiny native module: "is the installed Signer the official one?" | 2c |
 | `plugins/withKlvSigner.js` | Makes the Signer visible to the app on Android 11+ (`<queries>`) | 2a |
-| `src/kleverTx.js` | Prepares unsigned transfers with a Klever testnet node and sends signed ones | 7 |
+| `src/kleverTx.js` | Prepares unsigned transfers with a Klever testnet node, checks the node prepared exactly what was typed, and sends signed ones | 7 |
 | `App.js` | The one screen | |
 
 ## Building it

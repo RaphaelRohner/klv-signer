@@ -61,3 +61,15 @@ test('weak passwords are refused as a new password; fair and strong are accepted
     assert.equal(isAcceptablePassword(pw), true, pw);
   }
 });
+
+test('near variants of common passwords are refused (weekly check, 6 Oct 2026)', () => {
+  // Letters swapped for look-alike digits/symbols, a common word padded with
+  // digits, or the same piece repeated: guessing programs try all of these.
+  for (const pw of ['Passw0rd1234', 'P@ssw0rd2026!', 'passwordpassword', 'qwertyqwerty', 'abcabcabcabc', '123412341234', 'L3tm31n!2026x']) {
+    assert.equal(isAcceptablePassword(pw), false, pw);
+  }
+  // Long passwords that only happen to contain a short common word stay fine.
+  for (const pw of ['maple tunnel orbit river', 'Correct horse battery staple', 'dragonfly-meadow-ninety-7']) {
+    assert.equal(isAcceptablePassword(pw), true, pw);
+  }
+});

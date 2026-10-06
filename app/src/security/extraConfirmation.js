@@ -88,6 +88,16 @@ function transferKey(t) {
   return `${receiverKey(t.to)}|${t.assetId}|${BigInt(t.amount).toString()}`;
 }
 
+/** Is a loaded history usable? (If not, the Signer treats it as unreadable: more careful.) */
+export function isWellFormedHistory(h) {
+  const isObject = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
+  const isMap = (m) => isObject(m) && Object.values(m).every((v) => typeof v === 'number');
+  const isList = (l, keys) => Array.isArray(l)
+    && l.every((e) => isObject(e) && typeof e.t === 'number' && keys.every((k) => k in e));
+  return isObject(h) && isMap(h.receivers) && isMap(h.apps)
+    && isList(h.recent, ['h']) && isList(h.signed || [], ['k']);
+}
+
 /** How receivers are remembered (see top of file). */
 export function receiverKey(address) {
   return String(address).slice(-16);
@@ -156,7 +166,7 @@ function short(address) {
  *
  * @param {object} reading   from readTransaction(): { transfers: [{ to, assetId, amount, isNft }] }
  * @param {object} rules     the saved rules (DEFAULT_RULES shape)
- * @param {object} history   { receivers: {address: count}, apps: {appId: count}, recent: [time ms] }
+ * @param {object} history   { receivers: {address: count}, apps: {appId: count}, recent: [{t, h}], signed: [{t, k}] }; unreadable: true if the saved record was damaged
  * @param {{ appId: string|null, now: number }} context  appId = the asking app (null = pasted by hand)
  * @returns {{ id: string, text: string }[]}  empty = no extra confirmation needed
  */
@@ -208,6 +218,10 @@ export function reasonsForExtraConfirmation(reading, rules, history, { appId, no
 
   if (r.multiTransfer && reading.transfers.length > 1) {
     reasons.push({ id: 'multiTransfer', text: `It contains ${reading.transfers.length} transfers in one go.` });
+  }
+
+  if (h.unreadable) {
+    reasons.push({ id: 'history', text: 'The Signer couldn\'t read its record of earlier signatures, so it asks for the extra confirmation to be safe.' });
   }
 
   if (r.repeat) {
@@ -310,7 +324,7 @@ export function isRelaxing(oldRules, newRules) {
  * added twice; times in the future (clock changed) are dropped.
  */
 export function withRequest(history, now, hash) {
-  const h = { ...EMPTY_HISTORY, ...(history || {}) };
+  const { unreadable, ...h } = { ...EMPTY_HISTORY, ...(history || {}) };
   const kept = (h.recent || []).filter((e) => e && now - e.t >= 0 && now - e.t < 10 * 60 * 1000 && e.h !== hash);
   return { ...h, recent: [...kept, { t: now, h: hash }].slice(-20) };
 }
@@ -325,7 +339,7 @@ function newest(map, max) {
 
 /** History after a successful signature: remembers the receivers and the app. */
 export function withSigned(history, reading, appId, now) {
-  const h = { ...EMPTY_HISTORY, ...(history || {}) };
+  const { unreadable, ...h } = { ...EMPTY_HISTORY, ...(history || {}) };
   const receivers = { ...(h.receivers || {}) };
   for (const t of reading.transfers) receivers[receiverKey(t.to)] = now;
   const apps = { ...(h.apps || {}) };

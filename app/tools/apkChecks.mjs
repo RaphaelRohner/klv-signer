@@ -37,6 +37,28 @@ export const FORBIDDEN_PERMISSIONS = [
 /** Permissions it MUST have (hides other apps' overlays on the Signer's screens). */
 export const REQUIRED_PERMISSIONS = ['android.permission.HIDE_OVERLAY_WINDOWS'];
 
+/** Lowest Android version allowed: 12 (SDK 31). Older versions lack protections the Signer relies on. */
+export const MIN_SDK = 31;
+
+/**
+ * Screens and services other apps may open. Only these two are meant to be
+ * open: the home-screen icon and the request screen (by exact name).
+ */
+export const ALLOWED_OPEN_COMPONENTS = [
+  'com.raphaelrohner.klvsigner.MainActivity',
+  REQUEST_ACTIVITY,
+];
+
+/**
+ * Libraries sometimes add open parts guarded by a permission that only
+ * Android itself (or a computer connected by cable with developer tools)
+ * holds. Those are fine. Example: androidx's ProfileInstallReceiver uses DUMP.
+ */
+export const SYSTEM_ONLY_PERMISSIONS = [
+  'android.permission.DUMP',
+  'android.permission.BIND_JOB_SERVICE',
+];
+
 /** "aa:bb…" or "aabb…" → "AABB…". */
 export const plainHex = (s) => String(s || '').replace(/[^0-9a-fA-F]/g, '').toUpperCase();
 
@@ -63,7 +85,7 @@ export function parseApksigner(text) {
 
 /**
  * Reads `aapt2 dump badging` output.
- * → { packageName, versionCode, versionName, permissions: [...], debuggable }
+ * → { packageName, versionCode, versionName, minSdk, permissions: [...], debuggable }
  */
 export function parseBadging(text) {
   const lines = String(text || '').split(/\r?\n/);
@@ -73,8 +95,10 @@ export function parseBadging(text) {
     .map((l) => l.match(/^uses-permission(?:-sdk-23)?: name='([^']+)'/))
     .filter(Boolean)
     .map((m) => m[1]);
+  const sdk = lines.map((l) => l.match(/^(?:minSdkVersion|sdkVersion):'(\d+)'/)).find(Boolean);
   return {
     packageName: field('name') || null,
+    minSdk: sdk ? Number(sdk[1]) : null,
     versionCode: field('versionCode') ? Number(field('versionCode')) : null,
     versionName: field('versionName') || null,
     permissions,
@@ -165,6 +189,10 @@ export function checkApk({ signer, badging, manifest, ownFingerprints, official,
     }
   }
 
+  // 2b. Oldest Android it installs on (weekly check, 6 Oct 2026).
+  if (!Number.isInteger(badging.minSdk)) problems.push('No minimum Android version found (minSdkVersion).');
+  else if (badging.minSdk < MIN_SDK) problems.push(`Installs on Android older than 12 (minSdkVersion ${badging.minSdk}, must be ${MIN_SDK} or higher).`);
+
   // 3. Permissions: none of the forbidden ones, the required one present.
   for (const p of FORBIDDEN_PERMISSIONS) {
     if (badging.permissions.includes(p)) problems.push(`Has the forbidden permission ${p}.`);
@@ -198,6 +226,19 @@ export function checkApk({ signer, badging, manifest, ownFingerprints, official,
   const requestScreen = findAll(manifest, 'activity').find((a) => a.attrs.name === REQUEST_ACTIVITY);
   if (!requestScreen) problems.push(`The request screen ${REQUEST_ACTIVITY} is missing.`);
   else if (findAll(requestScreen, 'intent-filter').length > 0) problems.push('The request screen has an intent filter. It must be reachable only by exact name.');
+
+  // 6. No other open entry points (weekly check, 6 Oct 2026). A library
+  //    update could quietly add a screen, service, receiver or provider that
+  //    other apps can reach. "Open" = exported="true", or an intent filter
+  //    without an exported setting. Allowed: the two screens above, and parts
+  //    guarded by a permission only Android itself holds.
+  const kinds = ['activity', 'activity-alias', 'service', 'receiver', 'provider'];
+  for (const part of kinds.flatMap((k) => findAll(manifest, k).map((node) => ({ k, node })))) {
+    const { exported, name, permission } = part.node.attrs;
+    const open = exported === 'true' || (exported === undefined && findAll(part.node, 'intent-filter').length > 0);
+    if (!open || ALLOWED_OPEN_COMPONENTS.includes(name) || SYSTEM_ONLY_PERMISSIONS.includes(permission)) continue;
+    problems.push(`Other apps can reach the ${part.k} ${name}${permission ? ` (guarded only by ${permission})` : ''}. Check where it comes from before publishing.`);
+  }
 
   return problems;
 }

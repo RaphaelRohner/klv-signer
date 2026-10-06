@@ -62,7 +62,9 @@ example; use the real one.
    → must end with **OK**. It uses Android's own tools from the Android SDK
    (apksigner, aapt2) and checks: valid signature with the official key, no
    internet or other removed permissions, not a debug build, backup off, no
-   link filters, versionCode higher than every earlier release. Only then
+   link filters, Android 12 or newer only, no screens, services, receivers
+   or providers open to other apps except the two intended ones (a library
+   update could add one), versionCode higher than every earlier release. Only then
    does it write `klv-signer-0.2.0.apk.sha256`. If it says STOP: don't publish.
 7. **Phone test:** install it over the previous version (`adb install -r …`):
    wallet still there, unlock, one Hub test transfer.

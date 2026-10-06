@@ -89,7 +89,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | `app/src/components/` | Shared looks (`ui.js`), the "remove wallet" box (`RemoveWallet.js`), the phone-safety box (`DeviceWarning.js`), connected apps, and the fingerprint/face switch and button (`BiometricSetting.js`, `BiometricButton.js`). |
 | `app/modules/klv-signer-requests/` | The Signer's own small piece of native Android code (Kotlin): the "front door" that receives requests from other apps, learns from Android which app is asking, and sends the answer back only to that app. Also the phone-safety checks (`DeviceSecurity.kt`) and the window protections against overlays and accessibility misuse (`WindowProtection.kt`). |
 | `app/src/requests/` | The rules for requests from other apps: `protocol.js` (request checks and answers) and `appTrust.js` (which apps you've allowed). |
-| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (127 checks). Run with `npm test`. |
+| `app/tests/` | Automatic checks for the security core, the transaction reader, the rules and the permissions (134 checks). Run with `npm test`. |
 | `app/eas.json` | Build settings: the signing key comes from this Mac only (`credentialsSource: local`), and builds only from committed code. |
 | `app/eslint.config.js` | Settings for the code checker (`npx expo lint`). |
 

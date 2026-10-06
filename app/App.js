@@ -56,7 +56,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { CAPTURE_KEY, LOCK_WHEN_LEFT, NETWORK, PASSWORD_STRETCHING, RECOVERY_PHRASE_WORDS } from './src/config.js';
 import { createRecoveryPhrase, walletFromPhrase, wipeBytes } from './src/crypto/wallet.js';
-import { lockKey } from './src/crypto/vault.js';
+import { lockKeyChecked } from './src/crypto/vault.js';
 import { engineName } from './src/crypto/passwordKey.js';
 import { loadAddress, loadVault, saveVault } from './src/storage/secureStore.js';
 import { colors } from './src/components/ui.js';
@@ -444,7 +444,7 @@ export default function App() {
     const { privateKey, address: newAddress } = walletFromPhrase(draftPhrase);
     const started = Date.now();
     try {
-      const vault = await lockKey(privateKey, password, newAddress, PASSWORD_STRETCHING);
+      const vault = await lockKeyChecked(privateKey, password, newAddress, PASSWORD_STRETCHING);
       await saveVault(vault, { isNewWallet: true }); // refuses to replace an existing wallet
     } finally {
       wipeBytes(privateKey); // the key only lives on in scrambled form

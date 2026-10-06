@@ -285,3 +285,12 @@ test('notes with blank-looking, covering or mixed-direction characters are not s
     assert.equal(describeNote(enc(good)).readable, true, JSON.stringify(good));
   }
 });
+
+test('notes with rare right-to-left scripts or invisible joiners are not shown as text (weekly check, 6 Oct 2026)', () => {
+  const enc = (t) => new TextEncoder().encode(t);
+  // ͏ and ️ are invisible; \u{1E900} is Adlam and \u{10900} Phoenician (both right-to-left).
+  for (const bad of ['pay͏me', 'ok᠎ok', 'send󠄀 now', 'to \u{1E900}\u{1E901} 50', 'x \u{10900} 12']) {
+    assert.equal(describeNote(enc(bad)).readable, false, JSON.stringify(bad));
+  }
+  assert.equal(describeNote(enc('\u{1E900}\u{1E901}\u{1E902}')).readable, true);
+});

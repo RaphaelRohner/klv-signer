@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import {
   ACTIONS, ERRORS, PROTOCOL_VERSION, addressReply, checkRequest, errorReply, signedReply,
 } from '../src/requests/protocol.js';
-import { shortFingerprint, trustStatus, withApp, withoutApp } from '../src/requests/appTrust.js';
+import { cleanLabel, shortFingerprint, trustStatus, withApp, withoutApp } from '../src/requests/appTrust.js';
 
 const HUB = 'com.raphaelrohner.devikinslegacyhub';
 const CERT = 'a1'.repeat(32);
@@ -73,4 +73,12 @@ test('apps are recognised by package AND certificate', () => {
 test('certificate fingerprints are shortened for display', () => {
   assert.equal(shortFingerprint(CERT), 'a1a1a1a1…a1a1a1a1');
   assert.equal(shortFingerprint(null), 'unknown');
+});
+
+test('app names: blank-looking characters removed, mixed writing directions not shown (weekly check, 6 Oct 2026)', () => {
+  assert.equal(cleanLabel('Devi͏kins️ Hub⠀'), 'Devikins Hub');
+  assert.equal(cleanLabel('⠀￼͏'), '(no name)');
+  assert.equal(cleanLabel('Hub שלום 2'), '(name in mixed writing directions: check the app id)');
+  assert.equal(cleanLabel('שלום'), 'שלום');
+  assert.equal(cleanLabel('Devikins Legacy Hub'), 'Devikins Legacy Hub');
 });

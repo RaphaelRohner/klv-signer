@@ -47,7 +47,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Keyboard } from 'react-native';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { getBootCount, getElapsedRealtime } from '../../modules/klv-signer-requests/index.js';
-import { isWeakerThan, lockKey, openVault, scramblingKeyFromPassword, WrongPasswordError } from '../crypto/vault.js';
+import { isWeakerThan, openVault, scramblingKeyFromPassword, WrongPasswordError, lockKeyChecked } from '../crypto/vault.js';
 import { PASSWORD_STRETCHING } from '../config.js';
 import { engineName } from '../crypto/passwordKey.js';
 import { wipeBytes } from '../crypto/wallet.js';
@@ -204,7 +204,7 @@ export function usePasswordCheck() {
       // saves a new one inside withKey: that must never be overwritten here.)
       const saved = await loadVault();
       if (!saved || saved.salt !== vault.salt) return saved || vault;
-      const upgraded = await lockKey(privateKey, password, vault.address, PASSWORD_STRETCHING);
+      const upgraded = await lockKeyChecked(privateKey, password, vault.address, PASSWORD_STRETCHING);
       await saveVault(upgraded);
       return upgraded;
     } catch {

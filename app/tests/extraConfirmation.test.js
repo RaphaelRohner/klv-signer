@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_RULES, EMPTY_HISTORY, REPEAT_WINDOW_MS, RULE_SWITCHES, reasonsForExtraConfirmation, isRelaxing, parseKlv, formatKlv,
   groupMatches, pickConfirmGroup, CONFIRM_GROUP_LENGTH, receiversToConfirm, withRequest, withSigned, BURST_WINDOW_MS, receiverKey, checkRules, MAX_RECEIVERS,
-  klvCandidates,
+  klvCandidates, isWellFormedHistory,
 } from '../src/security/extraConfirmation.js';
 import { validAddressOrNull } from '../src/klever/address.js';
 
@@ -204,4 +204,16 @@ test('the same transfer again within an hour asks for the extra confirmation (do
   assert.ok(RULE_SWITCHES.includes('repeat'));
   // Old saved history without the new list still works.
   assert.deepEqual(ids(again, DEFAULT_RULES, { ...known, signed: undefined }, 'com.hub', later), []);
+});
+
+test('a damaged signing history asks for the extra confirmation (weekly check, 6 Oct 2026)', () => {
+  assert.equal(isWellFormedHistory(known), true);
+  assert.equal(isWellFormedHistory(EMPTY_HISTORY), true);
+  for (const bad of [null, 'x', { ...known, receivers: [] }, { ...known, recent: [{ t: 'x' }] }, { ...known, signed: 'oops' }, { ...known, apps: { a: 'b' } }]) {
+    assert.equal(isWellFormedHistory(bad), false, JSON.stringify(bad));
+  }
+  // loadHistory marks an unreadable record with `unreadable: true`.
+  assert.ok(ids(tx(klv(A, '5')), DEFAULT_RULES, { ...EMPTY_HISTORY, unreadable: true }).includes('history'));
+  // The mark is never saved back.
+  assert.equal('unreadable' in withRequest({ ...EMPTY_HISTORY, unreadable: true }, NOW, 'h1'), false);
 });

@@ -81,7 +81,7 @@ export default function App() {
     }
     try {
       setBusy('Preparing the transfer…');
-      const unsignedHex = await buildTransfer({ sender: address, receiver: to, amountUnits: units });
+      const unsignedHex = await buildTransfer({ sender: address, receiver: to, amountUnits: units }); // also checks the node prepared exactly this
       setBusy('Waiting for your approval in the KLV Signer…');
       const signed = await signWithSigner(unsignedHex); // also checks the answer is exactly this transfer
       setBusy('Sending to the Klever testnet…');

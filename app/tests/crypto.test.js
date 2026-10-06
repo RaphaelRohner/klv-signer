@@ -23,7 +23,7 @@ import { scrypt as nodeScrypt } from 'node:crypto';
 import {
   createRecoveryPhrase, tidyPhrase, isValidRecoveryPhrase, walletFromPhrase, addressFromPrivateKey,
 } from '../src/crypto/wallet.js';
-import { lockKey, unlockKey, WrongPasswordError } from '../src/crypto/vault.js';
+import { lockKey, lockKeyChecked, unlockKey, WrongPasswordError } from '../src/crypto/vault.js';
 import { useEngineForTests, engineName, keyFromPassword } from '../src/crypto/passwordKey.js';
 import { waitSecondsAfter, recordFailure, secondsLeft, FRESH_STATE, restartIfRebooted } from '../src/security/wrongPasswordPolicy.js';
 import { PASSWORD_STRETCHING } from '../src/config.js';
@@ -231,4 +231,12 @@ test('a wallet file with out-of-range settings is refused before any work (third
   }
   const key = await unlockKey(vault, 'maple tunnel orbit ginger'); // the untouched one still opens
   assert.equal(key.length, 32);
+});
+
+test('a new lock is test-opened before it replaces the old one (weekly check, 6 Oct 2026)', async () => {
+  useEngineForTests(null);
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const vault = await lockKeyChecked(privateKey, 'maple tunnel orbit', address, QUICK);
+  const back = await unlockKey(vault, 'maple tunnel orbit');
+  assert.deepEqual(Array.from(back), Array.from(privateKey));
 });

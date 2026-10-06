@@ -48,6 +48,27 @@ function isSequence(text) {
   return false;
 }
 
+/**
+ * "P@ssw0rd" → "password": the usual swaps guessers undo first
+ * (weekly check, 6 Oct 2026: "Passw0rd1234" was accepted before).
+ */
+function undoSwaps(text) {
+  const map = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's', '!': 'i', '|': 'l' };
+  return text.toLowerCase().replace(/[013457@$!|]/g, (c) => map[c]);
+}
+
+/**
+ * True if a very common word (4+ letters) makes up a third or more of the
+ * password, also with swapped characters ("Passw0rd1234", "Kl3ver2026!!").
+ */
+function containsCommonWord(pw) {
+  const plain = undoSwaps(pw).replace(/[^a-z]/g, '');
+  for (const word of COMMON) {
+    if (word.length >= 4 && word.length >= pw.length / 3 && plain.includes(word)) return true;
+  }
+  return false;
+}
+
 /** How many kinds of characters: lower-case, capitals, digits, other symbols. */
 function characterKinds(text) {
   let kinds = 0;
@@ -76,8 +97,12 @@ export function passwordStrength(password) {
     return { level: 'weak', hint: `Too short: at least ${MIN_PASSWORD_LENGTH} characters, please.` };
   }
   const letters = pw.toLowerCase().replace(/[^a-z]/g, '');
-  if (COMMON.has(letters) && letters.length >= pw.length / 3) {
+  if ((COMMON.has(letters) && letters.length >= pw.length / 3) || containsCommonWord(pw)) {
     return { level: 'weak', hint: 'Built on a very common password or word. Guessers try these first.' };
+  }
+  // The same short piece repeated ("passwordpassword", "qwertyqwerty", "ab12ab12ab12").
+  if (/^(.{1,8}?)\1+$/.test(pw.toLowerCase().replace(/\s/g, ''))) {
+    return { level: 'weak', hint: 'The same piece repeated. Guessers try these first.' };
   }
   if (new Set(pw.toLowerCase()).size < 5 || isSequence(pw.replace(/\s/g, ''))) {
     return { level: 'weak', hint: 'Too repetitive or a simple sequence. Guessers try these first.' };

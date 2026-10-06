@@ -757,6 +757,23 @@ No `npm install` needed. Build and install the Signer.
       check in SignRequestActivity.kt.)
 - F25 passed on 6 Oct 2026 (requesting, rejecting and signing as before).
 
+**F26. Weekly check's small items (6 Oct 2026)**
+
+No `npm install` needed for either app. Build and install the Signer
+(in `app`) and the example app (in `example`).
+
+- [ ] Normal use unchanged: the example app and the Hub connect, send and
+      reject as before. (If the history of earlier signatures is fine, no
+      new extra confirmation appears.)
+- [ ] Settings → Change password: try `Passw0rd1234` → refused as weak.
+      Then change to a strong new password → works; lock the Signer and
+      open it with the new password.
+- [ ] Example app: send 0.1 KLV → as before. (The new check, that the
+      testnet node prepared exactly what you typed, only speaks up if the
+      node changed something, which a normal node doesn't do.)
+- The other items (notes, app names, damaged history, release check) are
+  covered by the automatic checks (`npm test`, 134 checks).
+
 ---
 
 ## Good to know

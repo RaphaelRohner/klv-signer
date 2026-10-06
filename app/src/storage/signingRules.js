@@ -11,7 +11,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
-import { DEFAULT_RULES, EMPTY_HISTORY, checkRules } from '../security/extraConfirmation.js';
+import { DEFAULT_RULES, EMPTY_HISTORY, checkRules, isWellFormedHistory } from '../security/extraConfirmation.js';
 
 // Names under which things are saved. Never change these.
 const RULES = 'klvsigner.rules.v1';
@@ -31,7 +31,13 @@ export const loadRules = async () => checkRules(await loadJson(RULES, DEFAULT_RU
 export const saveRules = (rules) => SecureStore.setItemAsync(RULES, JSON.stringify(rules));
 // History: if it can't be read, start empty. That only makes the Signer
 // stricter (every receiver and app counts as new again).
-export const loadHistory = () => loadJson(HISTORY, EMPTY_HISTORY).catch(() => ({ ...EMPTY_HISTORY }));
+// If it can't be read (or is damaged), the Signer becomes MORE careful, not
+// less: "unreadable" makes the approval screen ask for the extra
+// confirmation (weekly check, 6 Oct 2026; before, the "same transfer again"
+// and "many requests quickly" rules then quietly saw nothing).
+export const loadHistory = () => loadJson(HISTORY, EMPTY_HISTORY)
+  .then((h) => (isWellFormedHistory(h) ? h : { ...EMPTY_HISTORY, unreadable: true }))
+  .catch(() => ({ ...EMPTY_HISTORY, unreadable: true }));
 export const saveHistory = (history) => SecureStore.setItemAsync(HISTORY, JSON.stringify(history));
 
 /** Deletes rules and history (when the wallet is removed). */

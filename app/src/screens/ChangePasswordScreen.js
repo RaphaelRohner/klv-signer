@@ -26,7 +26,7 @@ import React, { useState } from 'react';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Title } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
-import { lockKey } from '../crypto/vault.js';
+import { lockKeyChecked } from '../crypto/vault.js';
 import { saveVault } from '../storage/secureStore.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_STRETCHING } from '../config.js';
 import PasswordStrength from '../components/PasswordStrength.js';
@@ -55,7 +55,7 @@ export default function ChangePasswordScreen({ address, onChanged, onBack }) {
   async function change() {
     const biometricWasOn = pw.biometric.enabled;
     const result = await pw.check(current, async (privateKey) => {
-      const vault = await lockKey(privateKey, next, address, PASSWORD_STRETCHING);
+      const vault = await lockKeyChecked(privateKey, next, address, PASSWORD_STRETCHING);
       await saveVault(vault); // also switches fingerprint/face off
     });
     setCurrent('');

@@ -99,14 +99,20 @@ const NOTE_CHAR = /^[\p{L}\p{N}\p{P}\p{S}\p{M} ]$/u;
 // Blank-looking or screen-covering characters (third review, T8): Hangul
 // fillers, the Braille blank, the object-replacement box, the very wide
 // U+FDFD, and "enclosing" marks that draw a circle or box over neighbours.
-const BLANK_LOOKING = /[\u115F\u1160\u3164\uFFA0\u2800\uFFFC\uFDFD]/u;
+// (6 Oct, weekly check:) plus invisible marks: combining grapheme joiner,
+// Mongolian and other variation selectors, Khmer's invisible vowels.
+const BLANK_LOOKING = /[\u115F\u1160\u3164\uFFA0\u2800\uFFFC\uFDFD\u034F\u17B4\u17B5\u180B-\u180F\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u;
 const ENCLOSING_MARK = /\p{Me}/u;
 const TOO_MANY_MARKS = /\p{M}{3,}/u;
 // Right-to-left letters (Hebrew, Arabic, Syriac, Thaana, N'Ko …). Mixed with
 // left-to-right text or digits, the screen reorders them, so what you read
 // may not be the order of the bytes (T8). Pure right-to-left notes are fine.
-const RTL_LETTER = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/u;
-const LTR_OR_DIGIT = /[\p{N}]|(?![\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF])\p{L}/u;
+// Also the rarer right-to-left scripts outside the main area (6 Oct, weekly
+// check): U+10800–10FFF (old Middle-Eastern and Central-Asian scripts) and
+// U+1E800–1EFFF (Mende Kikakui, Adlam, Arabic mathematical letters).
+const RTL_RANGES = '\\u0590-\\u08FF\\uFB1D-\\uFDFF\\uFE70-\\uFEFF\\u{10800}-\\u{10FFF}\\u{1E800}-\\u{1EFFF}';
+const RTL_LETTER = new RegExp(`[${RTL_RANGES}]`, 'u');
+const LTR_OR_DIGIT = new RegExp(`[\\p{N}]|(?![${RTL_RANGES}])\\p{L}`, 'u');
 
 /**
  * describeNote — shows an attached note ("Data") as text only if it's short

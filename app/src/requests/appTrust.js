@@ -48,10 +48,16 @@ export function withApp(apps, request, now = Date.now()) {
  */
 export function cleanLabel(label) {
   const text = String(label || '')
-    .replace(/[\p{C}\u2028\u2029\u115F\u1160\u3164\uFFA0]/gu, '')
+    .replace(/[\p{C}\u2028\u2029\u115F\u1160\u3164\uFFA0\u2800\uFFFC\u034F\u17B4\u17B5\u180B-\u180F\uFE00-\uFE0F\p{Me}]/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
   if (!text) return '(no name)';
+  // A name mixing right-to-left letters with other letters or digits can show
+  // its parts in a different order than written (weekly check, 6 Oct 2026):
+  // shown in parts the screen can't reorder, the app id below stays the check.
+  const rtl = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u;
+  const other = /[\p{N}]|(?![\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}])\p{L}/u;
+  if (rtl.test(text) && other.test(text)) return '(name in mixed writing directions: check the app id)';
   const chars = [...text];
   return chars.length > 40 ? `${chars.slice(0, 40).join('')}…` : text;
 }
