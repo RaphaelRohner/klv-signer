@@ -76,8 +76,10 @@ example; use the real one.
      `THIRD-PARTY-NOTICES.md`.
    - Also the example app, so testers can try the Signer: build it in
      `example/` (see example/README.md), name it
-     `klv-signer-example-0.1.0.apk`, make its checksum with
-     `shasum -a 256 klv-signer-example-0.1.0.apk > klv-signer-example-0.1.0.apk.sha256`
+     `klv-signer-example-<version>.apk` (raise its `"version"` and
+     `"versionCode"` in `example/app.json` too when it changed), make its
+     checksum with
+     `shasum -a 256 klv-signer-example-0.2.0.apk > klv-signer-example-0.2.0.apk.sha256`
      and upload both. (The release check is for the Signer itself; the
      example app has its own key, kept by Expo, and no wallet. Its
      fingerprint, for the release notes: `D3:A5:AE:6C:38:39:F0:DF:44:42:23:BE:4D:27:0D:7F:04:10:2E:B4:AD:8B:BE:38:68:EA:39:FF:93:C1:A6:AF`.)

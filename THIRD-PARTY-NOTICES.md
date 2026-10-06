@@ -1,6 +1,6 @@
 # Third-party notices
 
-KLV Signer 0.1.0 is free software under the GNU General Public License,
+KLV Signer 0.1.1 is free software under the GNU General Public License,
 version 3 or later (see LICENSE). It includes the open-source packages below,
 each under its own licence. Their copyright notices and licence texts follow.
 

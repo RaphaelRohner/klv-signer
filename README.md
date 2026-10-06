@@ -55,7 +55,7 @@ Settings → About.
 **Stage 4 — Safety polish: in progress.** Most protections are done and tested; AI
 reviews on 1 Oct ([REVIEW-2026-10.md](REVIEW-2026-10.md)) and 5 Oct 2026
 ([REVIEW-2026-10-05.md](REVIEW-2026-10-05.md)), and a weekly automatic check since
-6 Oct (WEEKLY-CHECK.md). **First public testnet preview: 0.1.0, 6 Oct 2026.**
+6 Oct (WEEKLY-CHECK.md). **First public testnet preview: 0.1.0, 6 Oct 2026; latest: 0.1.1 (fixes from the first weekly check).**
 The Signer is set to **testnet** and hasn't had an independent human review yet.
 
 ## What's in this folder
