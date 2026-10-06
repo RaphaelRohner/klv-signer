@@ -5,10 +5,11 @@ the owner a short summary. It only **reads and reports**: it never changes
 code, never pushes, never opens pull requests. Fixes are made together, as
 usual.
 
-**Status:** prepared 5 Oct 2026. To be switched on right after the repository
-goes public (owner's decision): the check then reads the public code and
-nothing has to be connected. Together with it, switch on GitHub's free
-security alerts (below).
+**Status:** switched on 6 Oct 2026, right after the repository went public.
+Runs every **Monday at 8:54** (Dublin time) as the scheduled task "KLV Signer
+weekly check" in claude.ai; the summary arrives by email. It reads the
+public code, so nothing has to be connected. GitHub's Dependabot alerts are
+on too (below).
 
 ## What it does
 
