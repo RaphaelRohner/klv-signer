@@ -62,7 +62,8 @@ Report only: do NOT change, commit, push or open pull requests anywhere.
 2. In app/: npm ci, then npm test. Note the pass/fail count and any failures.
 3. npm audit --omit=dev --json. For each finding, npm ls <package> --omit=dev
    to see where it sits. Known and accepted: braces/micromatch, node-forge,
-   uuid under @expo/cli (build tools only, DEPENDENCIES.md finding 1). Flag
+   uuid under @expo/cli, source-map-js under postcss/@expo/metro-config
+   (build tools only, DEPENDENCIES.md finding 1). Flag
    anything else, especially in packages that end up in the app.
 4. npm outdated for: @klever/connect-crypto, @klever/connect-encoding,
    @noble/hashes, @noble/ciphers, @noble/curves, @noble/ed25519,

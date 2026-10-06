@@ -61,6 +61,10 @@ package couldn't send anything out.
      Expo's update-signing feature, which the Signer doesn't use;
    - [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq)
      in `uuid` 7.0.3, inside an iPhone-project tool (the 7 moderate ones).
+   - (added 6 Oct 2026) [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
+     in `source-map-js` 1.2.1 (a crafted source map can slow it down), used by
+     `postcss` → `@expo/metro-config`, again only while bundling on the Mac;
+     it isn't in the app bundle.
 
    `npm audit` lists `expo`, `react-native`, `metro` and even
    `react-native-quick-crypto` as "high" only because they *depend on*
