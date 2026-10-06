@@ -30,7 +30,7 @@ import { lockKeyChecked } from '../crypto/vault.js';
 import { saveVault } from '../storage/secureStore.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_STRETCHING } from '../config.js';
 import PasswordStrength from '../components/PasswordStrength.js';
-import { isAcceptablePassword } from '../security/passwordStrength.js';
+import { isAcceptablePassword, passwordStrength } from '../security/passwordStrength.js';
 
 /**
  * @param {object} props
@@ -92,7 +92,7 @@ export default function ChangePasswordScreen({ address, onChanged, onBack }) {
         secret
         editable={!pw.busy}
         onChangeText={setNext}
-        error={tooShort ? `Please use at least ${MIN_PASSWORD_LENGTH} characters.` : tooWeak ? 'Too easy to guess. Please choose a stronger one (see the hint below).' : same ? 'The new password is the same as the current one.' : ''}
+        error={tooShort ? `Please use at least ${MIN_PASSWORD_LENGTH} characters.` : tooWeak ? `Too easy to guess: ${passwordStrength(next).hint} Please choose a stronger one.` : same ? 'The new password is the same as the current one.' : ''}
       />
       {same ? null : <PasswordStrength password={next} />}
       <Field

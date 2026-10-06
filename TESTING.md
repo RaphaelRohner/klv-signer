@@ -765,7 +765,8 @@ No `npm install` needed for either app. Build and install the Signer
 - [ ] Normal use unchanged: the example app and the Hub connect, send and
       reject as before. (If the history of earlier signatures is fine, no
       new extra confirmation appears.)
-- [ ] Settings → Change password: try `Passw0rd1234` → refused as weak.
+- [ ] Settings → Change password: try `Passw0rd1234` → refused as weak, and the red
+      message under the box says why ("Built on a very common password…").
       Then change to a strong new password → works; lock the Signer and
       open it with the new password.
 - [ ] Example app: send 0.1 KLV → as before. (The new check, that the

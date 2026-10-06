@@ -24,6 +24,9 @@ export default function PasswordStrength({ password }) {
   if (!password || password.length < MIN_PASSWORD_LENGTH) return null;
   const { level, hint } = passwordStrength(password);
   const look = LOOK[level];
+  // Weak: the red message under the box already says why (since 6 Oct 2026),
+  // so only the word is shown here, not the same reason twice.
+  if (level === 'weak') return <Text style={[styles.line, styles.word, { color: colors[look.color] }]}>Strength: {look.word}.</Text>;
   return (
     <Text style={styles.line}>
       <Text style={[styles.word, { color: colors[look.color] }]}>Strength: {look.word}. </Text>
