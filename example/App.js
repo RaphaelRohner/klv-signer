@@ -8,7 +8,8 @@
  * One screen:
  *   1. "Connect KLV Signer" → the Signer asks "Allow this app?" (first time)
  *      and answers with the wallet address. The testnet balance is shown.
- *   2. Receiver + amount → "Send with KLV Signer": a Klever testnet node
+ *   2. Receiver + amount (or an NFT, e.g. "SGNTEST-3UC2/1") → "Send with
+ *      KLV Signer": a Klever testnet node
  *      prepares the unsigned transfer, the Signer shows it and asks for the
  *      password/fingerprint, then this app sends the signed transfer to the
  *      testnet and links to it on Kleverscan.
@@ -38,6 +39,7 @@ export default function App() {
   const [balance, setBalance] = useState(null); // testnet KLV, smallest units
   const [receiver, setReceiver] = useState('');
   const [amount, setAmount] = useState('');
+  const [nft, setNft] = useState(''); // optional: send this NFT instead of KLV
   const [busy, setBusy] = useState(null); // what's happening right now, or null
   const [error, setError] = useState(null);
   const [sentHash, setSentHash] = useState(null);
@@ -72,22 +74,33 @@ export default function App() {
       setError('Please enter a valid receiver address (klv1…, 62 characters).');
       return;
     }
-    let units;
-    try {
-      units = klvToUnits(amount);
-    } catch (e) {
-      setError(e.message);
+    // An NFT is "COLLECTION-XXXX/NUMBER" (e.g. SGNTEST-3UC2/1); one NFT = amount 1.
+    const nftId = nft.trim().toUpperCase();
+    if (nftId && !/^[A-Z0-9]{3,10}-[A-Z0-9]{4}\/[1-9][0-9]{0,19}$/.test(nftId)) {
+      setError('Please enter the NFT like SGNTEST-3UC2/1 (collection, "/", number), or leave the field empty to send KLV.');
       return;
+    }
+    let units;
+    if (nftId) {
+      units = '1';
+    } else {
+      try {
+        units = klvToUnits(amount);
+      } catch (e) {
+        setError(e.message);
+        return;
+      }
     }
     try {
       setBusy('Preparing the transfer…');
-      const unsignedHex = await buildTransfer({ sender: address, receiver: to, amountUnits: units }); // also checks the node prepared exactly this
+      const unsignedHex = await buildTransfer({ sender: address, receiver: to, amountUnits: units, kda: nftId || undefined }); // also checks the node prepared exactly this
       setBusy('Waiting for your approval in the KLV Signer…');
       const signed = await signWithSigner(unsignedHex); // also checks the answer is exactly this transfer
       setBusy('Sending to the Klever testnet…');
       const hash = await broadcastSigned(signed.signedTransaction);
       setSentHash(hash);
       setAmount('');
+      setNft('');
       setTimeout(() => refreshBalance(address), 5000);
     } catch (e) {
       setError(e.code === 'USER_REJECTED' ? 'Cancelled in the KLV Signer: nothing was sent.' : e.message);
@@ -129,6 +142,12 @@ export default function App() {
               style={s.input} value={amount} onChangeText={setAmount} placeholder="0.1"
               placeholderTextColor={C.muted} keyboardType="decimal-pad"
             />
+            <Text style={[s.label, s.gap]}>Or send an NFT (optional)</Text>
+            <TextInput
+              style={s.input} value={nft} onChangeText={setNft} placeholder="SGNTEST-3UC2/1"
+              placeholderTextColor={C.muted} autoCapitalize="characters" autoCorrect={false}
+            />
+            <Text style={s.hint}>Filled in: this NFT is sent and the amount is ignored. Empty: KLV is sent.</Text>
             <Button title="Send with KLV Signer" onPress={send} disabled={!!busy} />
           </View>
         ) : null}
@@ -181,6 +200,7 @@ const s = StyleSheet.create({
   buttonText: { color: '#121214', fontSize: 16, fontWeight: '700' },
   row: { flexDirection: 'row', alignItems: 'center', marginTop: 16 },
   busy: { color: C.text, marginLeft: 10 },
+  hint: { color: C.muted, fontSize: 12, marginTop: 6 },
   error: { color: C.danger, marginTop: 16, fontSize: 15, lineHeight: 21 },
   ok: { color: C.accent, fontSize: 16, fontWeight: '600' },
   link: { color: C.accent, textDecorationLine: 'underline', marginTop: 8 },
