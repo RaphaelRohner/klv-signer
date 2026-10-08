@@ -777,6 +777,19 @@ No `npm install` needed for either app. Build and install the Signer
   covered by the automatic checks (`npm test`, 134 checks).
 - F26 passed on 6 Oct 2026.
 
+**F27. Sending an NFT with the Signer (8 Oct 2026)**
+
+Test collection SGNTEST-3UC2 (owner: a separate testnet wallet); NFTs #1-#3
+were minted to the Signer wallet. No `npm install` needed. Build and install
+the example app (in `example`); the Signer stays as it is.
+
+- [ ] Example app: receiver = another of your wallets, "Or send an NFT" =
+      `SGNTEST-3UC2/1` → the Signer shows "NFT SGNTEST-3UC2 #1", the royalty
+      note, and (new receiver) the extra confirmation → approve → "Sent".
+- [ ] Kleverscan shows the NFT at the new owner; the Signer wallet keeps #2 and #3.
+- [ ] A typo in the NFT field (e.g. `SGNTEST/1`) → the example app refuses
+      before anything reaches the Signer.
+
 ---
 
 ## Good to know
