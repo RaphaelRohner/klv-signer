@@ -202,27 +202,36 @@ object DeviceSecurity {
   /**
    * Apps with accessibility access switched on: [{ package, label, cameWithPhone, isTool }].
    * isTool = the app declares itself a genuine accessibility tool (screen
-   * readers etc.); Android 16 only lets those read "sensitive" screens.
+   * readers etc.); Android 14+ only lets those read the Signer's screens.
+   *
+   * Returns null when the list couldn't be read (weekly check 12 Oct 2026,
+   * Medium): "couldn't check" must not look like "no apps", because a check
+   * that fails counts as unsafe. deviceChecks.js then allows fingerprint/face
+   * only. isTool is only read from Android 14 (API 34) on, the only versions
+   * where deviceChecks.js uses it, so older phones never trip over a detail
+   * their Android may not have (null there).
    */
-  private fun accessibilityApps(context: Context): List<Map<String, Any?>> = try {
+  private fun accessibilityApps(context: Context): List<Map<String, Any?>>? = try {
     val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+      ?: throw IllegalStateException("no AccessibilityManager")
     val pm = context.packageManager
-    (am?.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK) ?: emptyList())
+    am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
       .mapNotNull { service ->
         val serviceInfo = service.resolveInfo?.serviceInfo ?: return@mapNotNull null
         mapOf(
           "package" to serviceInfo.packageName,
           "label" to (service.resolveInfo.loadLabel(pm)?.toString() ?: serviceInfo.packageName),
           "cameWithPhone" to cameWithPhone(serviceInfo.applicationInfo),
-          "isTool" to service.isAccessibilityTool,
+          "isTool" to (if (Build.VERSION.SDK_INT >= 34) service.isAccessibilityTool else null),
           // Installed from Google Play? (Known tools like TalkBack count as
           // trusted only from there; see deviceChecks.js.)
           "fromPlayStore" to (installedFrom(pm, serviceInfo.packageName) == PLAY_STORE),
         )
       }
       .distinctBy { it["package"] }
-  } catch (e: Exception) {
-    emptyList()
+  } catch (e: Throwable) {
+    // Throwable, not just Exception: a missing Android method is an Error.
+    null
   }
 
   /** True for apps that are part of the phone's system (preinstalled, maybe updated since). */

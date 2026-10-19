@@ -50,7 +50,7 @@ import { signTransaction } from '../klever/signTransaction.js';
 import DeviceWarning from '../components/DeviceWarning.js';
 import BiometricButton from '../components/BiometricButton.js';
 import {
-  FINGERPRINT_ONLY_TEXT, isFingerprintOnly, isSigningBlocked, SIGNING_BLOCKED_TEXT,
+  fingerprintOnlyText, isFingerprintOnly, isSigningBlocked, SIGNING_BLOCKED_TEXT,
 } from '../security/deviceChecks.js';
 import { NETWORKS } from '../klever/networks.js';
 import {
@@ -85,6 +85,7 @@ export default function ApproveScreen({
   const fingerprintOnly = isFingerprintOnly(deviceFindings);
   const fingerprintOnlyRef = useRef(fingerprintOnly);
   useEffect(() => { fingerprintOnlyRef.current = fingerprintOnly; }, [fingerprintOnly]);
+  const fingerprintOnlyMessage = fingerprintOnlyText(deviceFindings);
   usePreventScreenCapture('approve');
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
@@ -155,7 +156,7 @@ export default function ApproveScreen({
 
   /** Password path: not while a risky accessibility app is on (checked again at the last moment). */
   function signWithKeyPassword(privateKey) {
-    if (fingerprintOnlyRef.current) throw new Error(FINGERPRINT_ONLY_TEXT);
+    if (fingerprintOnlyRef.current) throw new Error(fingerprintOnlyMessage);
     return signWithKey(privateKey);
   }
 
@@ -300,7 +301,7 @@ export default function ApproveScreen({
 
           {fingerprintOnly ? (
             <Notice kind="warning">
-              <Body>{FINGERPRINT_ONLY_TEXT}</Body>
+              <Body>{fingerprintOnlyMessage}</Body>
               {pw.biometric.loaded && !pw.biometric.enabled ? (
                 <Body>
                   <Strong>Fingerprint or face isn't switched on in the Signer</Strong> (Settings → Unlocking), so this

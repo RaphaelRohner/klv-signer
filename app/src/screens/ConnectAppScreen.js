@@ -25,7 +25,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Body, Button, Field, NetworkBadge, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import BiometricButton from '../components/BiometricButton.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
-import { FINGERPRINT_ONLY_TEXT, isFingerprintOnly } from '../security/deviceChecks.js';
+import { fingerprintOnlyText, isFingerprintOnly } from '../security/deviceChecks.js';
 import { shortFingerprint, cleanLabel } from '../requests/appTrust.js';
 import { describeAction } from '../requests/protocol.js';
 
@@ -89,7 +89,7 @@ export default function ConnectAppScreen({ request, trust, onAllow, onDeny, devi
       {pw.wait > 0 ? <Notice kind="warning">Too many wrong passwords. You can try again in {pw.waitText}.</Notice> : null}
       {fingerprintOnly ? (
         <Notice kind="warning">
-          <Body>{FINGERPRINT_ONLY_TEXT}</Body>
+          <Body>{fingerprintOnlyText(deviceFindings)}</Body>
           {pw.biometric.loaded && !pw.biometric.enabled ? (
             <Body><Strong>Fingerprint or face isn't switched on in the Signer</Strong>, so no app can be allowed right now.</Body>
           ) : null}

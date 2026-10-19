@@ -791,6 +791,20 @@ the example app (in `example`); the Signer stays as it is.
       before anything reaches the Signer.
 - F27 passed on 8 Oct 2026: the Signer's first real NFT transfer (SGNTEST-3UC2 #1).
 
+**F28. Accessibility check fails safe (19 Oct 2026)**
+
+From the weekly check of 12 Oct. No `npm install` needed. Build and install
+the Signer (in `app`). The "couldn't check" case itself can't be caused on a
+normal phone; the automated tests cover it. Here: nothing changed for you.
+
+- [ ] Settings → This phone: the same warnings as before (none about
+      accessibility if no app you installed has that access).
+- [ ] Sign a test transaction (e.g. with the example app) with your
+      **password** → works as before.
+- [ ] (Optional, like F20) Switch on accessibility access for an app you
+      installed (e.g. Button Mapper) → fingerprint/face only, as before;
+      switch it off → password works again.
+
 ---
 
 ## Good to know

@@ -82,6 +82,19 @@ export function riskyAccessibilityApps(report) {
     && (!android14 || a.isTool !== false));
 }
 
+/** True when the phone check could read the list of accessibility apps. */
+export function accessibilityListKnown(report) {
+  return Array.isArray(report && report.accessibilityApps);
+}
+
+/** Shown when that list couldn't be read: fingerprint/face only, to be safe. */
+export const ACCESSIBILITY_UNKNOWN = Object.freeze({
+  id: 'accessibilityUnknown',
+  fingerprintOnly: true,
+  title: 'Couldn\'t check which apps can control the screen',
+  text: 'The Signer couldn\'t read which apps have accessibility access (they can read the screen and press buttons). To be safe, it only signs with your fingerprint or face for now, and allowing a new app needs them too. Close the Signer completely and open it again; if this stays, tell the developer.',
+});
+
 /**
  * isFingerprintOnly — true when password signing (and allowing apps with the
  * password) is switched off because of a risky accessibility app.
@@ -93,6 +106,17 @@ export function isFingerprintOnly(findings) {
 /** What the approval and "Allow this app" screens say in fingerprint-only mode. */
 export const FINGERPRINT_ONLY_TEXT =
   'An app with accessibility access is switched on that could type your password and press buttons here (Settings → This phone). Until you switch its access off, the Signer only accepts your fingerprint or face.';
+
+/** Same, when the list of accessibility apps couldn't be read at all. */
+export const FINGERPRINT_ONLY_UNKNOWN_TEXT =
+  'The Signer couldn\'t check which apps can press buttons here (Settings → This phone). To be safe, it only accepts your fingerprint or face until that check works again.';
+
+/** Which of the two texts fits these findings (fingerprint-only mode). */
+export function fingerprintOnlyText(findings) {
+  return (findings || []).some((f) => f.id === 'accessibilityUnknown')
+    ? FINGERPRINT_ONLY_UNKNOWN_TEXT
+    : FINGERPRINT_ONLY_TEXT;
+}
 
 /** Shown under every warning: what these checks can and can't tell. */
 export const DEVICE_CHECK_LIMIT =
@@ -219,6 +243,13 @@ export function describeDeviceSecurity(report) {
   }
 
   // 6. Apps with accessibility access (can read the screen and press buttons)
+  //    6.0 The list couldn't be read (the phone check sends null): treated as
+  //        unsafe, so fingerprint/face only (weekly check 12 Oct 2026, Medium:
+  //        "couldn't check" used to count as "no apps").
+  if (!accessibilityListKnown(report)) {
+    findings.push(ACCESSIBILITY_UNKNOWN);
+    return { checked: true, findings };
+  }
   //    6a. Ones that could actually press buttons in the Signer: password
   //        signing is switched off while they're on (fingerprint/face only).
   const risky = riskyAccessibilityApps(report);

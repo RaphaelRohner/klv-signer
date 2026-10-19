@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   describeDeviceSecurity, riskyAccessibilityApps, isFingerprintOnly, DEVICE_CHECK_LIMIT, isSigningBlocked, SIGNING_BLOCKED_TEXT, DEVICE_CHECK_FAILED, isOfficialCopy,
-  describeKeyStorage,
+  describeKeyStorage, accessibilityListKnown, fingerprintOnlyText, FINGERPRINT_ONLY_TEXT, FINGERPRINT_ONLY_UNKNOWN_TEXT,
 } from '../src/security/deviceChecks.js';
 import { OFFICIAL_SIGNING_KEY } from '../src/config.js';
 
@@ -175,4 +175,34 @@ test('accessibility apps that could press buttons switch the Signer to fingerpri
   assert.deepEqual(ids({ ...SAFE, sdkInt: 33, accessibilityApps: [{ ...cleaner, cameWithPhone: true }] }), []);
   assert.equal(isFingerprintOnly([]), false);
   assert.equal(isFingerprintOnly(undefined), false);
+});
+
+test('accessibility list unreadable = fingerprint-only, never "no apps" (weekly check 12 Oct 2026, Medium)', () => {
+  // The phone check sends null when it couldn't read the list.
+  for (const accessibilityApps of [null, undefined, 'error']) {
+    const report = { ...SAFE, sdkInt: 34, accessibilityApps };
+    assert.equal(accessibilityListKnown(report), false);
+    const f = findingsOf(report);
+    assert.deepEqual(f.map((x) => x.id), ['accessibilityUnknown'], String(accessibilityApps));
+    assert.equal(isFingerprintOnly(f), true);
+    assert.equal(isSigningBlocked(f), false); // fingerprint/face still work
+    assert.equal(fingerprintOnlyText(f), FINGERPRINT_ONLY_UNKNOWN_TEXT);
+  }
+  // A readable, empty list is fine, and the usual text stays for risky apps.
+  assert.equal(accessibilityListKnown(SAFE), true);
+  assert.deepEqual(ids(SAFE), []);
+  const risky = findingsOf({ ...SAFE, sdkInt: 33, accessibilityApps: [{ package: 'x.c', label: 'C', cameWithPhone: false, isTool: null, fromPlayStore: true }] });
+  assert.equal(fingerprintOnlyText(risky), FINGERPRINT_ONLY_TEXT);
+  // Other warnings found earlier are kept next to it.
+  assert.deepEqual(ids({ ...SAFE, suBinary: true, accessibilityApps: null }), ['root', 'accessibilityUnknown']);
+});
+
+test('Android 12/13: "is it a tool?" is not read there (null) and that changes nothing (weekly check 12 Oct 2026, Low)', () => {
+  const talkback = { package: 'com.google.android.marvin.talkback', label: 'TalkBack', cameWithPhone: false, isTool: null, fromPlayStore: true };
+  const preinstalled = { package: 'x.maker', label: 'Maker helper', cameWithPhone: true, isTool: null, fromPlayStore: false };
+  const cleaner = { package: 'x.cleaner', label: 'Cleaner', cameWithPhone: false, isTool: null, fromPlayStore: true };
+  for (const sdkInt of [31, 32, 33]) {
+    assert.deepEqual(ids({ ...SAFE, sdkInt, accessibilityApps: [talkback, preinstalled] }), [], String(sdkInt));
+    assert.deepEqual(ids({ ...SAFE, sdkInt, accessibilityApps: [cleaner] }), ['accessibilityRisk'], String(sdkInt));
+  }
 });
