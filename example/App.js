@@ -28,6 +28,10 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { getSignerAddress, signWithSigner } from './src/klvSigner';
+import appJson from './app.json';
+
+// Shown at the bottom, so testers can tell which version they have (Raphael, 19 Oct 2026).
+const VERSION_TEXT = `Version ${appJson.expo.version} (build ${appJson.expo.android.versionCode})`;
 import {
   broadcastSigned, buildTransfer, explorerUrl, getKlvBalance, klvToUnits, unitsToKlv,
 } from './src/kleverTx';
@@ -168,6 +172,7 @@ export default function App() {
         <Text style={[s.muted, s.gap]}>
           Needs the official KLV Signer app on this phone. Source code and the protocol: github.com/RaphaelRohner/klv-signer
         </Text>
+        <Text style={[s.muted, s.version]}>{VERSION_TEXT}</Text>
       </ScrollView>
     </View>
   );
@@ -204,4 +209,5 @@ const s = StyleSheet.create({
   error: { color: C.danger, marginTop: 16, fontSize: 15, lineHeight: 21 },
   ok: { color: C.accent, fontSize: 16, fontWeight: '600' },
   link: { color: C.accent, textDecorationLine: 'underline', marginTop: 8 },
+  version: { marginTop: 10, fontSize: 12, textAlign: 'center' },
 });
