@@ -2,7 +2,8 @@
 
 The weekly check (WEEKLY-CHECK.md) reads this file every Monday and lists
 every point that is still open in its report, so nothing drops out of view
-just because the code didn't change that week. When a point is fixed, move
+just because the code didn't change that week. The reports themselves are
+kept in weekly-reports/. When a point is fixed, move
 it to "Fixed" with the date; when it's accepted as it is, move it to
 "Accepted" with the reason.
 

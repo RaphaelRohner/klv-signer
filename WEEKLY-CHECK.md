@@ -45,13 +45,22 @@ on too (below).
   reported "nothing" while a Medium finding was still open).
 - Nothing is changed in the repository.
 
+## Keeping the reports
+
+Every report is saved in `weekly-reports/` (one file per Monday, the table in
+weekly-reports/README.md gives the overview), also "All fine" ones when
+they're pasted into a chat. The check itself never writes them: it stays
+read-only on purpose.
+
 ## When a report says "Something needs a look" or "Act now"
 
 The check doesn't fix anything itself (on purpose: no change to a wallet app
 without the owner seeing and testing it). Open a chat in the claude.ai
 project "KLV Signer App", paste the report (or its summary), and Claude
 checks it against the code, fixes what's needed, runs the tests, records the
-points in OPEN-FINDINGS.md (open, fixed or accepted) and commits;
+points in OPEN-FINDINGS.md (open, fixed or accepted), saves the report as it
+arrived in `weekly-reports/YYYY-MM-DD.md` with a note on what became of each
+point, and commits;
 the owner builds, tests on the phone and pushes, as usual. "All fine" needs
 nothing.
 
