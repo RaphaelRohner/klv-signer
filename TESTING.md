@@ -808,6 +808,9 @@ normal phone; the automated tests cover it. Here: nothing changed for you.
       apps); on Android 12/13, or with an app that calls itself an
       accessibility tool, fingerprint/face only. Switch its access off again
       afterwards.
+- (Nothing to try for the damaged signing history: a damaged record can't
+  be caused on a normal phone. The automated tests check that the extra
+  confirmation then stays for one hour.)
 
 ---
 

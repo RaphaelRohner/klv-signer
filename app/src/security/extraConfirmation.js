@@ -95,7 +95,33 @@ export function isWellFormedHistory(h) {
   const isList = (l, keys) => Array.isArray(l)
     && l.every((e) => isObject(e) && typeof e.t === 'number' && keys.every((k) => k in e));
   return isObject(h) && isMap(h.receivers) && isMap(h.apps)
-    && isList(h.recent, ['h']) && isList(h.signed || [], ['k']);
+    && isList(h.recent, ['h']) && isList(h.signed || [], ['k'])
+    && (h.damagedAt === undefined || typeof h.damagedAt === 'number');
+}
+
+/**
+ * Was the history found damaged less than an hour ago? Then the Signer keeps
+ * asking for the extra confirmation for that hour (weekly check 12 Oct 2026,
+ * Low): the fresh, empty history doesn't know what was signed just before,
+ * so "the same transfer again" can't see it. One hour = REPEAT_WINDOW_MS,
+ * exactly how far that rule looks back. Times in the future (clock changed)
+ * don't count.
+ */
+export function recentlyDamaged(history, now) {
+  const at = history && history.damagedAt;
+  return typeof at === 'number' && now - at >= 0 && now - at < REPEAT_WINDOW_MS;
+}
+
+/** The damage time to keep in a history saved now (undefined = none). */
+function damageMark(h, unreadable, now) {
+  if (unreadable) return recentlyDamaged(h, now) ? h.damagedAt : now;
+  return recentlyDamaged(h, now) ? h.damagedAt : undefined;
+}
+
+/** Puts the damage time into a history object (or leaves it out). */
+function withDamageMark(h, damagedAt) {
+  const { damagedAt: _old, ...rest } = h;
+  return damagedAt === undefined ? rest : { ...rest, damagedAt };
 }
 
 /** How receivers are remembered (see top of file). */
@@ -222,6 +248,8 @@ export function reasonsForExtraConfirmation(reading, rules, history, { appId, no
 
   if (h.unreadable) {
     reasons.push({ id: 'history', text: 'The Signer couldn\'t read its record of earlier signatures, so it asks for the extra confirmation to be safe.' });
+  } else if (recentlyDamaged(h, now)) {
+    reasons.push({ id: 'history', text: 'The Signer\'s record of earlier signatures was damaged less than an hour ago, so it can\'t see what you signed just before. It asks for the extra confirmation until that hour is over.' });
   }
 
   if (r.repeat) {
@@ -326,7 +354,7 @@ export function isRelaxing(oldRules, newRules) {
 export function withRequest(history, now, hash) {
   const { unreadable, ...h } = { ...EMPTY_HISTORY, ...(history || {}) };
   const kept = (h.recent || []).filter((e) => e && now - e.t >= 0 && now - e.t < 10 * 60 * 1000 && e.h !== hash);
-  return { ...h, recent: [...kept, { t: now, h: hash }].slice(-20) };
+  return withDamageMark({ ...h, recent: [...kept, { t: now, h: hash }].slice(-20) }, damageMark(h, unreadable, now));
 }
 
 export const MAX_RECEIVERS = 200;
@@ -348,7 +376,10 @@ export function withSigned(history, reading, appId, now) {
     ...(h.signed || []).filter((e) => e && now - e.t >= 0 && now - e.t < REPEAT_WINDOW_MS),
     ...reading.transfers.map((t) => ({ t: now, k: transferKey(t) })),
   ].slice(-MAX_SIGNED);
-  return { ...h, receivers: newest(receivers, MAX_RECEIVERS), apps: newest(apps, MAX_APPS), signed };
+  return withDamageMark(
+    { ...h, receivers: newest(receivers, MAX_RECEIVERS), apps: newest(apps, MAX_APPS), signed },
+    damageMark(h, unreadable, now),
+  );
 }
 
 /** Checks saved rules are well-formed (throws if not, so the Signer asks for the extra confirmation to be safe). */

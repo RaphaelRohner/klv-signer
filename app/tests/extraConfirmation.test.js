@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_RULES, EMPTY_HISTORY, REPEAT_WINDOW_MS, RULE_SWITCHES, reasonsForExtraConfirmation, isRelaxing, parseKlv, formatKlv,
   groupMatches, pickConfirmGroup, CONFIRM_GROUP_LENGTH, receiversToConfirm, withRequest, withSigned, BURST_WINDOW_MS, receiverKey, checkRules, MAX_RECEIVERS,
-  klvCandidates, isWellFormedHistory,
+  klvCandidates, isWellFormedHistory, recentlyDamaged,
 } from '../src/security/extraConfirmation.js';
 import { validAddressOrNull } from '../src/klever/address.js';
 
@@ -216,4 +216,29 @@ test('a damaged signing history asks for the extra confirmation (weekly check, 6
   assert.ok(ids(tx(klv(A, '5')), DEFAULT_RULES, { ...EMPTY_HISTORY, unreadable: true }).includes('history'));
   // The mark is never saved back.
   assert.equal('unreadable' in withRequest({ ...EMPTY_HISTORY, unreadable: true }, NOW, 'h1'), false);
+});
+
+test('after a damaged history, the extra confirmation stays for one hour (weekly check 12 Oct 2026, Low)', () => {
+  const HOUR = 60 * 60 * 1000;
+  // First request: unreadable -> asks, and the saved history remembers when.
+  const saved = withRequest({ ...EMPTY_HISTORY, unreadable: true }, NOW, 'h1');
+  assert.equal(saved.damagedAt, NOW);
+  assert.equal(isWellFormedHistory(saved), true);
+  // Even a receiver and app that are known again after signing: still asks within the hour.
+  const afterSign = withSigned(saved, tx(klv(A, '5')), 'com.hub', NOW + 1000);
+  assert.equal(afterSign.damagedAt, NOW);
+  const rulesOff = { ...DEFAULT_RULES, newReceiver: false, firstAppRequest: false, repeat: false };
+  assert.deepEqual(ids(tx(klv(A, '5')), rulesOff, afterSign, 'com.hub', NOW + 30 * 60 * 1000), ['history']);
+  assert.equal(recentlyDamaged(afterSign, NOW + HOUR - 1), true);
+  // After the hour: no more, and the mark is dropped from the next save.
+  assert.deepEqual(ids(tx(klv(A, '5')), rulesOff, afterSign, 'com.hub', NOW + HOUR), []);
+  assert.equal('damagedAt' in withRequest(afterSign, NOW + HOUR, 'h2'), false);
+  // A history that still carries its damage time keeps it (a record that can't be read at all starts a new hour).
+  assert.equal(withRequest({ ...afterSign, unreadable: true }, NOW + 10 * 60 * 1000, 'h3').damagedAt, NOW);
+  // A clock set back doesn't extend it, and a damaged mark itself counts as unreadable.
+  assert.equal(recentlyDamaged(afterSign, NOW - 1), false);
+  assert.equal(isWellFormedHistory({ ...known, damagedAt: 'x' }), false);
+  // Normal histories never get the mark.
+  assert.equal('damagedAt' in withRequest(known, NOW, 'h4'), false);
+  assert.equal('damagedAt' in withSigned(known, tx(klv(A, '5')), 'com.hub', NOW), false);
 });
