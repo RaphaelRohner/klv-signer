@@ -802,8 +802,12 @@ normal phone; the automated tests cover it. Here: nothing changed for you.
 - [ ] Sign a test transaction (e.g. with the example app) with your
       **password** → works as before.
 - [ ] (Optional, like F20) Switch on accessibility access for an app you
-      installed (e.g. Button Mapper) → fingerprint/face only, as before;
-      switch it off → password works again.
+      installed (e.g. Button Mapper) → the same as in F20: on **Android 14 or
+      newer** the note "An app can read and control the screen" and the
+      password still works (Android hides the Signer's screens from such
+      apps); on Android 12/13, or with an app that calls itself an
+      accessibility tool, fingerprint/face only. Switch its access off again
+      afterwards.
 
 ---
 
