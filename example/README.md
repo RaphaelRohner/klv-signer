@@ -38,3 +38,13 @@ example app is signed with this key (SHA-256, created by Expo on 6 Oct 2026):
 
 (Not the Signer's key: that one is `82:D0:9D:…:7E:86:11`, see ../README.md.) Licence: GPL-3.0-or-later,
 like the Signer (see ../LICENSE).
+
+## Test link at the bottom
+
+"Test: a request passed on by another app (must be refused)" opens a tiny,
+invisible helper screen of this app (`modules/klv-signer-check/android/…/ForwardTestActivity.kt`)
+that hands a harmless "which address?" request on to the Signer with
+Android's "forward result" flag, the way a harmful app would. The Signer
+must refuse it (`INVALID_REQUEST`); the app shows the result in green
+(refused) or red (not refused). It's there for the Signer's own testing
+(TESTING.md F30); a real client app never needs it.

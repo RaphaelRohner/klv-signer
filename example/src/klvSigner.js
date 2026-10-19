@@ -149,3 +149,24 @@ export async function signWithSigner(unsignedHex) {
   }
   return answer;
 }
+
+/**
+ * forwardTest - TEST ONLY (TESTING.md F30): asks a tiny helper screen of this
+ * app (ForwardTestActivity.kt) to pass a harmless GET_ADDRESS request on to
+ * the Signer, the way a harmful app would ("forward result"). The Signer must
+ * refuse it. Returns { refused, error, message } for the screen to show.
+ */
+export async function forwardTest() {
+  verifySigner();
+  const result = await IntentLauncher.startActivityAsync('com.raphaelrohner.klvsignerexample.FORWARD_TEST', {
+    packageName: 'com.raphaelrohner.klvsignerexample',
+    className: 'com.raphaelrohner.klvsignerexample.signercheck.ForwardTestActivity',
+  });
+  const answer = result.extra || {};
+  const ok = result.resultCode === IntentLauncher.ResultCode.Success && answer.status === 'ok';
+  return {
+    refused: !ok && answer.error === 'INVALID_REQUEST',
+    error: answer.error || (ok ? 'none (answered with an address!)' : 'no details'),
+    message: answer.message || '',
+  };
+}

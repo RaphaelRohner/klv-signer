@@ -797,11 +797,11 @@ From the weekly check of 12 Oct. No `npm install` needed. Build and install
 the Signer (in `app`). The "couldn't check" case itself can't be caused on a
 normal phone; the automated tests cover it. Here: nothing changed for you.
 
-- [ ] Settings → This phone: the same warnings as before (none about
+- [x] Settings → This phone: the same warnings as before (none about
       accessibility if no app you installed has that access).
-- [ ] Sign a test transaction (e.g. with the example app) with your
+- [x] Sign a test transaction (e.g. with the example app) with your
       **password** → works as before.
-- [ ] (Optional, like F20) Switch on accessibility access for an app you
+- [x] (Optional, like F20) Switch on accessibility access for an app you
       installed (e.g. Button Mapper) → the same as in F20: on **Android 14 or
       newer** the note "An app can read and control the screen" and the
       password still works (Android hides the Signer's screens from such
@@ -817,14 +817,33 @@ normal phone; the automated tests cover it. Here: nothing changed for you.
 From the weekly check of 12 Oct. No `npm install` needed. Build and install
 the Signer (in `app`) and the example app (in `example`).
 
-- [ ] Settings → Change password: type your current password, then as the
+- [x] Settings → Change password: type your current password, then as the
       new one `1234qwerasdf` → refused with "A pattern of neighbouring keys
       or a simple sequence". Same for `!QAZ2wsx#EDC`. Don't save anything:
       tap Back (your password stays the same).
-- [ ] A normal strong password (e.g. 4 random words) is still accepted in
+- [x] A normal strong password (e.g. 4 random words) is still accepted in
       that box (no need to save it).
-- [ ] The example app shows version 0.1.2 (Android Settings → Apps → KLV
+- [x] The example app shows version 0.1.2 (Android Settings → Apps → KLV
       Signer Example), and a test transfer still works.
+
+**F30. A request passed on by another app is refused (19 Oct 2026)**
+
+From the weekly check of 12 Oct (it completes F25, which could only show
+that normal use still works). No `npm install` needed. Build and install the
+**example app** (in `example`); the Signer stays as it is.
+
+- [ ] At the bottom of the example app, under the version, tap **"Test: a
+      request passed on by another app (must be refused)"**. A tiny invisible
+      helper screen of the example app passes a harmless "which address?"
+      request on to the Signer, the way a harmful app would.
+- [ ] The example app shows in green: **"✔ Refused, as it should be
+      (INVALID_REQUEST): Requests passed on from another app aren't
+      accepted. …"**. (Nothing is signed; the Signer may flash up briefly or
+      not at all.) Red "NOT refused" → tell Claude.
+- [ ] A normal test transfer afterwards still works.
+
+(The release check's fix, point 7 of the same report, needs no phone: the
+automated tests cover it.)
 
 ---
 

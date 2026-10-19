@@ -27,7 +27,7 @@ import {
   ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { getSignerAddress, signWithSigner } from './src/klvSigner';
+import { getSignerAddress, signWithSigner, forwardTest } from './src/klvSigner';
 import appJson from './app.json';
 
 // Shown at the bottom, so testers can tell which version they have (Raphael, 19 Oct 2026).
@@ -47,6 +47,17 @@ export default function App() {
   const [busy, setBusy] = useState(null); // what's happening right now, or null
   const [error, setError] = useState(null);
   const [sentHash, setSentHash] = useState(null);
+  const [forwardResult, setForwardResult] = useState(null); // test F30, see runForwardTest
+
+  // Test F30: a request passed on by another app must be refused by the Signer.
+  async function runForwardTest() {
+    setForwardResult(null);
+    try {
+      setForwardResult(await forwardTest());
+    } catch (e) {
+      setForwardResult({ refused: false, error: e.code || 'error', message: e.message });
+    }
+  }
 
   async function refreshBalance(addr) {
     try {
@@ -173,6 +184,16 @@ export default function App() {
           Needs the official KLV Signer app on this phone. Source code and the protocol: github.com/RaphaelRohner/klv-signer
         </Text>
         <Text style={[s.muted, s.version]}>{VERSION_TEXT}</Text>
+        <Pressable accessibilityRole="button" onPress={runForwardTest} disabled={!!busy}>
+          <Text style={[s.muted, s.testLink]}>Test: a request passed on by another app (must be refused)</Text>
+        </Pressable>
+        {forwardResult ? (
+          <Text style={[forwardResult.refused ? s.ok : s.error, s.testResult]}>
+            {forwardResult.refused
+              ? `✔ Refused, as it should be (${forwardResult.error}): ${forwardResult.message}`
+              : `✘ NOT refused as expected (${forwardResult.error}). ${forwardResult.message} Please tell Claude.`}
+          </Text>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -210,4 +231,6 @@ const s = StyleSheet.create({
   ok: { color: C.accent, fontSize: 16, fontWeight: '600' },
   link: { color: C.accent, textDecorationLine: 'underline', marginTop: 8 },
   version: { marginTop: 10, fontSize: 12, textAlign: 'center' },
+  testLink: { marginTop: 18, fontSize: 12, textAlign: 'center', textDecorationLine: 'underline' },
+  testResult: { marginTop: 8, fontSize: 13, textAlign: 'center' },
 });

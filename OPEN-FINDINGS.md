@@ -8,18 +8,16 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
 
 ## Open
 
-- **Release check: unusual "open" setting (Low, weekly check 12 Oct 2026).**
-  The release check (`app/tools/release-check.mjs`) could miss an openable
-  part of the app (an exported component) if its setting is written in an
-  unusual way. No library does this today. Planned: its own small fix, build
-  and test.
 - **Refusal of passed-on requests not proven on a phone (Low, weekly check
   12 Oct 2026).** The Signer refuses a request one app passes on from
-  another (`FLAG_ACTIVITY_FORWARD_RESULT`). Test F25 only showed that normal
-  use still works; the refused case still needs a way to be caused on a
-  phone. Planned: its own build and test.
+  another (`FLAG_ACTIVITY_FORWARD_RESULT`). Since 19 Oct the example app has
+  a test link that causes exactly this (TESTING.md F30); move this point to
+  "Fixed" once F30 has passed on a phone.
 
 ## Fixed
+
+- 19 Oct 2026 — Release check could miss an open part written in an unusual
+  way (Low, weekly check 12 Oct): only a plain "false" counts as closed now.
 
 - 19 Oct 2026 — Accessibility check didn't fail safe (Medium, weekly check
   12 Oct): an unreadable list now means fingerprint/face only.

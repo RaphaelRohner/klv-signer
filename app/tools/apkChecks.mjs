@@ -106,6 +106,12 @@ export function parseBadging(text) {
   };
 }
 
+/** True only for a plain "false" (as aapt2 prints it, maybe with a type note or as 0x0). */
+function isPlainFalse(value) {
+  const v = String(value).trim();
+  return v === 'false' || /^\(type 0x12\)0x0$/.test(v) || v === '0x0';
+}
+
 /**
  * Reads `aapt2 dump xmltree --file AndroidManifest.xml` output into a tree of
  * { name, attrs: { allowBackup: 'false', name: 'com…', … }, children, depth }.
@@ -232,10 +238,16 @@ export function checkApk({ signer, badging, manifest, ownFingerprints, official,
   //    other apps can reach. "Open" = exported="true", or an intent filter
   //    without an exported setting. Allowed: the two screens above, and parts
   //    guarded by a permission only Android itself holds.
+  //    Fail-safe (weekly check, 12 Oct 2026): only a plain "false" counts as
+  //    closed. Any other way of writing it ("0xffffffff", "1", "TRUE", a
+  //    reference to a setting elsewhere) counts as open, so an unusual
+  //    spelling can't slip past.
   const kinds = ['activity', 'activity-alias', 'service', 'receiver', 'provider'];
   for (const part of kinds.flatMap((k) => findAll(manifest, k).map((node) => ({ k, node })))) {
     const { exported, name, permission } = part.node.attrs;
-    const open = exported === 'true' || (exported === undefined && findAll(part.node, 'intent-filter').length > 0);
+    const open = exported === undefined
+      ? findAll(part.node, 'intent-filter').length > 0
+      : !isPlainFalse(exported);
     if (!open || ALLOWED_OPEN_COMPONENTS.includes(name) || SYSTEM_ONLY_PERMISSIONS.includes(permission)) continue;
     problems.push(`Other apps can reach the ${part.k} ${name}${permission ? ` (guarded only by ${permission})` : ''}. Check where it comes from before publishing.`);
   }

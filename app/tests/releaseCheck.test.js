@@ -202,3 +202,17 @@ ${attrs}${filter ? `              E: intent-filter (line=201)
   const closed = `            A: ${A}:exported(0x01010010)=false\n`;
   assert.deepEqual(checkApk(facts({ manifest: manifestOutput({ extra: part('service', 'lib.Inner', closed, true) }) })), []);
 });
+
+test('an open part written in an unusual way is still caught; only a plain "false" counts as closed (weekly check, 12 Oct 2026)', () => {
+  const part = (name, value) => `          E: service (line=200)
+            A: ${A}:name(0x01010003)="${name}" (Raw: "${name}")
+            A: ${A}:exported(0x01010010)=${value}
+`;
+  for (const value of ['(type 0x12)0xffffffff', '0xffffffff', '1', 'TRUE', '@0x7f050001', '"true"', '']) {
+    const problems = checkApk(facts({ manifest: manifestOutput({ extra: part('lib.Odd', value) }) })).join(' ');
+    assert.match(problems, /service lib\.Odd/, `exported=${value}`);
+  }
+  for (const value of ['false', '(type 0x12)0x0', '0x0']) {
+    assert.deepEqual(checkApk(facts({ manifest: manifestOutput({ extra: part('lib.Closed', value) }) })), [], `exported=${value}`);
+  }
+});
