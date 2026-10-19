@@ -13,7 +13,8 @@
  *   broadcastSigned(hex)     sends a signed transaction to the testnet,
  *                            returns its hash
  *   checkPrepared(hex, ...)  reads the prepared transfer back and makes sure
- *                            it is exactly what the user typed (see below)
+ *                            sender, receiver, token and amount are what the
+ *                            user typed (not the fee, chain or note; see below)
  *   getKlvBalance(address)   the address's testnet KLV balance
  *   explorerUrl(hash)        link to see the transaction on testnet Kleverscan
  *
@@ -67,7 +68,8 @@ export function unitsToKlv(units) {
  *   kda:         optional token id (e.g. "ABC-1234") or NFT ("COLLECTION/NUMBER");
  *                leave empty for KLV
  * Returns the unsigned transaction as hex, ready for signWithSigner().
- * Before returning, it checks the node prepared exactly this transfer.
+ * Before returning, it checks the node kept the sender, receiver, token and
+ * amount (see checkPrepared for what it does NOT check).
  */
 export async function buildTransfer({ sender, receiver, amountUnits, kda }) {
   const transfer = { receiver, amount: amountUnits };
@@ -85,6 +87,15 @@ export async function buildTransfer({ sender, receiver, amountUnits, kda }) {
 // before anyone approves, but a careful app checks too, before even asking
 // (weekly check, 6 Oct 2026). Klever's own decoder misreads transfers in
 // connect-encoding 0.1.3, so this is a tiny reader of just the fields needed.
+//
+// What it checks: one transfer only (several, or another kind, is refused),
+// and its sender, receiver, token and amount. What it does NOT check: the
+// fee, the chain (network), notes (data) and any other field of RawData.
+// The Signer reads all of those itself: it refuses what it can't explain
+// (another network, a fee over 100 KLV, unknown fields) and shows the rest,
+// notes included, before anyone approves. So for this example that is enough. Copying this code into an app that doesn't
+// go through the Signer? Then check those fields too (weekly check, 12 Oct
+// 2026: the comments used to say "exactly this transfer").
 //
 // Layout (protobuf; "field n" = numbered part):
 //   Transaction  field 1 = RawData
@@ -196,8 +207,9 @@ export function readTransfer(unsignedHex) {
 }
 
 /**
- * checkPrepared - throws unless the prepared transfer sends exactly
+ * checkPrepared - throws unless the prepared transaction is one transfer of
  * `amountUnits` of `kda` (KLV if empty) from `sender` to `receiver`.
+ * Fee, chain and notes are left to the Signer (see above).
  */
 export function checkPrepared(unsignedHex, { sender, receiver, amountUnits, kda }) {
   const t = readTransfer(unsignedHex);

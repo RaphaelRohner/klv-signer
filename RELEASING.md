@@ -40,7 +40,7 @@ installing updates until a new, re-keyed Signer is announced.
 
 ## Making a release
 
-Do these in order, from the `app` folder unless noted. Version `0.2.0` is the
+Do these in order, from the `app` folder unless noted. Version `0.1.2` is the
 example; use the real one.
 
 1. **Clean start:** `git status` shows nothing to commit (builds refuse
@@ -49,46 +49,46 @@ example; use the real one.
 2. **Checks:** `npm test` → `# fail 0`, and the checklist "Before every
    release" in DEPENDENCIES.md (audit, versions). **Never `npm audit fix
    --force`**: it would install a years-old Expo and break the app.
-3. **Version:** in `app/app.json` raise `"version"` (e.g. 0.1.0 → 0.2.0) **and**
-   `"android" → "versionCode"` by one (e.g. 1 → 2). Android uses the
+3. **Version:** in `app/app.json` raise `"version"` (e.g. 0.1.1 → 0.1.2) **and**
+   `"android" → "versionCode"` by one (e.g. 2 → 3). Android uses the
    versionCode to refuse installing an older version over a newer one. Note
    what changed. Commit.
 4. **Notices:** `node tools/third-party-notices.mjs` → updates
    `THIRD-PARTY-NOTICES.md` (licences of the packages inside the app). Commit
    if it changed.
 5. **Build:** `npx eas-cli@latest build --platform android --profile preview --local`
-6. **Name it and check it:** `cp build-<number>.apk klv-signer-0.2.0.apk`, then
-   `node tools/release-check.mjs klv-signer-0.2.0.apk`
+6. **Name it and check it:** `cp build-<number>.apk klv-signer-0.1.2.apk`, then
+   `node tools/release-check.mjs klv-signer-0.1.2.apk`
    → must end with **OK**. It uses Android's own tools from the Android SDK
    (apksigner, aapt2) and checks: valid signature with the official key, no
    internet or other removed permissions, not a debug build, backup off, no
    link filters, Android 12 or newer only, no screens, services, receivers
    or providers open to other apps except the two intended ones (a library
    update could add one), versionCode higher than every earlier release. Only then
-   does it write `klv-signer-0.2.0.apk.sha256`. If it says STOP: don't publish.
+   does it write `klv-signer-0.1.2.apk.sha256`. If it says STOP: don't publish.
 7. **Phone test:** install it over the previous version (`adb install -r …`):
    wallet still there, unlock, one Hub test transfer.
-8. **Tag the commit:** in the project folder, `git tag v0.2.0` and
-   `git push origin v0.2.0` (so everyone can see exactly which code it is).
+8. **Tag the commit:** in the project folder, `git tag v0.1.2` and
+   `git push origin v0.1.2` (so everyone can see exactly which code it is).
 9. **GitHub release** (repository → Releases → Draft a new release):
-   - Tag: `v0.2.0`, title "KLV Signer 0.2.0 (testnet preview)".
-   - Upload `klv-signer-0.2.0.apk`, `klv-signer-0.2.0.apk.sha256` and
+   - Tag: `v0.1.2`, title "KLV Signer 0.1.2 (testnet preview)".
+   - Upload `klv-signer-0.1.2.apk`, `klv-signer-0.1.2.apk.sha256` and
      `THIRD-PARTY-NOTICES.md`.
    - Also the example app, so testers can try the Signer: build it in
      `example/` (see example/README.md), name it
      `klv-signer-example-<version>.apk` (raise its `"version"` and
      `"versionCode"` in `example/app.json` too when it changed), make its
      checksum with
-     `shasum -a 256 klv-signer-example-0.2.0.apk > klv-signer-example-0.2.0.apk.sha256`
+     `shasum -a 256 klv-signer-example-0.1.2.apk > klv-signer-example-0.1.2.apk.sha256`
      and upload both. (The release check is for the Signer itself; the
      example app has its own key, kept by Expo, and no wallet. Its
      fingerprint, for the release notes: `D3:A5:AE:6C:38:39:F0:DF:44:42:23:BE:4D:27:0D:7F:04:10:2E:B4:AD:8B:BE:38:68:EA:39:FF:93:C1:A6:AF`.)
-   - Notes: what changed, the commit hash (`git rev-parse v0.2.0`), the
+   - Notes: what changed, the commit hash (`git rev-parse v0.1.2`), the
      checksum, the official key fingerprint, "testnet only, no independent
      audit yet", and the "Before you start" text from the README (as is, own
      risk, only funds you could afford to lose).
    - Tick **Set as a pre-release** while it's testnet.
-10. **Record it:** add `{ "version": "0.2.0", "versionCode": 2 }` to
+10. **Record it:** add `{ "version": "0.1.2", "versionCode": 3 }` to
    `app/tools/released-versions.json` (the release check prints the line)
    and commit. From then on, a build with the same or a lower versionCode
    is refused.
@@ -110,7 +110,7 @@ example; use the real one.
 - **To do, with the first public release** (decided 5 Oct 2026), when the
   repository goes public. As far as we know, GitHub's provenance
   certificates are free for public repositories only.
-  - **Build provenance:** pushing a version tag (e.g. `v0.2.0`) makes GitHub
+  - **Build provenance:** pushing a version tag (e.g. `v0.1.2`) makes GitHub
     Actions build the APK **unsigned** and publish a certificate ("built by
     GitHub from commit X"). Raphael downloads it and **signs it on the Mac**
     as now. The signing key never goes to GitHub, so the 1 Oct decision

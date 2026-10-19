@@ -29,12 +29,12 @@ async function loadJson(key, fallback) {
 
 export const loadRules = async () => checkRules(await loadJson(RULES, DEFAULT_RULES));
 export const saveRules = (rules) => SecureStore.setItemAsync(RULES, JSON.stringify(rules));
-// History: if it can't be read, start empty. That only makes the Signer
-// stricter (every receiver and app counts as new again).
-// If it can't be read (or is damaged), the Signer becomes MORE careful, not
+// History: if it can't be read (or is damaged), the Signer becomes MORE careful, not
 // less: "unreadable" makes the approval screen ask for the extra
 // confirmation (weekly check, 6 Oct 2026; before, the "same transfer again"
 // and "many requests quickly" rules then quietly saw nothing).
+// It then starts a fresh history that remembers when the damage was found,
+// and keeps asking for one hour (extraConfirmation.js, recentlyDamaged).
 export const loadHistory = () => loadJson(HISTORY, EMPTY_HISTORY)
   .then((h) => (isWellFormedHistory(h) ? h : { ...EMPTY_HISTORY, unreadable: true }))
   .catch(() => ({ ...EMPTY_HISTORY, unreadable: true }));

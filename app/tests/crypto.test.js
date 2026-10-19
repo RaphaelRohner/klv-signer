@@ -23,7 +23,7 @@ import { scrypt as nodeScrypt } from 'node:crypto';
 import {
   createRecoveryPhrase, tidyPhrase, isValidRecoveryPhrase, walletFromPhrase, addressFromPrivateKey,
 } from '../src/crypto/wallet.js';
-import { lockKey, lockKeyChecked, unlockKey, WrongPasswordError } from '../src/crypto/vault.js';
+import { lockKey, lockKeyChecked, unlockKey, WrongPasswordError, NEW_LOCK_FAILED } from '../src/crypto/vault.js';
 import { useEngineForTests, engineName, keyFromPassword } from '../src/crypto/passwordKey.js';
 import { waitSecondsAfter, recordFailure, secondsLeft, FRESH_STATE, restartIfRebooted } from '../src/security/wrongPasswordPolicy.js';
 import { PASSWORD_STRETCHING } from '../src/config.js';
@@ -239,4 +239,34 @@ test('a new lock is test-opened before it replaces the old one (weekly check, 6 
   const vault = await lockKeyChecked(privateKey, 'maple tunnel orbit', address, QUICK);
   const back = await unlockKey(vault, 'maple tunnel orbit');
   assert.deepEqual(Array.from(back), Array.from(privateKey));
+});
+
+test('a new lock that fails its test-open is not used, and never says "Wrong password" (weekly check, 12 Oct 2026)', async () => {
+  useEngineForTests(null);
+  const { privateKey, address } = walletFromPhrase(PUBLIC_TEST_PHRASE);
+  const failures = {
+    'the test-open says the password is wrong': async () => { throw new WrongPasswordError(); },
+    'the test-open breaks': async () => { throw new Error('storage hiccup'); },
+    'a different key comes out': async () => new Uint8Array(32).fill(7),
+    'a shorter key comes out': async () => new Uint8Array(16),
+    'nothing comes out': async () => undefined,
+  };
+  for (const [what, reopen] of Object.entries(failures)) {
+    await assert.rejects(
+      lockKeyChecked(privateKey, 'maple tunnel orbit', address, QUICK, { reopen }),
+      (error) => {
+        assert.equal(error instanceof WrongPasswordError, false, what);
+        assert.equal(error.message, NEW_LOCK_FAILED, what);
+        return true;
+      },
+      what,
+    );
+  }
+  assert.match(NEW_LOCK_FAILED, /password was right/);
+  // A wrongly opened key is wiped, not left in memory.
+  const leaked = new Uint8Array(32).fill(7);
+  await assert.rejects(lockKeyChecked(privateKey, 'maple tunnel orbit', address, QUICK, { reopen: async () => leaked }));
+  assert.ok(leaked.every((b) => b === 0));
+  // The key passed in is untouched (the old lock stays usable).
+  assert.equal(addressFromPrivateKey(privateKey), address);
 });

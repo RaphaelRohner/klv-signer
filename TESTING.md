@@ -812,6 +812,20 @@ normal phone; the automated tests cover it. Here: nothing changed for you.
   be caused on a normal phone. The automated tests check that the extra
   confirmation then stays for one hour.)
 
+**F29. Keyboard-pattern passwords, example app 0.1.2 (19 Oct 2026)**
+
+From the weekly check of 12 Oct. No `npm install` needed. Build and install
+the Signer (in `app`) and the example app (in `example`).
+
+- [ ] Settings → Change password: type your current password, then as the
+      new one `1234qwerasdf` → refused with "A pattern of neighbouring keys
+      or a simple sequence". Same for `!QAZ2wsx#EDC`. Don't save anything:
+      tap Back (your password stays the same).
+- [ ] A normal strong password (e.g. 4 random words) is still accepted in
+      that box (no need to save it).
+- [ ] The example app shows version 0.1.2 (Android Settings → Apps → KLV
+      Signer Example), and a test transfer still works.
+
 ---
 
 ## Good to know

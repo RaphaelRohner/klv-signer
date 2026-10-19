@@ -6,7 +6,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isAcceptablePassword, passwordStrength } from '../src/security/passwordStrength.js';
+import { isAcceptablePassword, passwordStrength, keyboardWalkShare } from '../src/security/passwordStrength.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_STRETCHING } from '../src/config.js';
 import { isWeakerThan } from '../src/crypto/vault.js';
 
@@ -70,6 +70,21 @@ test('near variants of common passwords are refused (weekly check, 6 Oct 2026)',
   }
   // Long passwords that only happen to contain a short common word stay fine.
   for (const pw of ['maple tunnel orbit river', 'Correct horse battery staple', 'dragonfly-meadow-ninety-7']) {
+    assert.equal(isAcceptablePassword(pw), true, pw);
+  }
+});
+
+test('patterns of neighbouring keys are refused (weekly check, 12 Oct 2026)', () => {
+  // The three from the report, and other well-known keyboard walks (English and German/Swiss keyboards).
+  for (const pw of ['123456789abc', '1234qwerasdf', '!QAZ2wsx#EDC', '1qaz2wsx3edc', 'qazwsxedcrfv', 'zaq12wsxcde3',
+    '1q2w3e4r5t6y', 'qwerasdfzxcv', 'poiuytrewq12', '1qay2wsx3edc', 'mnbvcxz12345', 'yxcvbnm12345']) {
+    assert.equal(isAcceptablePassword(pw), false, pw);
+    assert.match(passwordStrength(pw).hint, /neighbouring keys|sequence|repeated|common/, pw);
+  }
+  // Real passwords and random words stay well below the limit.
+  for (const pw of ['maple tunnel orbit ginger', 'Correct horse battery staple', 'Tr0mb0ne!Garden', 'Xk9#mPq2$vLw',
+    'trees grow slowly', 'kiwifruitsalad', 'Raphael-Dublin-77', 'cobalt4Lantern!', 'Sunflower Boat 42']) {
+    assert.ok(keyboardWalkShare(pw) < 0.5, `${pw}: ${keyboardWalkShare(pw)}`);
     assert.equal(isAcceptablePassword(pw), true, pw);
   }
 });

@@ -179,13 +179,27 @@ function checkVaultFormat(vault) {
  * password and compares, BEFORE it's saved over the old one (weekly check,
  * 6 Oct 2026). If anything went wrong in between, the old vault stays and
  * nobody has to fall back on the recovery words. Costs one extra password
- * check (a second or so).
+ * check (a second or so). If the test-open fails, it says so plainly
+ * (NEW_LOCK_FAILED), never "Wrong password". `reopen` is only swapped in by
+ * the automated tests, to make the test-open fail on purpose.
  */
-export async function lockKeyChecked(privateKey, password, address, stretching) {
+export const NEW_LOCK_FAILED =
+  'Your password was right, but the new lock could not be opened again, so it was not saved. Nothing changed. Please try again.';
+
+export async function lockKeyChecked(privateKey, password, address, stretching, { reopen = unlockKey } = {}) {
   const vault = await lockKey(privateKey, password, address, stretching);
-  const reopened = await unlockKey(vault, password);
-  const same = reopened.length === privateKey.length && reopened.every((b, i) => b === privateKey[i]);
+  let reopened = null;
+  try {
+    reopened = await reopen(vault, password);
+  } catch {
+    // Not a WrongPasswordError for the caller: the password WAS right (the
+    // old lock opened with it). Before 19 Oct 2026 this showed "Wrong
+    // password" (weekly check, 12 Oct 2026).
+    throw new Error(NEW_LOCK_FAILED);
+  }
+  const same = reopened instanceof Uint8Array
+    && reopened.length === privateKey.length && reopened.every((b, i) => b === privateKey[i]);
   wipeBytes(reopened);
-  if (!same) throw new Error('The new lock could not be opened again, so it was not saved. Nothing changed.');
+  if (!same) throw new Error(NEW_LOCK_FAILED);
   return vault;
 }

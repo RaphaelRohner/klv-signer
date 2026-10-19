@@ -1,0 +1,42 @@
+# OPEN-FINDINGS.md — what reviews found and isn't fixed yet
+
+The weekly check (WEEKLY-CHECK.md) reads this file every Monday and lists
+every point that is still open in its report, so nothing drops out of view
+just because the code didn't change that week. When a point is fixed, move
+it to "Fixed" with the date; when it's accepted as it is, move it to
+"Accepted" with the reason.
+
+## Open
+
+- **Release check: unusual "open" setting (Low, weekly check 12 Oct 2026).**
+  The release check (`app/tools/release-check.mjs`) could miss an openable
+  part of the app (an exported component) if its setting is written in an
+  unusual way. No library does this today. Planned: its own small fix, build
+  and test.
+- **Refusal of passed-on requests not proven on a phone (Low, weekly check
+  12 Oct 2026).** The Signer refuses a request one app passes on from
+  another (`FLAG_ACTIVITY_FORWARD_RESULT`). Test F25 only showed that normal
+  use still works; the refused case still needs a way to be caused on a
+  phone. Planned: its own build and test.
+
+## Fixed
+
+- 19 Oct 2026 — Accessibility check didn't fail safe (Medium, weekly check
+  12 Oct): an unreadable list now means fingerprint/face only.
+- 19 Oct 2026 — Android 12/13 could trip over the "is it a tool?" detail
+  (Low): only read on Android 14+.
+- 19 Oct 2026 — Damaged signing history replaced after one request (Low):
+  the extra confirmation now stays for one hour.
+- 19 Oct 2026 — Keyboard-pattern passwords accepted (Low): refused now
+  (e.g. `123456789abc`, `1234qwerasdf`, `!QAZ2wsx#EDC`).
+- 19 Oct 2026 — "Wrong password" shown when a new lock failed its test-open
+  (Low): now says the password was right and nothing changed.
+- 19 Oct 2026 — No tests for the test-open's failure cases (Low): added.
+- 19 Oct 2026 — Example app weaker than its comments (Low): comments say
+  what it checks and what it leaves to the Signer; version name 0.1.2.
+- 19 Oct 2026 — Outdated docs (Low): RELEASING.md examples, DEPENDENCIES.md
+  summary, SECURITY.md date, signingRules.js comment.
+
+## Accepted
+
+(none yet)

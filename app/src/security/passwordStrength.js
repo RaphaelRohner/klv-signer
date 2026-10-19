@@ -9,8 +9,9 @@
  * "strong" is recommended.
  *
  * Three levels:
- *   - weak:   too short, a well-known password, or very repetitive
- *             (e.g. "aaaaaaaaaaaa", "123456789012", "password1234")
+ *   - weak:   too short, a well-known password, very repetitive, or a
+ *             pattern of neighbouring keys (e.g. "aaaaaaaaaaaa",
+ *             "123456789012", "password1234", "1qaz2wsx3edc")
  *   - fair:   acceptable, but could be stronger
  *   - strong: 4 or more words, or long with a good mix of characters
  *
@@ -46,6 +47,62 @@ function isSequence(text) {
     if (both.includes(t) || reversed.includes(t)) return true;
   }
   return false;
+}
+
+// Keyboard walks (weekly check, 12 Oct 2026): "1234qwerasdf", "!QAZ2wsx#EDC",
+// "123456789abc" were accepted before. Each key's spot on the keyboard
+// (column, row), with the rows shifted like a real keyboard. Both the English
+// (QWERTY) and the German/Swiss (QWERTZ) layout count.
+const KEY_ROWS = {
+  qwerty: ['1234567890-=', 'qwertyuiop[]', "asdfghjkl;'", 'zxcvbnm,./'],
+  qwertz: ['1234567890ß', 'qwertzuiopü+', 'asdfghjklöä#', 'yxcvbnm,.-'],
+};
+const ROW_SHIFT = [0, 0.5, 0.75, 1.25];
+// Shifted symbols sit on the key below them ("!" is the 1 key).
+const SHIFTED = {
+  '!': '1', '@': '2', '"': '2', '#': '3', '§': '3', $: '4', '%': '5', '^': '6', '&': '7', '/': '7',
+  '*': '8', '(': '8', ')': '9', '=': '0', _: '-', '+': '=', '?': 'ß', '{': '[', '}': ']', ':': ';', '<': ',', '>': '.',
+};
+const KEY_SPOTS = Object.fromEntries(Object.entries(KEY_ROWS).map(([layout, rows]) => {
+  const spots = {};
+  rows.forEach((row, r) => [...row].forEach((c, i) => { spots[c] = [i + ROW_SHIFT[r], r]; }));
+  return [layout, spots];
+}));
+
+/** Next to each other on the keyboard (also diagonally), or the same key. */
+function neighbourKeys(a, b, spots) {
+  const p = spots[a];
+  const q = spots[b];
+  return !!p && !!q && Math.abs(p[1] - q[1]) <= 1 && Math.abs(p[0] - q[0]) <= 1;
+}
+
+/** Next to each other in the alphabet or in 0-9 ("ab", "98"), or the same. */
+function neighbourInOrder(a, b) {
+  return ['abcdefghijklmnopqrstuvwxyz', '0123456789'].some((s) => {
+    const i = s.indexOf(a);
+    const j = s.indexOf(b);
+    return i >= 0 && j >= 0 && Math.abs(i - j) <= 1;
+  });
+}
+
+/**
+ * keyboardWalkShare — which share (0 to 1) of the steps from one character
+ * to the next go to a neighbouring key or the next letter/digit. Patterns
+ * like "1qaz2wsx3edc" score 0.7 or more; real passwords and random words
+ * stay far below (about 0.45 at most in the tests).
+ */
+export function keyboardWalkShare(password) {
+  const keys = [...String(password).replace(/\s/g, '')].map((c) => SHIFTED[c] || c.toLowerCase());
+  if (keys.length < 2) return 0;
+  let best = 0;
+  for (const spots of Object.values(KEY_SPOTS)) {
+    let steps = 0;
+    for (let i = 1; i < keys.length; i += 1) {
+      if (neighbourKeys(keys[i - 1], keys[i], spots) || neighbourInOrder(keys[i - 1], keys[i])) steps += 1;
+    }
+    best = Math.max(best, steps / (keys.length - 1));
+  }
+  return best;
 }
 
 /**
@@ -109,6 +166,9 @@ export function passwordStrength(password) {
   }
   if (new Set(pw.toLowerCase()).size < 5 || isSequence(pw.replace(/\s/g, ''))) {
     return { level: 'weak', hint: 'Too repetitive or a simple sequence. Guessers try these first.' };
+  }
+  if (keyboardWalkShare(pw) >= 0.7) {
+    return { level: 'weak', hint: 'A pattern of neighbouring keys or a simple sequence. Guessers try these first.' };
   }
 
   const words = wordCount(pw);
