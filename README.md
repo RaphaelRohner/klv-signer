@@ -111,7 +111,7 @@ The Signer is set to **testnet** and hasn't had an independent human review yet.
 | Library | Job |
 |---|---|
 | `@klever/connect-crypto` | Klever's official code for recovery phrases, keys and addresses. Pinned to exactly 0.2.0 so it can't change under us. |
-| `@klever/connect-encoding` | Only used for small helpers. Its transfer definition is wrong (amount and token swapped), so the Signer reads transactions with its own reader instead. |
+| `@klever/connect-encoding` | Not used by the Signer itself: it's only installed because Klever's crypto library needs it. Its transfer definition is wrong (amount and token swapped), so the Signer reads transactions with its own reader. |
 | `@klever/connect-provider`, `@klever/connect-transactions` | Only used by the Mac helper tools, to talk to the testnet node. Not part of the phone app. |
 | `@noble/hashes`, `@noble/ciphers` | Well-known, audited crypto code: the password recipe (scrypt) and the scrambling (AES-GCM). Klever's own library is built on the same family. |
 | `react-native-quick-crypto` | Runs the slow password recipe in the phone's fast built-in crypto code. |

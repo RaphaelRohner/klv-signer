@@ -13,6 +13,10 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
 
 ## Fixed
 
+- 19 Oct 2026 — README.md said `@klever/connect-encoding` is used for small
+  helpers; it isn't used by the Signer at all (Low, weekly check 19 Oct).
+- 19 Oct 2026 — DEPENDENCIES.md "two issues" / "three advisories" (Low,
+  weekly check 19 Oct): already corrected to four the same day.
 - 19 Oct 2026 — Refusal of passed-on requests not proven on a phone (Low,
   weekly check 12 Oct): TESTING.md F30 passed (the example app's test link
   is refused with INVALID_REQUEST; the Signer doesn't even come to the front).
