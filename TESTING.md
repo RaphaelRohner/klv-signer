@@ -832,18 +832,20 @@ From the weekly check of 12 Oct (it completes F25, which could only show
 that normal use still works). No `npm install` needed. Build and install the
 **example app** (in `example`); the Signer stays as it is.
 
-- [ ] At the bottom of the example app, under the version, tap **"Test: a
+- [x] At the bottom of the example app, under the version, tap **"Test: a
       request passed on by another app (must be refused)"**. A tiny invisible
       helper screen of the example app passes a harmless "which address?"
       request on to the Signer, the way a harmful app would.
-- [ ] The example app shows in green: **"✔ Refused, as it should be
+- [x] The example app shows in green: **"✔ Refused, as it should be
       (INVALID_REQUEST): Requests passed on from another app aren't
       accepted. …"**. (Nothing is signed; the Signer may flash up briefly or
       not at all.) Red "NOT refused" → tell Claude.
-- [ ] A normal test transfer afterwards still works.
+- [x] A normal test transfer afterwards still works.
 
 (The release check's fix, point 7 of the same report, needs no phone: the
 automated tests cover it.)
+- F30 passed on 19 Oct 2026: refused in green (INVALID_REQUEST); the Signer
+  didn't come to the front at all. A normal transfer afterwards worked.
 
 ---
 

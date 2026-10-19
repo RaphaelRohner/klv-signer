@@ -8,14 +8,13 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
 
 ## Open
 
-- **Refusal of passed-on requests not proven on a phone (Low, weekly check
-  12 Oct 2026).** The Signer refuses a request one app passes on from
-  another (`FLAG_ACTIVITY_FORWARD_RESULT`). Since 19 Oct the example app has
-  a test link that causes exactly this (TESTING.md F30); move this point to
-  "Fixed" once F30 has passed on a phone.
+(none)
 
 ## Fixed
 
+- 19 Oct 2026 — Refusal of passed-on requests not proven on a phone (Low,
+  weekly check 12 Oct): TESTING.md F30 passed (the example app's test link
+  is refused with INVALID_REQUEST; the Signer doesn't even come to the front).
 - 19 Oct 2026 — Release check could miss an open part written in an unusual
   way (Low, weekly check 12 Oct): only a plain "false" counts as closed now.
 
