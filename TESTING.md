@@ -853,17 +853,22 @@ Example app 0.1.3. No `npm install` needed. Build and install the
 **example app** (in `example`); the Signer stays as it is (0.1.2).
 Test NFTs: SGNTEST-3UC2 #2 and #3 are in the Signer wallet.
 
-- [ ] The example app shows "Version 0.1.3 (build 4)" at the bottom.
-- [ ] Receiver: your other test wallet (the one that got #1 in F27). In
+- [x] The example app shows "Version 0.1.3 (build 4)" at the bottom.
+- [x] Receiver: your other test wallet (the one that got #1 in F27). In
       "Or send NFTs", type `SGNTEST-3UC2/2, SGNTEST-3UC2/3` → Send.
-- [ ] The Signer shows **both** NFTs on one approval screen ("NFT
+- [x] The Signer shows **both** NFTs on one approval screen ("NFT
       SGNTEST-3UC2 #2" and "#3", with the royalty notes) and asks for the
       extra confirmation ("It contains 2 transfers in one go", plus any other
       rules you switched on). Approve once → the example app says "Sent".
-- [ ] Kleverscan (testnet): one transaction with two transfers; both NFTs
+- [x] Kleverscan (testnet): one transaction with two transfers; both NFTs
       are now at the receiver, the Signer wallet holds none of the three.
-- [ ] A typo in one of the IDs, or the same ID twice → the example app
+- [x] A typo in one of the IDs, or the same ID twice → the example app
       refuses before anything reaches the Signer.
+- F31 passed on 21 Oct 2026: 2 NFTs (#4, #5; tx 0c81ace5…e8aa) and then the
+  full 20 (#6-#25; tx c598f4d9…4353) in one transaction each, one approval.
+  The Signer listed all 20 in order and asked for one address group only
+  (same receiver), plus the password. Klever's limit of 20 per transaction
+  holds: the testnet node refuses to prepare 21.
 
 ---
 
