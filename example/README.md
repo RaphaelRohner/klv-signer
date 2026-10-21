@@ -48,3 +48,13 @@ Android's "forward result" flag, the way a harmful app would. The Signer
 must refuse it (`INVALID_REQUEST`); the app shows the result in green
 (refused) or red (not refused). It's there for the Signer's own testing
 (TESTING.md F30); a real client app never needs it.
+
+## Several NFTs at once
+
+The NFT field takes one NFT or several, separated by commas, spaces or new
+lines (e.g. `SGNTEST-3UC2/2, SGNTEST-3UC2/3`). Several NFTs go in **one**
+transaction, one transfer each, so the Signer shows them all on one approval
+screen and one approval sends them all. At most 20: that's Klever's own
+limit per transaction (klever-go `core/constants.go`, `MaxLengthOfContracts
+= 20`; the testnet node refuses to prepare 21) and the Signer's. The code is
+`buildTransfers` and `parseNftList` in `src/kleverTx.js`.

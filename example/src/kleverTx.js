@@ -10,6 +10,9 @@
  *   buildTransfer(...)       asks a Klever testnet node to prepare an
  *                            unsigned transfer (it fills in the transaction
  *                            number and fees) - returns it as hex
+ *   buildTransfers(...)      the same for up to 20 transfers in ONE
+ *                            transaction (e.g. several NFTs at once), signed
+ *                            with one approval
  *   broadcastSigned(hex)     sends a signed transaction to the testnet,
  *                            returns its hash
  *   checkPrepared(hex, ...)  reads the prepared transfer back and makes sure
@@ -72,11 +75,38 @@ export function unitsToKlv(units) {
  * amount (see checkPrepared for what it does NOT check).
  */
 export async function buildTransfer({ sender, receiver, amountUnits, kda }) {
-  const transfer = { receiver, amount: amountUnits };
-  if (kda) transfer.kda = kda;
-  const tx = await new TransactionBuilder(getProvider()).sender(sender).transfer(transfer).build();
+  return buildTransfers({ sender, transfers: [{ receiver, amountUnits, kda }] });
+}
+
+/**
+ * MAX_TRANSFERS - the most transfers one Klever transaction may hold. It's
+ * Klever's own rule (klever-go, core/constants.go: MaxLengthOfContracts = 20;
+ * a node refuses more) and also the KLV Signer's limit. More than that has to
+ * be split into several transactions, each approved on its own.
+ */
+export const MAX_TRANSFERS = 20;
+
+/**
+ * buildTransfers - prepares ONE unsigned testnet transaction with several
+ * transfers (1 to MAX_TRANSFERS), e.g. several NFTs to the same receiver.
+ *   sender:    the Signer's wallet address
+ *   transfers: [{ receiver, amountUnits, kda }] in the order they should run
+ * The Signer shows them all on one approval screen. Before returning, it
+ * checks the node kept every transfer, in the same order.
+ */
+export async function buildTransfers({ sender, transfers }) {
+  if (!Array.isArray(transfers) || transfers.length === 0 || transfers.length > MAX_TRANSFERS) {
+    throw new Error(`One transaction can hold 1 to ${MAX_TRANSFERS} transfers.`);
+  }
+  let builder = new TransactionBuilder(getProvider()).sender(sender);
+  for (const t of transfers) {
+    const transfer = { receiver: t.receiver, amount: String(t.amountUnits) };
+    if (t.kda) transfer.kda = t.kda;
+    builder = builder.transfer(transfer);
+  }
+  const tx = await builder.build();
   const hex = tx.toHex();
-  checkPrepared(hex, { sender, receiver, amountUnits, kda }); // the node must not change anything
+  checkPreparedAll(hex, { sender, transfers }); // the node must not change anything
   return hex;
 }
 
@@ -88,8 +118,8 @@ export async function buildTransfer({ sender, receiver, amountUnits, kda }) {
 // (weekly check, 6 Oct 2026). Klever's own decoder misreads transfers in
 // connect-encoding 0.1.3, so this is a tiny reader of just the fields needed.
 //
-// What it checks: one transfer only (several, or another kind, is refused),
-// and its sender, receiver, token and amount. What it does NOT check: the
+// What it checks: only transfers (1 to 20; another kind is refused), and for
+// each one its receiver, token and amount, plus the sender. What it does NOT check: the
 // fee, the chain (network), notes (data) and any other field of RawData.
 // The Signer reads all of those itself: it refuses what it can't explain
 // (another network, a fee over 100 KLV, unknown fields) and shows the rest,
@@ -174,18 +204,9 @@ function toAddress(bytes) {
   return `klv1${[...words, ...checksum].map((w) => CHARSET[w]).join('')}`;
 }
 
-/**
- * readTransfer - what a prepared single transfer really does:
- * { sender, receiver, tokenId, amountUnits }. Throws if it is anything else
- * (several contracts, another kind of contract, a damaged layout).
- */
-export function readTransfer(unsignedHex) {
-  const raw = one(readFields(hexToBytes(unsignedHex)), 1);
-  if (!(raw instanceof Uint8Array)) throw new Error('The prepared transfer has no content.');
-  const rawData = readFields(raw);
-  const sender = one(rawData, 2);
-  if (!rawData[6] || rawData[6].length !== 1) throw new Error('The prepared transaction does more than one thing.');
-  const contract = readFields(rawData[6][0]);
+/** One Contract (field 6 of RawData) → { receiver, tokenId, amountUnits }, or throws. */
+function readOneTransfer(contractBytes) {
+  const contract = readFields(contractBytes);
   const type = one(contract, 1);
   if (type !== undefined && type !== 0n) throw new Error('The prepared transaction is not a transfer.');
   const parameter = readFields(one(contract, 2) || new Uint8Array());
@@ -195,15 +216,39 @@ export function readTransfer(unsignedHex) {
   const receiver = one(transfer, 1);
   const token = one(transfer, 2);
   const amount = one(transfer, 3);
-  if (!(sender instanceof Uint8Array) || sender.length !== 32 || !(receiver instanceof Uint8Array) || receiver.length !== 32 || typeof amount !== 'bigint') {
-    throw new Error('The prepared transfer is missing its sender, receiver or amount.');
+  if (!(receiver instanceof Uint8Array) || receiver.length !== 32 || typeof amount !== 'bigint') {
+    throw new Error('A prepared transfer is missing its receiver or amount.');
   }
-  return {
-    sender: toAddress(sender),
-    receiver: toAddress(receiver),
-    tokenId: token ? ascii(token) : 'KLV',
-    amountUnits: amount.toString(),
-  };
+  return { receiver: toAddress(receiver), tokenId: token ? ascii(token) : 'KLV', amountUnits: amount.toString() };
+}
+
+/**
+ * readTransfers - what a prepared transaction really does:
+ * { sender, transfers: [{ receiver, tokenId, amountUnits }] } in order.
+ * Throws if it holds anything other than 1 to MAX_TRANSFERS transfers, or
+ * the layout is damaged.
+ */
+export function readTransfers(unsignedHex) {
+  const raw = one(readFields(hexToBytes(unsignedHex)), 1);
+  if (!(raw instanceof Uint8Array)) throw new Error('The prepared transfer has no content.');
+  const rawData = readFields(raw);
+  const sender = one(rawData, 2);
+  if (!(sender instanceof Uint8Array) || sender.length !== 32) throw new Error('The prepared transfer is missing its sender.');
+  const contracts = rawData[6] || [];
+  if (contracts.length === 0 || contracts.length > MAX_TRANSFERS) {
+    throw new Error(`The prepared transaction holds ${contracts.length} parts; 1 to ${MAX_TRANSFERS} transfers are allowed.`);
+  }
+  return { sender: toAddress(sender), transfers: contracts.map(readOneTransfer) };
+}
+
+/**
+ * readTransfer - a prepared SINGLE transfer: { sender, receiver, tokenId,
+ * amountUnits }. Throws if it holds more than one.
+ */
+export function readTransfer(unsignedHex) {
+  const { sender, transfers } = readTransfers(unsignedHex);
+  if (transfers.length !== 1) throw new Error('The prepared transaction does more than one thing.');
+  return { sender, ...transfers[0] };
 }
 
 /**
@@ -212,12 +257,41 @@ export function readTransfer(unsignedHex) {
  * Fee, chain and notes are left to the Signer (see above).
  */
 export function checkPrepared(unsignedHex, { sender, receiver, amountUnits, kda }) {
-  const t = readTransfer(unsignedHex);
-  const same = t.sender === sender && t.receiver === receiver
-    && t.tokenId === (kda || 'KLV') && t.amountUnits === String(amountUnits);
+  checkPreparedAll(unsignedHex, { sender, transfers: [{ receiver, amountUnits, kda }] });
+}
+
+/**
+ * checkPreparedAll - the same for several transfers: exactly these, in this
+ * order, nothing added or left out. Fee, chain and notes are left to the
+ * Signer (see above).
+ */
+export function checkPreparedAll(unsignedHex, { sender, transfers }) {
+  const t = readTransfers(unsignedHex);
+  const same = t.sender === sender && t.transfers.length === transfers.length
+    && t.transfers.every((got, i) => got.receiver === transfers[i].receiver
+      && got.tokenId === (transfers[i].kda || 'KLV') && got.amountUnits === String(transfers[i].amountUnits));
   if (!same) {
     throw new Error('The testnet node prepared a different transfer than the one you typed, so it was not sent to the Signer. Nothing was signed.');
   }
+}
+
+/**
+ * The NFT field: one or several NFTs, separated by commas, spaces or new
+ * lines ("SGNTEST-3UC2/2, SGNTEST-3UC2/3"). Returns { ids } or { problem }.
+ * Several = one transaction with one transfer each, approved once in the
+ * Signer (at most MAX_TRANSFERS, Klever's own limit). Used by App.js.
+ */
+export function parseNftList(text) {
+  const ids = String(text || '').toUpperCase().split(/[\s,;]+/).filter(Boolean);
+  if (ids.length === 0) return { ids: [] };
+  const wrong = ids.find((id) => !/^[A-Z0-9]{3,10}-[A-Z0-9]{4}\/[1-9][0-9]{0,19}$/.test(id));
+  if (wrong) return { problem: `"${wrong}" isn't an NFT like SGNTEST-3UC2/1 (collection, "/", number).` };
+  const twice = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (twice) return { problem: `${twice} is in the list twice.` };
+  if (ids.length > MAX_TRANSFERS) {
+    return { problem: `That's ${ids.length} NFTs. One transaction can send at most ${MAX_TRANSFERS} (Klever's limit); send the rest in a second one.` };
+  }
+  return { ids };
 }
 
 /** broadcastSigned - sends a signed transaction (hex) to the testnet. Returns its hash. */

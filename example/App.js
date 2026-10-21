@@ -29,12 +29,12 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { getSignerAddress, signWithSigner, forwardTest } from './src/klvSigner';
 import appJson from './app.json';
+import {
+  broadcastSigned, buildTransfer, buildTransfers, explorerUrl, getKlvBalance, klvToUnits, unitsToKlv, MAX_TRANSFERS, parseNftList,
+} from './src/kleverTx';
 
 // Shown at the bottom, so testers can tell which version they have (Raphael, 19 Oct 2026).
 const VERSION_TEXT = `Version ${appJson.expo.version} (build ${appJson.expo.android.versionCode})`;
-import {
-  broadcastSigned, buildTransfer, explorerUrl, getKlvBalance, klvToUnits, unitsToKlv,
-} from './src/kleverTx';
 
 const C = { bg: '#121214', card: '#1d1d21', border: '#34343a', text: '#f2f2f2', muted: '#9a9aa2', accent: '#3fd1b8', danger: '#ff6b6b' };
 
@@ -90,13 +90,14 @@ export default function App() {
       return;
     }
     // An NFT is "COLLECTION-XXXX/NUMBER" (e.g. SGNTEST-3UC2/1); one NFT = amount 1.
-    const nftId = nft.trim().toUpperCase();
-    if (nftId && !/^[A-Z0-9]{3,10}-[A-Z0-9]{4}\/[1-9][0-9]{0,19}$/.test(nftId)) {
-      setError('Please enter the NFT like SGNTEST-3UC2/1 (collection, "/", number), or leave the field empty to send KLV.');
+    // Several NFTs (up to 20) go in ONE transaction, approved once.
+    const nfts = parseNftList(nft);
+    if (nfts.problem) {
+      setError(`${nfts.problem} Or leave the field empty to send KLV.`);
       return;
     }
     let units;
-    if (nftId) {
+    if (nfts.ids.length > 0) {
       units = '1';
     } else {
       try {
@@ -107,8 +108,10 @@ export default function App() {
       }
     }
     try {
-      setBusy('Preparing the transfer…');
-      const unsignedHex = await buildTransfer({ sender: address, receiver: to, amountUnits: units, kda: nftId || undefined }); // also checks the node kept receiver, token and amount
+      setBusy(nfts.ids.length > 1 ? `Preparing ${nfts.ids.length} NFT transfers in one transaction…` : 'Preparing the transfer…');
+      const unsignedHex = nfts.ids.length > 1
+        ? await buildTransfers({ sender: address, transfers: nfts.ids.map((kda) => ({ receiver: to, amountUnits: '1', kda })) })
+        : await buildTransfer({ sender: address, receiver: to, amountUnits: units, kda: nfts.ids[0] }); // also checks the node kept receiver, token and amount
       setBusy('Waiting for your approval in the KLV Signer…');
       const signed = await signWithSigner(unsignedHex); // also checks the answer is exactly this transfer
       setBusy('Sending to the Klever testnet…');
@@ -157,12 +160,15 @@ export default function App() {
               style={s.input} value={amount} onChangeText={setAmount} placeholder="0.1"
               placeholderTextColor={C.muted} keyboardType="decimal-pad"
             />
-            <Text style={[s.label, s.gap]}>Or send an NFT (optional)</Text>
+            <Text style={[s.label, s.gap]}>Or send NFTs (optional)</Text>
             <TextInput
-              style={s.input} value={nft} onChangeText={setNft} placeholder="SGNTEST-3UC2/1"
-              placeholderTextColor={C.muted} autoCapitalize="characters" autoCorrect={false}
+              style={s.input} value={nft} onChangeText={setNft} placeholder="SGNTEST-3UC2/2, SGNTEST-3UC2/3"
+              placeholderTextColor={C.muted} autoCapitalize="characters" autoCorrect={false} multiline
             />
-            <Text style={s.hint}>Filled in: this NFT is sent and the amount is ignored. Empty: KLV is sent.</Text>
+            <Text style={s.hint}>
+              Filled in: these NFTs are sent and the amount is ignored. Several (up to {MAX_TRANSFERS}, separated by commas or
+              spaces) go in one transaction with one approval. Empty: KLV is sent.
+            </Text>
             <Button title="Send with KLV Signer" onPress={send} disabled={!!busy} />
           </View>
         ) : null}

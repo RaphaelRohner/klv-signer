@@ -847,6 +847,24 @@ automated tests cover it.)
 - F30 passed on 19 Oct 2026: refused in green (INVALID_REQUEST); the Signer
   didn't come to the front at all. A normal transfer afterwards worked.
 
+**F31. Several NFTs in one transaction (21 Oct 2026)**
+
+Example app 0.1.3. No `npm install` needed. Build and install the
+**example app** (in `example`); the Signer stays as it is (0.1.2).
+Test NFTs: SGNTEST-3UC2 #2 and #3 are in the Signer wallet.
+
+- [ ] The example app shows "Version 0.1.3 (build 4)" at the bottom.
+- [ ] Receiver: your other test wallet (the one that got #1 in F27). In
+      "Or send NFTs", type `SGNTEST-3UC2/2, SGNTEST-3UC2/3` → Send.
+- [ ] The Signer shows **both** NFTs on one approval screen ("NFT
+      SGNTEST-3UC2 #2" and "#3", with the royalty notes) and asks for the
+      extra confirmation ("It contains 2 transfers in one go", plus any other
+      rules you switched on). Approve once → the example app says "Sent".
+- [ ] Kleverscan (testnet): one transaction with two transfers; both NFTs
+      are now at the receiver, the Signer wallet holds none of the three.
+- [ ] A typo in one of the IDs, or the same ID twice → the example app
+      refuses before anything reaches the Signer.
+
 ---
 
 ## Good to know
