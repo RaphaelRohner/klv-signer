@@ -32,7 +32,10 @@
  */
 
 import * as IntentLauncher from 'expo-intent-launcher';
-import { verifyWalletSignedMessage } from '@klever/connect-crypto';
+// (the SYNCHRONOUS check: verifyWalletSignedMessage is asynchronous and needs
+// the browser's WebCrypto, which Android apps don't have; there it quietly
+// answers "false" - found in the phone test F32, 25 Oct 2026)
+import { prepareKlvMessage, verifySignatureSync } from '@klever/connect-crypto';
 import { bech32Decode } from '@klever/connect-encoding';
 import { signerStatus } from '../modules/klv-signer-check';
 
@@ -195,7 +198,7 @@ export async function signTextWithSigner(text, address) {
   if (answer.address === address && /^[0-9a-f]{128}$/.test(signature)) {
     const { prefix, data } = bech32Decode(address);
     const bytes = Uint8Array.from(signature.match(/../g), (h) => parseInt(h, 16));
-    valid = prefix === 'klv' && data.length === 32 && await verifyWalletSignedMessage(text, bytes, data);
+    valid = prefix === 'klv' && data.length === 32 && verifySignatureSync(prepareKlvMessage(text), bytes, data);
   }
   if (!valid) {
     throw Object.assign(new Error("The KLV Signer's signature doesn't match this text and wallet."), { code: 'SIGNATURE_MISMATCH' });

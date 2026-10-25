@@ -251,8 +251,11 @@ say who is asking, why, and that it's not a transaction.
 What's signed is **Klever's message format**, the same as the Klever
 extension and `@klever/connect-crypto`:
 Ed25519 over keccak-256("Klever Signed Message:\n" + byte length + text).
-Check it with `verifyWalletSignedMessage(text, signature, publicKey)` from
-`@klever/connect-crypto`. Because of the prefix and the different hash, a
+Check it with `verifySignatureSync(prepareKlvMessage(text), signature, publicKey)`
+from `@klever/connect-crypto` (on a server or website,
+`verifyWalletSignedMessage(text, signature, publicKey)` does the same; **not
+in an Android app**: it needs the browser's WebCrypto and there quietly
+answers `false`). Because of the prefix and the different hash, a
 message signature can never be used as a transaction signature.
 
 Answer on success:
