@@ -13,6 +13,9 @@
  *      prepares the unsigned transfer, the Signer shows it and asks for the
  *      password/fingerprint, then this app sends the signed transfer to the
  *      testnet and links to it on Kleverscan.
+ *   3. "Sign a text" (25 Oct 2026): the Signer signs a short text (not a
+ *      transaction), e.g. what a website or chat uses to check you hold
+ *      the wallet. This app checks the signature and shows it.
  *
  * This app never sees or stores a key. The parts worth copying:
  *   src/klvSigner.js          talking to the Signer (SIGNER-PROTOCOL.md),
@@ -27,7 +30,7 @@ import {
   ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { getSignerAddress, signWithSigner, forwardTest } from './src/klvSigner';
+import { getSignerAddress, signWithSigner, signTextWithSigner, forwardTest } from './src/klvSigner';
 import appJson from './app.json';
 import {
   broadcastSigned, buildTransfer, buildTransfers, explorerUrl, getKlvBalance, klvToUnits, unitsToKlv, MAX_TRANSFERS, parseNftList,
@@ -48,6 +51,22 @@ export default function App() {
   const [error, setError] = useState(null);
   const [sentHash, setSentHash] = useState(null);
   const [forwardResult, setForwardResult] = useState(null); // test F30, see runForwardTest
+  const [text, setText] = useState('Hello from the KLV Signer Example.\nThis is NOT a transaction.');
+  const [textSignature, setTextSignature] = useState(null);
+
+  // "Sign a text": not a transaction, nothing is sent.
+  async function signText() {
+    setError(null);
+    setTextSignature(null);
+    setBusy('Waiting for your approval in the KLV Signer…');
+    try {
+      setTextSignature(await signTextWithSigner(text, address)); // also checks the signature
+    } catch (e) {
+      setError(e.code === 'USER_REJECTED' ? 'Cancelled in the KLV Signer: nothing was signed.' : e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
 
   // Test F30: a request passed on by another app must be refused by the Signer.
   async function runForwardTest() {
@@ -170,6 +189,27 @@ export default function App() {
               spaces) go in one transaction with one approval. Empty: KLV is sent.
             </Text>
             <Button title="Send with KLV Signer" onPress={send} disabled={!!busy} />
+          </View>
+        ) : null}
+
+        {address ? (
+          <View style={s.card}>
+            <Text style={s.label}>Sign a text (not a transaction)</Text>
+            <TextInput
+              style={s.input} value={text} onChangeText={(t) => { setText(t); setTextSignature(null); }}
+              placeholderTextColor={C.muted} multiline maxLength={2000}
+            />
+            <Text style={s.hint}>
+              Nothing is sent and there's no fee. The Signer shows the text in full; this app then checks the signature
+              (Klever's message format, like the Klever browser extension).
+            </Text>
+            <Button title="Sign text with KLV Signer" onPress={signText} disabled={!!busy || !text.trim()} />
+            {textSignature ? (
+              <View style={s.gap}>
+                <Text style={s.ok}>✔ Signed, and the signature checks out for this wallet</Text>
+                <Text selectable style={[s.mono, s.gap]}>{textSignature}</Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
 

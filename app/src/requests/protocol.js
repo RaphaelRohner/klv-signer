@@ -12,6 +12,7 @@
 
 import { ACTIONS } from '../../modules/klv-signer-requests/actions.js';
 import { NETWORKS } from '../klever/networks.js';
+import { checkMessageText } from '../klever/signMessage.js';
 
 export { ACTIONS };
 
@@ -41,6 +42,7 @@ export const ERRORS = {
 export function describeAction(action) {
   if (action === ACTIONS.GET_ADDRESS) return 'share your wallet address';
   if (action === ACTIONS.SIGN_TRANSACTION) return 'sign a transaction';
+  if (action === ACTIONS.SIGN_MESSAGE) return 'sign a text (not a transaction)';
   return 'do something the Signer doesn\'t know';
 }
 
@@ -59,7 +61,12 @@ export function checkRequest(request) {
   if (request.action === ACTIONS.SIGN_TRANSACTION && !extras.transaction) {
     return { code: ERRORS.INVALID_REQUEST, message: 'The app asked for a signature but sent no transaction.' };
   }
-  if (request.action !== ACTIONS.SIGN_TRANSACTION && request.action !== ACTIONS.GET_ADDRESS) {
+  if (request.action === ACTIONS.SIGN_MESSAGE) {
+    // The text is checked here already, before anything is shown (signMessage.js).
+    const problem = checkMessageText(extras.text);
+    if (problem) return { code: ERRORS.INVALID_REQUEST, message: problem };
+  }
+  if (![ACTIONS.SIGN_TRANSACTION, ACTIONS.GET_ADDRESS, ACTIONS.SIGN_MESSAGE].includes(request.action)) {
     return { code: ERRORS.UNKNOWN_ACTION, message: `Unknown request type: ${request.action}` };
   }
   return null;
@@ -90,6 +97,18 @@ export function signedReply(request, address, reading, result) {
     transactionHash: reading.hashHex,
     signature: result.signatureHex,
     signedTransaction: result.signedTransactionHex,
+  });
+}
+
+/**
+ * The answer after signing a text (SIGN_MESSAGE). Klever's message format,
+ * like the Klever extension's signMessage: `signature` = 64 bytes as hex.
+ */
+export function messageSignedReply(request, address, result) {
+  return withRequestId(request, {
+    status: STATUS.OK,
+    address,
+    signature: result.signatureHex,
   });
 }
 

@@ -15,16 +15,22 @@ object SignerProtocol {
   // Request types
   const val ACTION_GET_ADDRESS = "com.raphaelrohner.klvsigner.action.GET_ADDRESS"
   const val ACTION_SIGN_TRANSACTION = "com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION"
+  // Added 25 Oct 2026: sign a short text (not a transaction), e.g. a chat sign-in.
+  const val ACTION_SIGN_MESSAGE = "com.raphaelrohner.klvsigner.action.SIGN_MESSAGE"
 
   // Values a client app sends
   const val EXTRA_PROTOCOL_VERSION = "protocolVersion"
   const val EXTRA_TRANSACTION = "transaction"   // unsigned transaction, hex
+  const val EXTRA_TEXT = "text"                  // the text to sign (SIGN_MESSAGE)
   const val EXTRA_REQUEST_ID = "requestId"       // optional, echoed back unchanged
 
   /** The only extras we accept, with the longest length allowed for each. */
   val ACCEPTED_EXTRAS = mapOf(
     EXTRA_PROTOCOL_VERSION to 10,
     EXTRA_TRANSACTION to 65536,
+    // 2,000 characters are checked in JavaScript (signMessage.js); here in
+    // Android's units, where an emoji can count twice.
+    EXTRA_TEXT to 4000,
     EXTRA_REQUEST_ID to 200,
   )
 

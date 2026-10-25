@@ -870,6 +870,26 @@ Test NFTs: SGNTEST-3UC2 #2 and #3 are in the Signer wallet.
   (same receiver), plus the password. Klever's limit of 20 per transaction
   holds: the testnet node refuses to prepare 21.
 
+**F32. Signing a text, not a transaction (25 Oct 2026, Signer 0.1.3, example app 0.1.4)**
+
+Install both new builds over the old ones (wallet and allowed apps stay).
+
+- [ ] Example app → Connect → the card **"Sign a text (not a transaction)"**
+      shows a ready-made two-line text. Tap **Sign text with KLV Signer**.
+- [ ] The Signer shows: who is asking (KLV Signer Example), the blue box
+      "This is not a transaction…", and the whole text in a dashed box.
+      No amount, no receiver, no network fee.
+- [ ] Approve with the password → back in the example app:
+      "✔ Signed, and the signature checks out for this wallet" and a long
+      signature (128 characters).
+- [ ] Again with the fingerprint/face (if switched on): Android's prompt says
+      "Sign a text (not a transaction)".
+- [ ] Again, but **Reject** → "Cancelled in the KLV Signer: nothing was signed."
+- [ ] Change the text to something with an emoji like ❤️ → the Signer refuses
+      it straight away ("invisible or special characters": the heart carries
+      a hidden variation mark). Plain text works.
+- [ ] Optional: a text longer than 2,000 characters → refused.
+
 ---
 
 ## Good to know

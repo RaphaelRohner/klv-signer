@@ -9,7 +9,7 @@ signer apps, and where the Signer stands against each.
 > reviews (the latest: REVIEW-2026-10-05.md), but no independent human
 > security review yet. Don't use it with real funds.
 
-Of 29 common attacks, the Signer blocks **17** today, partly covers **6**, and
+Of 30 common attacks, the Signer blocks **17** today, partly covers **7**, and
 **6** depend on the user or on how releases are published.
 
 **Status:** **Protected** = the Signer blocks it today · **Partly** = reduced,
@@ -55,6 +55,7 @@ this repository's **Security** tab → **Report a vulnerability**.
 | Blind signing | The user approves a request they can't understand, and it does something else. | The Signer reads every transaction itself, shows it in plain words, and refuses anything it can't explain. | Protected |
 | Look-alike addresses | Scammers send tiny amounts from an address that starts and ends like a familiar one. | The approval screen always shows the full receiver address, in small boxes for easier comparing. With the (default) "new receiver" rule, a first transfer to any address needs the extra confirmation: password only and typing one box of the address. Since 5 Oct 2026 that box is a middle one chosen at random each time (outlined), not the ending: a look-alike can copy the start and end of an address in minutes, but can't match a box nobody knows in advance. It still only checks the box you type, so compare the whole address too. Token and NFT transfers also note that their creator may charge a royalty the offline Signer can't see. | Partly |
 | Scam tokens and fake airdrops | Worthless tokens or NFTs arrive with links to fake "claim" sites. | The Signer shows no token pictures or links and never goes online. | Protected |
+| Misleading text to sign | Since 25 Oct 2026 apps can ask the Signer to sign a short text (SIGN_MESSAGE, e.g. a chat sign-in). A harmful app could hide words in it, or word it so the signature means more than the user thinks (e.g. "I agree to …" for some other service that trusts wallet signatures). | The text can't move anything: it's signed in Klever's message format (a fixed prefix and keccak-256), which can never pass as a transaction signature. The whole text is shown, marked "not a transaction", with the Android-verified app name; texts with invisible, direction-changing or other special characters, mixed writing directions, more than 2,000 characters or 40 lines are refused, not cleaned. What a signed text is later used for, the Signer can't know: read it, and only sign texts you expect. | Partly |
 
 ## 4. The transaction and the cryptography
 
@@ -118,6 +119,7 @@ that affects a row above.
 | 19 Oct 2026 | Weekly check of 12 Oct (Low): after a damaged signing history, the extra confirmation stays for one hour (as long as "the same transfer again" looks back), not only for the first request | 17 / 6 / 6 |
 | 19 Oct 2026 | Weekly check of 12 Oct (Low): passwords that are a pattern of neighbouring keys ("1234qwerasdf", "!QAZ2wsx#EDC", "123456789abc", English and German/Swiss keyboards) are refused as a new password; a new lock that fails its test-open says the password was right and nothing changed (not "Wrong password"); the example app's comments say what it checks and what it leaves to the Signer. Open points are tracked in OPEN-FINDINGS.md | 17 / 6 / 6 |
 | 19 Oct 2026 | Weekly check of 12 Oct (Low): the release check counts any "exported" value other than a plain false as open (fail-safe); the example app can cause a passed-on request on purpose, so the Signer's refusal can be seen on a phone (TESTING.md F30) | 17 / 6 / 6 |
+| 25 Oct 2026 | Signing a short text (SIGN_MESSAGE, Signer 0.1.3), for proofs like the Devikins Legacy Hub's chat sign-in: Klever's message format (can't be a transaction signature), whole text shown and marked "not a transaction", hidden/reordering characters refused. New row "Misleading text to sign" (Partly: what a text is later used for is up to the reader) | 17 / 7 / 6 |
 | 6 Oct 2026 | Weekly check's Low items: look-alike password variants refused; new password locks test-opened before saving; more note and app-name characters handled (rare right-to-left scripts, invisible marks, mixed directions); a damaged signing history asks for the extra confirmation instead of being silently treated as empty; release check also requires Android 12+ and no extra open entry points; the example app checks the node prepared exactly what was typed | 17 / 6 / 6 |
 
 ## Planned fixes (Stage 4)

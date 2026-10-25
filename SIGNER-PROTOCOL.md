@@ -230,6 +230,41 @@ Answer on success:
 | `transactionHash` | The transaction's fingerprint (blake2b-256 of `RawData`, hex). Same as the node will report. |
 | `address`, `network` | The signing wallet and network. |
 
+### 3c. `SIGN_MESSAGE`: sign a short text (not a transaction)
+
+Added 25 Oct 2026 (Signer 0.1.3; still protocol version 1). For proving you
+hold a wallet, e.g. a chat sign-in or a vote, the same way websites use the
+Klever browser extension's `signMessage`. **Nothing is sent and nothing
+moves.** The Signer shows the whole text, clearly marked "not a
+transaction", and asks for the password or fingerprint.
+
+Action: `com.raphaelrohner.klvsigner.action.SIGN_MESSAGE`
+
+Extra `text`: the text to sign. **The Signer refuses** (`error:
+INVALID_REQUEST`, with a plain-words `message`) a text that is empty, longer
+than 2,000 characters or 40 lines, contains invisible or special characters
+(only line breaks are allowed: no tabs, zero-width or direction-changing
+marks, variation selectors, …), or mixes right-to-left letters with other
+letters or digits. Everything you send is shown, so write it for people:
+say who is asking, why, and that it's not a transaction.
+
+What's signed is **Klever's message format**, the same as the Klever
+extension and `@klever/connect-crypto`:
+Ed25519 over keccak-256("Klever Signed Message:\n" + byte length + text).
+Check it with `verifyWalletSignedMessage(text, signature, publicKey)` from
+`@klever/connect-crypto`. Because of the prefix and the different hash, a
+message signature can never be used as a transaction signature.
+
+Answer on success:
+
+| Extra | Meaning |
+|---|---|
+| `signature` | The Ed25519 signature (hex, 64 bytes). |
+| `address` | The signing wallet. Check it's the one you expected. |
+
+**Check the answer before trusting it:** the signature must verify for your
+text and that address (the example app's `signTextWithSigner` does it).
+
 ---
 
 ## 4. Answers
@@ -256,7 +291,7 @@ was closed by the system), treat it as "rejected".
 | `NOT_ALLOWED` | The user didn't allow your app to use the Signer. |
 | `NO_WALLET` | No wallet is set up in the Signer yet. Only sent to apps the user has allowed; others get `NOT_ALLOWED` first. |
 | `INVALID_TRANSACTION` | The Signer refused the transaction; `message` says why. Among the reasons: a fee over 100 KLV, more than 5 notes, token names that aren't plain capital letters and digits. |
-| `INVALID_REQUEST` | Required values missing or too long, or the request was passed on by another app. |
+| `INVALID_REQUEST` | Required values missing or too long, the request was passed on by another app, or (SIGN_MESSAGE) the text isn't accepted; `message` says why. |
 | `UNSUPPORTED_PROTOCOL` | `protocolVersion` missing or unknown. |
 | `UNKNOWN_ACTION` | Unknown action. |
 | `UNSAFE_DEVICE` | Signing is switched off because the phone looks rooted, its bootloader is unlocked, its startup check failed, or the Signer couldn't run its phone check. `GET_ADDRESS` still works. Tell the user to check the Signer. |

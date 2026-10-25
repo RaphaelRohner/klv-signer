@@ -32,6 +32,8 @@
  */
 
 import * as IntentLauncher from 'expo-intent-launcher';
+import { verifyWalletSignedMessage } from '@klever/connect-crypto';
+import { bech32Decode } from '@klever/connect-encoding';
 import { signerStatus } from '../modules/klv-signer-check';
 
 // Always name the Signer exactly (package + screen), so no other app can
@@ -44,6 +46,8 @@ const SIGNER = {
 const ACTION = {
   GET_ADDRESS: 'com.raphaelrohner.klvsigner.action.GET_ADDRESS',
   SIGN_TRANSACTION: 'com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION',
+  // Sign a short text, not a transaction (Signer 0.1.3 and later; SIGNER-PROTOCOL.md 3c).
+  SIGN_MESSAGE: 'com.raphaelrohner.klvsigner.action.SIGN_MESSAGE',
 };
 
 const PROTOCOL_VERSION = '1';
@@ -169,4 +173,32 @@ export async function forwardTest() {
     error: answer.error || (ok ? 'none (answered with an address!)' : 'no details'),
     message: answer.message || '',
   };
+}
+
+/**
+ * signTextWithSigner — asks the Signer to sign a short text (NOT a
+ * transaction: nothing is sent, no fee), e.g. to prove you hold the wallet.
+ * The Signer shows the text in full and asks for the password/fingerprint.
+ *
+ * Then checks the answer itself before trusting it: the signature must be
+ * valid for exactly this text and the wallet address (Klever's message
+ * format, the same as the Klever extension's signMessage).
+ *
+ * @param {string} text     up to 2,000 characters, no invisible characters
+ * @param {string} address  the wallet from getSignerAddress()
+ * @returns {Promise<string>} the signature, hex (64 bytes)
+ */
+export async function signTextWithSigner(text, address) {
+  const answer = await askSigner(ACTION.SIGN_MESSAGE, { text });
+  const signature = String(answer.signature || '');
+  let valid = false;
+  if (answer.address === address && /^[0-9a-f]{128}$/.test(signature)) {
+    const { prefix, data } = bech32Decode(address);
+    const bytes = Uint8Array.from(signature.match(/../g), (h) => parseInt(h, 16));
+    valid = prefix === 'klv' && data.length === 32 && await verifyWalletSignedMessage(text, bytes, data);
+  }
+  if (!valid) {
+    throw Object.assign(new Error("The KLV Signer's signature doesn't match this text and wallet."), { code: 'SIGNATURE_MISMATCH' });
+  }
+  return signature;
 }

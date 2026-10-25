@@ -88,6 +88,16 @@ Other developers will get a short, public description of how to ask the
 Signer (the **Signer protocol**), so they can add "Sign with KLV Signer" to
 their own apps.
 
+**Signing a text (since 25 Oct 2026).** Besides transactions, an app can ask
+the Signer to sign a short text, to prove that you hold the wallet (for
+example the Devikins Legacy Hub's chat sign-in, which websites do with the
+Klever browser extension). It isn't a transaction: nothing is sent, nothing
+moves, no fee. The Signer shows the whole text, marked "not a transaction",
+and refuses texts with invisible or reordering characters, so what you read
+is exactly what you sign. It uses Klever's standard message format, which
+adds a fixed prefix and a different fingerprint method, so such a signature
+can never be used as a transaction signature (SIGNER-PROTOCOL.md 3c).
+
 ---
 
 ## 4. The journey of one signature, step by step

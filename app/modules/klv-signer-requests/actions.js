@@ -7,6 +7,8 @@
 export const ACTIONS = {
   GET_ADDRESS: 'com.raphaelrohner.klvsigner.action.GET_ADDRESS',
   SIGN_TRANSACTION: 'com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION',
+  // Added 25 Oct 2026: sign a short text (not a transaction), e.g. a chat sign-in.
+  SIGN_MESSAGE: 'com.raphaelrohner.klvsigner.action.SIGN_MESSAGE',
 };
 
 /** The exact package and screen other apps must name when asking. */

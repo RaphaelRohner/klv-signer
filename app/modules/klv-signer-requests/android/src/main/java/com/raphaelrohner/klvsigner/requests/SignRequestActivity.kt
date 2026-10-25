@@ -78,7 +78,8 @@ class SignRequestActivity : Activity() {
     }
 
     val action = intent?.action
-    if (action != SignerProtocol.ACTION_GET_ADDRESS && action != SignerProtocol.ACTION_SIGN_TRANSACTION) {
+    if (action != SignerProtocol.ACTION_GET_ADDRESS && action != SignerProtocol.ACTION_SIGN_TRANSACTION
+        && action != SignerProtocol.ACTION_SIGN_MESSAGE) {
       answer(false, errorExtras(SignerProtocol.ERROR_UNKNOWN_ACTION, "Unknown request type: $action"))
       return
     }

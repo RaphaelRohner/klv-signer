@@ -27,6 +27,7 @@
  *   the Signer and one of these screens takes over:
  *     "connectApp"      first time only: "Allow this app?"
  *     "requestApprove"  the approval screen, showing which app is asking
+ *     "requestMessage"  a text to sign (SIGN_MESSAGE, not a transaction), shown in full
  *     "requestProblem"  the request can't be done (reason shown), nothing signed
  *   Afterwards the answer goes back to the app and the Signer returns to "unlock".
  *
@@ -75,6 +76,7 @@ import ChangePasswordScreen from './src/screens/ChangePasswordScreen.js';
 import SigningRulesScreen from './src/screens/SigningRulesScreen.js';
 import PasteTransactionScreen from './src/screens/PasteTransactionScreen.js';
 import ApproveScreen from './src/screens/ApproveScreen.js';
+import MessageApproveScreen from './src/screens/MessageApproveScreen.js';
 import SignedScreen from './src/screens/SignedScreen.js';
 import ConnectAppScreen from './src/screens/ConnectAppScreen.js';
 import RequestProblemScreen from './src/screens/RequestProblemScreen.js';
@@ -88,7 +90,9 @@ import {
 import {
   DEVICE_CHECK_FAILED, describeDeviceSecurity, isSigningBlocked, SIGNING_BLOCKED_TEXT,
 } from './src/security/deviceChecks.js';
-import { ACTIONS, ERRORS, addressReply, checkRequest, errorReply, signedReply } from './src/requests/protocol.js';
+import {
+  ACTIONS, ERRORS, addressReply, checkRequest, errorReply, messageSignedReply, signedReply,
+} from './src/requests/protocol.js';
 import { cleanLabel, trustStatus, withApp } from './src/requests/appTrust.js';
 import { forgetApp } from './src/storage/signingRules.js';
 import { loadConnectedApps, saveConnectedApps } from './src/storage/connectedApps.js';
@@ -101,7 +105,7 @@ import { readTransaction, ReadProblem } from './src/klever/readTransaction.js';
 const UNLOCKED_SCREENS = ['home', 'settings', 'receive', 'termsInfo', 'pasteTx', 'approve', 'signed', 'changePassword', 'signingRules'];
 
 /** The screens used while answering a request from another app. */
-const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestProblem'];
+const REQUEST_SCREENS = ['connectApp', 'requestApprove', 'requestMessage', 'requestProblem'];
 /** Wallet setup screens: leaving the Signer here forgets the recovery words. */
 const SETUP_SCREENS = ['terms', 'showPhrase', 'confirmPhrase', 'restore', 'setPassword'];
 
@@ -269,6 +273,11 @@ export default function App() {
     // Rooted or unlocked phone: sharing the address is fine, signing is not.
     if (signingBlockedRef.current) {
       showRequestProblem(ERRORS.UNSAFE_DEVICE, SIGNING_BLOCKED_TEXT);
+      return;
+    }
+    // A text to sign (not a transaction): already checked in checkRequest.
+    if (req.action === ACTIONS.SIGN_MESSAGE) {
+      setScreen('requestMessage');
       return;
     }
     try {
@@ -639,6 +648,22 @@ export default function App() {
               ? finishRequest(request, true, signedReply(request, address, requestReading, result))
               : false)}
             onRejected={() => finishRequest(request, false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.'))}
+          />
+        );
+      case 'requestMessage':
+        return (
+          <MessageApproveScreen
+            key={request.id}
+            text={request.extras.text}
+            address={address}
+            requester={{ name: cleanLabel(request.callerLabel), detail: request.callerPackage }}
+            deviceFindings={deviceFindings}
+            deviceChecked={deviceChecked}
+            // Only if this screen's session is still current (as for transactions).
+            onSigned={(result) => (latestSession === session
+              ? finishRequest(request, true, messageSignedReply(request, address, result))
+              : false)}
+            onRejected={() => finishRequest(request, false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected signing the text.'))}
           />
         );
       case 'requestProblem':
