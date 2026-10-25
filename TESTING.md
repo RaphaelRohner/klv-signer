@@ -874,21 +874,29 @@ Test NFTs: SGNTEST-3UC2 #2 and #3 are in the Signer wallet.
 
 Install both new builds over the old ones (wallet and allowed apps stay).
 
-- [ ] Example app → Connect → the card **"Sign a text (not a transaction)"**
+- [x] Example app → Connect → the card **"Sign a text (not a transaction)"**
       shows a ready-made two-line text. Tap **Sign text with KLV Signer**.
-- [ ] The Signer shows: who is asking (KLV Signer Example), the blue box
+- [x] The Signer shows: who is asking (KLV Signer Example), the blue box
       "This is not a transaction…", and the whole text in a dashed box.
       No amount, no receiver, no network fee.
-- [ ] Approve with the password → back in the example app:
+- [x] Approve with the password → back in the example app:
       "✔ Signed, and the signature checks out for this wallet" and a long
       signature (128 characters).
 - [ ] Again with the fingerprint/face (if switched on): Android's prompt says
       "Sign a text (not a transaction)".
-- [ ] Again, but **Reject** → "Cancelled in the KLV Signer: nothing was signed."
+- [x] Again, but **Reject** → "Cancelled in the KLV Signer: nothing was signed."
 - [ ] Change the text to something with an emoji like ❤️ → the Signer refuses
       it straight away ("invisible or special characters": the heart carries
       a hidden variation mark). Plain text works.
 - [ ] Optional: a text longer than 2,000 characters → refused.
+- F32 passed on 25 Oct 2026 (Signer 0.1.3, example app 0.1.4): the Signer
+  showed the app, the "not a transaction" box and the whole text; signed with
+  the password; Reject answered "nothing was signed"; a screenshot of the
+  approval screen came out blank (screenshot block works). First try, the
+  example app said the signature didn't match: its check used
+  verifyWalletSignedMessage, which needs WebCrypto and quietly answers false
+  in Android apps. Fixed with the synchronous check (53844d9); then green.
+  Not tried yet: fingerprint, the emoji and the over-long text.
 
 ---
 
