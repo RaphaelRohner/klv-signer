@@ -885,7 +885,7 @@ Install both new builds over the old ones (wallet and allowed apps stay).
 - [x] Again with the fingerprint/face (if switched on): Android's prompt says
       "Sign a text (not a transaction)".
 - [x] Again, but **Reject** → "Cancelled in the KLV Signer: nothing was signed."
-- [ ] Change the text to something with an emoji like ❤️ → the Signer refuses
+- [x] Change the text to something with an emoji like ❤️ → the Signer refuses
       it straight away ("invisible or special characters": the heart carries
       a hidden variation mark). Plain text works.
 - [ ] Optional: a text longer than 2,000 characters → refused.
@@ -896,7 +896,9 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   example app said the signature didn't match: its check used
   verifyWalletSignedMessage, which needs WebCrypto and quietly answers false
   in Android apps. Fixed with the synchronous check (53844d9); then green.
-  Not tried yet: the emoji and the over-long text.
+  The ❤️ was refused ("invisible or special characters"). The over-long text
+  can't be sent from the example app (its box stops at 2,000 characters);
+  the automatic tests cover it.
 
 ---
 
