@@ -896,6 +896,9 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   example app said the signature didn't match: its check used
   verifyWalletSignedMessage, which needs WebCrypto and quietly answers false
   in Android apps. Fixed with the synchronous check (53844d9); then green.
+  26 Oct (after the weekly check's fix): the phone's Back button on the text
+  screen → the example app says "Cancelled in the KLV Signer: nothing was
+  signed." ✔
   The ❤️ was refused ("invisible or special characters"). The over-long text
   can't be sent from the example app (its box stops at 2,000 characters);
   the automatic tests cover it.
