@@ -907,14 +907,17 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   the automatic tests cover it.
 
 **F33. Version on screen, danger zone behind a switch (26 Oct 2026)**
-- [ ] Open the Signer: the start screen shows the seal, "KLV Signer" and
+- [x] Open the Signer: the start screen shows the seal, "KLV Signer" and
       at the bottom the version (e.g. "v0.1.4 · testnet"). It may only flash
       for a moment.
-- [ ] Unlock screen: the version at the top left, TESTNET on the right.
-- [ ] Settings → Danger zone: only a switch "Show the danger zone", off.
+- [x] Unlock screen: the version at the top left, TESTNET on the right.
+- [x] Settings → Danger zone: only a switch "Show the danger zone", off.
       Switch on → **Remove wallet from this phone…** appears. Tap it, then
       switch off → it's all hidden again. Leave Settings and come back →
       the switch is off again.
+- F33 passed on 26 Oct 2026 (Signer 0.1.4): version on the start and
+  unlock screens; the danger zone stays hidden until switched on, and is
+  off again after leaving Settings. ✔
 
 ---
 
