@@ -50,7 +50,8 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, BackHandler, View, ActivityIndicator } from 'react-native';
+import { AppState, BackHandler, View, ActivityIndicator, Image, Text } from 'react-native';
+import appJson from './app.json';
 import { StatusBar } from 'expo-status-bar';
 import { preventScreenCaptureAsync } from 'expo-screen-capture';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -684,10 +685,18 @@ export default function App() {
     }
   }
 
+  // The start screen (shown for a moment while the Signer opens): the seal,
+  // the name and, at the bottom, the version (Raphael, 26 Oct 2026). Nothing
+  // secret on it, so it's fine before screenshot protection is on.
   function renderLoading() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <Image source={require('./assets/seal-mark.png')} style={{ width: 68, height: 68, marginBottom: 16 }} accessibilityIgnoresInvertColors />
+        <Text style={{ color: colors.text, fontSize: 22, fontWeight: '600', marginBottom: 20 }}>KLV Signer</Text>
         <ActivityIndicator color={colors.accent} />
+        <Text style={{ position: 'absolute', bottom: 48, color: colors.muted, fontSize: 13 }}>
+          v{appJson.expo.version} · {NETWORK === 'testnet' ? 'testnet' : 'mainnet'}
+        </Text>
       </View>
     );
   }

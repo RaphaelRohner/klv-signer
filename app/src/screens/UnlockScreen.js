@@ -23,6 +23,11 @@
  * password box (components/BiometricButton.js). The password always works too.
  * (Switched on in Settings.)
  *
+ * VERSION (Raphael, 26 Oct 2026)
+ * The Signer's version sits at the top left, opposite the TESTNET/MAINNET
+ * badge, so you can see at a glance which version is installed (e.g. when
+ * an app asks for a newer one) without unlocking.
+ *
  * PHONE-SAFETY WARNING
  * If the phone looks unsafe for a wallet (rooted, unlocked bootloader, no
  * screen lock …), the warning box is shown right here, BEFORE you unlock, so
@@ -32,6 +37,7 @@
 
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import appJson from '../../app.json';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, NetworkBadge, Notice, Screen, colors } from '../components/ui.js';
 import { shortAddress } from '../klever/format.js';
@@ -63,7 +69,10 @@ export default function UnlockScreen({ address, deviceFindings, onUnlocked, onRe
 
   return (
     <Screen>
-      <View style={styles.badgeRow}><NetworkBadge /></View>
+      <View style={styles.badgeRow}>
+        <Text style={styles.version} accessibilityLabel={`Version ${appJson.expo.version}`}>v{appJson.expo.version}</Text>
+        <NetworkBadge />
+      </View>
       <View style={styles.brand}>
         <View style={styles.markBox}>
           <Image source={require('../../assets/seal-mark.png')} style={styles.mark} accessibilityIgnoresInvertColors />
@@ -129,7 +138,8 @@ export default function UnlockScreen({ address, deviceFindings, onUnlocked, onRe
 }
 
 const styles = StyleSheet.create({
-  badgeRow: { flexDirection: 'row', justifyContent: 'flex-end' },
+  badgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  version: { color: colors.muted, fontSize: 13 },
   brand: { alignItems: 'center', paddingTop: 32, paddingBottom: 16 },
   markBox: {
     width: 88, height: 88, borderRadius: 24, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,

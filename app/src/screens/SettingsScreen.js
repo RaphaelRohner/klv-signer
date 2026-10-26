@@ -16,7 +16,8 @@
  *                 and terms), "Share info for support" (plain text instead
  *                 of screenshots, which the Signer blocks), and the
  *                 developer tool "Sign a test transaction"
- *   DANGER ZONE   Remove wallet from this phone
+ *   DANGER ZONE   Remove wallet from this phone - behind its own switch, off
+ *                 each time Settings opens (Raphael, 26 Oct 2026; as in the Hub)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -65,6 +66,8 @@ export default function SettingsScreen({
 }) {
   const [rulesSummary, setRulesSummary] = useState('');
   const [showRemove, setShowRemove] = useState(false);
+  // The danger zone's content stays hidden until switched on (off each time Settings opens).
+  const [showDanger, setShowDanger] = useState(false);
   const blocked = isSigningBlocked(deviceFindings);
   // The seal THIS copy carries, as Android reports it (null = not known yet / unknown),
   // and where the key locking the stored wallet lives (security chip or software).
@@ -164,7 +167,18 @@ export default function SettingsScreen({
       </Card>
 
       <SectionLabel danger>Danger zone</SectionLabel>
-      {showRemove ? (
+      <Card>
+        <ListRow
+          title="Show the danger zone"
+          subtitle="Removing the wallet from this phone"
+          toggle={{
+            value: showDanger,
+            onChange: (on) => { setShowDanger(on); if (!on) setShowRemove(false); },
+          }}
+          last
+        />
+      </Card>
+      {!showDanger ? null : showRemove ? (
         <RemoveWallet onRemoved={onRemoved} onCancel={() => setShowRemove(false)} />
       ) : (
         <Button title="Remove wallet from this phone…" kind="danger" onPress={() => setShowRemove(true)} />
