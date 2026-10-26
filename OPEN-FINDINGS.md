@@ -41,6 +41,14 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
   app names); signed texts not tied to the asking app (see Accepted); the
   biometric button, request routing and key wiping are the reviewed code
   shared with transactions.
+- 26 Oct 2026 — Second opinion (Gemini, same code): no transaction
+  misuse, no approval bypass, key handling fine. Not followed: "normalise
+  the text (NFC) before signing" (the signature must cover exactly the text
+  the app sent, or the service can't check it; both forms look and mean the
+  same); "no scrolling" (every screen scrolls, Approve is below the text).
+  Accepted (Low): the Android entry point doesn't refuse an empty text
+  itself; the JavaScript check refuses it before anything is shown. Gemini
+  also left out the prefix's invisible first byte, like the protocol did.
 
 - 26 Oct 2026 — Back button on the text-signing screen answered "you left"
   instead of "rejected" (Low, weekly check 26 Oct): fixed; a test checks
