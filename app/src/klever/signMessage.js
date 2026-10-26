@@ -11,7 +11,10 @@
  * WHAT IS SIGNED
  *   Klever's standard message format (the same as the extension and Klever's
  *   own library, @klever/connect-crypto prepareKlvMessage):
- *     keccak-256( "Klever Signed Message:\n" + <length of the text in bytes> + <the text> )
+ *     keccak-256( <byte 23 (0x17)> + "Klever Signed Message:\n" + <length of the text in bytes, as
+ *                 decimal digits> + <the text in UTF-8> )
+ *   (The first byte is invisible in most editors; found by the hand-built
+ *   check in tests/message.test.js, 26 Oct 2026.)
  *   and that 32-byte fingerprint is signed with Ed25519.
  *
  * WHY THIS CAN'T BE MISUSED AS A TRANSACTION SIGNATURE
@@ -29,6 +32,8 @@
  *     - invisible characters and control codes (only line breaks allowed),
  *       direction-changing marks, blank-looking letters, combining
  *       "enclosing" marks – anything that could hide or rearrange text;
+ *     - a word mixing Latin letters with Cyrillic or Greek look-alikes
+ *       (second-opinion review, 26 Oct 2026);
  *     - marks that strike through or pile up on letters (3 or more), spaces
  *       other than the normal one, more than two empty lines in a row
  *       (weekly check, 26 Oct 2026);
@@ -59,6 +64,11 @@ const HIDDEN = /[\p{C}\u2028\u2029\u115F\u1160\u3164\uFFA0\u2800\uFFFC\u034F\u17
 const OVERLAY = /[\u0334-\u0338\u20D2\u20D3\u20E5\u20E6\u20EA\u20EB]/u;
 const STACKED = /\p{M}{3,}/u;
 const ODD_SPACE = /(?! )\p{Zs}/u;
+// Since the second-opinion review of 26 Oct 2026: a word mixing Latin letters
+// with Cyrillic or Greek ones can fake a name (a Cyrillic "e" in "Devikins").
+const WORD = /[\p{L}\p{M}\p{N}]+/gu;
+const LATIN = /\p{Script=Latin}/u;
+const CYRILLIC_OR_GREEK = /[\p{Script=Cyrillic}\p{Script=Greek}]/u;
 const RTL = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u;
 const OTHER = /[\p{N}]|(?![\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}])\p{L}/u;
 
@@ -81,6 +91,11 @@ export function checkMessageText(text) {
   }
   if (OVERLAY.test(text) || STACKED.test(text)) {
     return 'The text contains marks that strike through or pile up on letters, which makes it hard to read, so it isn\'t signed.';
+  }
+  for (const word of text.match(WORD) || []) {
+    if (LATIN.test(word) && CYRILLIC_OR_GREEK.test(word)) {
+      return `The word "${word}" mixes Latin letters with Cyrillic or Greek ones that look the same, so it could fake a name. The text isn't signed.`;
+    }
   }
   if (ODD_SPACE.test(text)) {
     return 'The text contains unusual spaces (only normal spaces and line breaks are allowed), so it isn\'t signed.';

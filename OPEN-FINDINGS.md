@@ -28,6 +28,20 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
 
 ## Fixed
 
+- 26 Oct 2026 — Second opinion (ChatGPT, on the 0.1.3 text-signing code):
+  no transaction-signature bypass, no approval bypass found. Acted on:
+  words mixing Latin with Cyrillic/Greek look-alike letters are refused
+  (could fake a name); Klever's message format is now also rebuilt by hand
+  in a test, which showed the prefix starts with an invisible byte (0x17)
+  that SIGNER-PROTOCOL.md didn't mention (corrected; the Signer itself was
+  right, it uses Klever's library). Not a problem: its "confirmed defect"
+  (normal spaces refused) was a misreading of the rule; a test shows normal
+  spaces pass. Already covered or accepted: the approval screen scrolls and
+  Approve sits below the whole text; right-to-left text only alone (as for
+  app names); signed texts not tied to the asking app (see Accepted); the
+  biometric button, request routing and key wiping are the reviewed code
+  shared with transactions.
+
 - 26 Oct 2026 — Back button on the text-signing screen answered "you left"
   instead of "rejected" (Low, weekly check 26 Oct): fixed; a test checks
   every request screen has a Back answer.

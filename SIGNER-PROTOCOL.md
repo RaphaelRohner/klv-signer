@@ -252,7 +252,10 @@ say who is asking, why, and that it's not a transaction.
 
 What's signed is **Klever's message format**, the same as the Klever
 extension and `@klever/connect-crypto`:
-Ed25519 over keccak-256("Klever Signed Message:\n" + byte length + text).
+Ed25519 over keccak-256(byte 0x17 + "Klever Signed Message:\n" + the text's length in
+UTF-8 bytes, as decimal digits + the text in UTF-8). Note the first byte (0x17,
+decimal 23): it's invisible in most editors. Easiest is to use
+`prepareKlvMessage(text)` from `@klever/connect-crypto`, which builds this.
 Check it with `verifySignatureSync(prepareKlvMessage(text), signature, publicKey)`
 from `@klever/connect-crypto` (on a server or website,
 `verifyWalletSignedMessage(text, signature, publicKey)` does the same; **not

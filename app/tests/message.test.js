@@ -19,6 +19,7 @@ import {
   generateKeyPairSync, PublicKeyImpl, prepareKlvMessage, signMessageSync, verifySignatureSync, verifyWalletSignedMessage,
 } from '@klever/connect-crypto';
 import { blake2b } from '@noble/hashes/blake2.js';
+import { keccak_256 } from '@noble/hashes/sha3.js';
 import { checkMessageText, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES } from '../src/klever/signMessage.js';
 import { ACTIONS, ERRORS, checkRequest, messageSignedReply, PROTOCOL_VERSION } from '../src/requests/protocol.js';
 
@@ -135,6 +136,30 @@ test('hard-to-read texts are refused too (weekly check, 26 Oct 2026)', () => {
   assert.match(checkMessageText('Top\n \n \n \nBottom') ?? '', /more than two empty lines/);
   // the Hub's real sign-in text still passes
   assert.equal(checkMessageText(HUB_SIGN_IN), null);
+});
+
+test('second-opinion review (26 Oct 2026): normal spaces pass, look-alike alphabets in one word are refused', () => {
+  // ChatGPT thought the space rule refused normal spaces: it doesn't.
+  for (const t of ['hello world', ' leading', 'trailing ', 'two  spaces', 'a b c']) assert.equal(checkMessageText(t), null, t);
+  // "Devikins" with a Cyrillic e (U+0435) or a Greek omicron (U+03BF) in "Hub"... in "Login"
+  assert.match(checkMessageText('Sign in to D' + ch(0x0435) + 'vikins') ?? '', /mixes Latin letters with Cyrillic or Greek/);
+  assert.match(checkMessageText('L' + ch(0x03bf) + 'gin') ?? '', /mixes Latin letters with Cyrillic or Greek/);
+  // whole words in Cyrillic or Greek next to Latin words are fine
+  assert.equal(checkMessageText(ch(0x041f) + ch(0x0440) + ch(0x0438) + ch(0x0432) + ch(0x0435) + ch(0x0442) + ' Devikins'), null);
+  assert.equal(checkMessageText(ch(0x03b1) + ch(0x03b2) + ch(0x03b3) + ' abc'), null);
+});
+
+test('Klever\'s message format, rebuilt by hand: prefix + length in BYTES + text, keccak-256', () => {
+  // Independent of @klever/connect-crypto, so a change in that library would be noticed.
+  const enc = new TextEncoder();
+  for (const text of [HUB_SIGN_IN, 'abc', 'Gr' + ch(0xfc) + 'ezi', ch(0x05e9) + ch(0x05dc) + ch(0x05d5) + ch(0x05dd), ch(0x4f60) + ch(0x597d), 'x'.repeat(2000)]) {
+    const bytes = enc.encode(text);
+    // (the prefix starts with an invisible byte, 23 = 0x17)
+    const expected = keccak_256(new Uint8Array([23, ...enc.encode('Klever Signed Message:\n'), ...enc.encode(String(bytes.length)), ...bytes]));
+    assert.deepEqual([...prepareKlvMessage(text)], [...expected], text.slice(0, 20));
+  }
+  // the length is in bytes, not characters: "Grüezi" is 6 characters but 7 bytes
+  assert.equal(enc.encode('Gr' + ch(0xfc) + 'ezi').length, 7);
 });
 
 test('SIGN_MESSAGE requests: the text is required and checked; the answer carries the signature', () => {
