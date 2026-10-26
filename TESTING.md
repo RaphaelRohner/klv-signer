@@ -899,7 +899,10 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   26 Oct (after the weekly check's fix): the phone's Back button on the text
   screen → the example app says "Cancelled in the KLV Signer: nothing was
   signed." ✔
-  The ❤️ was refused ("invisible or special characters"). The over-long text
+  The ❤️ was refused ("invisible or special characters").
+  26 Oct (look-alike rule, after the second opinions): "Dеvikins" with a
+  Cyrillic е was refused with the explanation; the only way on is back
+  to the app (which gets "refused"). ✔ The over-long text
   can't be sent from the example app (its box stops at 2,000 characters);
   the automatic tests cover it.
 
