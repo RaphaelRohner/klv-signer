@@ -69,6 +69,8 @@ export default function App() {
   }
 
   // Test F30: a request passed on by another app must be refused by the Signer.
+  // Only for testers. Copying this example for your own app? Leave out this
+  // test, its link at the bottom, ForwardTestActivity.kt and forwardTest().
   async function runForwardTest() {
     setForwardResult(null);
     try {

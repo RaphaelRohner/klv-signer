@@ -117,6 +117,26 @@ test('texts that could hide or rearrange what you read are refused', () => {
   assert.throws(() => signWalletMessage(`a${ch(0x202e)}b`, w.privateKey, addressOf(w.publicKey)), /invisible or special/);
 });
 
+test('hard-to-read texts are refused too (weekly check, 26 Oct 2026)', () => {
+  // strike-through / overlay marks
+  assert.match(checkMessageText('Send 1' + ch(0x0336) + '00 KLV') ?? '', /strike through or pile up/);
+  assert.match(checkMessageText('a' + ch(0x20e5) + 'b') ?? '', /strike through or pile up/);
+  // three or more marks piled on one letter
+  assert.match(checkMessageText('e' + ch(0x0301) + ch(0x0302) + ch(0x0303)) ?? '', /strike through or pile up/);
+  // one or two marks are normal (accents written as letter + mark)
+  assert.equal(checkMessageText('Cafe' + ch(0x0301)), null);
+  // spaces other than the normal one
+  for (const cp of [0x00a0, 0x2003, 0x3000, 0x202f]) {
+    assert.match(checkMessageText(`Pay${ch(cp)}now`) ?? '', /unusual spaces/, `U+${cp.toString(16)}`);
+  }
+  // empty lines: two in a row are fine, three push text out of sight
+  assert.equal(checkMessageText('Top\n\n\nBottom'), null);
+  assert.match(checkMessageText('Top\n\n\n\nBottom') ?? '', /more than two empty lines/);
+  assert.match(checkMessageText('Top\n \n \n \nBottom') ?? '', /more than two empty lines/);
+  // the Hub's real sign-in text still passes
+  assert.equal(checkMessageText(HUB_SIGN_IN), null);
+});
+
 test('SIGN_MESSAGE requests: the text is required and checked; the answer carries the signature', () => {
   const request = (extras) => ({ action: ACTIONS.SIGN_MESSAGE, extras: { protocolVersion: PROTOCOL_VERSION, ...extras } });
   assert.equal(checkRequest(request({ text: 'Sign in' })), null);

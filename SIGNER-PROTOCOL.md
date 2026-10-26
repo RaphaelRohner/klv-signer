@@ -11,7 +11,9 @@ Signer does it for Android apps.
 
 > **Status:** protocol version **1**, **testnet only** for now (the Signer
 > refuses mainnet transactions until it's been reviewed further). Only
-> **transfers** (KLV, KDA tokens, NFTs) can be signed so far.
+> **transfers** (KLV, KDA tokens, NFTs) can be signed so far, plus, since
+> Signer 0.1.3, **short texts** that aren't transactions (`SIGN_MESSAGE`, 3c),
+> e.g. to prove you hold a wallet.
 
 ---
 
@@ -266,7 +268,16 @@ Answer on success:
 | `address` | The signing wallet. Check it's the one you expected. |
 
 **Check the answer before trusting it:** the signature must verify for your
-text and that address (the example app's `signTextWithSigner` does it).
+text and that address (the example app's `signTextWithSigner` does it). The
+public key is the address itself, decoded: `bech32Decode(address)` from
+`@klever/connect-encoding` gives `{ prefix: 'klv', data }`, and `data` (32
+bytes) is the public key.
+
+**For services that check such signatures:** a signed text isn't tied to the
+app that asked for it, so an allowed app could pass on a text it got from
+somewhere else. Put your service's name and a fresh one-time number (with an
+expiry time) into the text, and accept each number only once. The Devikins
+Legacy Hub's chat sign-in does this.
 
 ---
 
@@ -316,6 +327,7 @@ const SIGNER = {
 const ACTION = {
   GET_ADDRESS: 'com.raphaelrohner.klvsigner.action.GET_ADDRESS',
   SIGN_TRANSACTION: 'com.raphaelrohner.klvsigner.action.SIGN_TRANSACTION',
+  SIGN_MESSAGE: 'com.raphaelrohner.klvsigner.action.SIGN_MESSAGE', // Signer 0.1.3+
 };
 
 async function askSigner(action, extra = {}) {
@@ -337,6 +349,8 @@ async function askSigner(action, extra = {}) {
 // Usage
 const { address } = await askSigner(ACTION.GET_ADDRESS);
 const { signedTransaction } = await askSigner(ACTION.SIGN_TRANSACTION, { transaction: unsignedHex });
+const { signature } = await askSigner(ACTION.SIGN_MESSAGE, { text: 'Sign in to Example (one-time code 4711)' });
+// then check it (3c): verifySignatureSync(prepareKlvMessage(text), signatureBytes, publicKeyFromAddress)
 ```
 
 ## 6. Example: Kotlin

@@ -435,6 +435,7 @@ export default function App() {
       // For requests from other apps, "back" means "no".
       connectApp: () => finishRequest(request, false, errorReply(request, ERRORS.NOT_ALLOWED, 'You did not allow this app to use the Signer.')),
       requestApprove: () => finishRequest(request, false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected the transaction.')),
+      requestMessage: () => finishRequest(request, false, errorReply(request, ERRORS.USER_REJECTED, 'You rejected signing the text.')),
       requestProblem: () => requestProblem && finishRequest(request, false, errorReply(request, requestProblem.code, requestProblem.message)),
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {

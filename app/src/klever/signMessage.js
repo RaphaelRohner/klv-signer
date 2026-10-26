@@ -29,6 +29,9 @@
  *     - invisible characters and control codes (only line breaks allowed),
  *       direction-changing marks, blank-looking letters, combining
  *       "enclosing" marks – anything that could hide or rearrange text;
+ *     - marks that strike through or pile up on letters (3 or more), spaces
+ *       other than the normal one, more than two empty lines in a row
+ *       (weekly check, 26 Oct 2026);
  *     - text mixing right-to-left letters (Arabic, Hebrew, …) with other
  *       letters or digits: the screen could show its parts in another order
  *       than they're signed (same rule as for app names, appTrust.js).
@@ -51,6 +54,11 @@ export const MESSAGE_MAX_LINES = 40;
 // unassigned and lone surrogate (broken) characters. Plus line/paragraph separators,
 // blank-looking letters, variation selectors and enclosing marks.
 const HIDDEN = /[\p{C}\u2028\u2029\u115F\u1160\u3164\uFFA0\u2800\uFFFC\u034F\u17B4\u17B5\u180B-\u180F\uFE00-\uFE0F\u{E0100}-\u{E01EF}\p{Me}]/u;
+// Since the weekly check of 26 Oct 2026 (Low): marks that strike through or
+// pile up on letters (hard to read), and spaces other than the normal one.
+const OVERLAY = /[\u0334-\u0338\u20D2\u20D3\u20E5\u20E6\u20EA\u20EB]/u;
+const STACKED = /\p{M}{3,}/u;
+const ODD_SPACE = /(?! )\p{Zs}/u;
 const RTL = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u;
 const OTHER = /[\p{N}]|(?![\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}])\p{L}/u;
 
@@ -70,6 +78,15 @@ export function checkMessageText(text) {
     if (HIDDEN.test(line)) {
       return 'The text contains invisible or special characters that could hide what you\'d be signing, so it isn\'t signed.';
     }
+  }
+  if (OVERLAY.test(text) || STACKED.test(text)) {
+    return 'The text contains marks that strike through or pile up on letters, which makes it hard to read, so it isn\'t signed.';
+  }
+  if (ODD_SPACE.test(text)) {
+    return 'The text contains unusual spaces (only normal spaces and line breaks are allowed), so it isn\'t signed.';
+  }
+  if (/\n[ ]*\n[ ]*\n[ ]*\n/.test(text)) {
+    return 'The text has more than two empty lines in a row, which could push part of it out of sight, so it isn\'t signed.';
   }
   if (RTL.test(text) && OTHER.test(text)) {
     return 'The text mixes right-to-left writing with other letters or digits, which can show it in a different order than it would be signed. It isn\'t signed.';

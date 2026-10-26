@@ -65,6 +65,9 @@ package couldn't send anything out.
      in `source-map-js` 1.2.1 (a crafted source map can slow it down), used by
      `postcss` → `@expo/metro-config`, again only while bundling on the Mac;
      it isn't in the app bundle.
+   - (added 26 Oct 2026, weekly check) [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
+     in `zod` 3.25.76 (a very large input can use up memory), used only by
+     `@expo/cli` on the Mac; not in the app.
 
    `npm audit` lists `expo`, `react-native`, `metro` and even
    `react-native-quick-crypto` as "high" only because they *depend on*

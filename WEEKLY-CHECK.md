@@ -83,7 +83,7 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
    is possible.)
 3. In app/: npm audit --omit=dev --json. For each finding,
    npm ls <package> --omit=dev to see where it sits. Known and accepted:
-   braces/micromatch, node-forge, uuid under @expo/cli, and source-map-js
+   braces/micromatch, node-forge, uuid and zod under @expo/cli, and source-map-js
    under postcss/@expo/metro-config (build tools only, DEPENDENCIES.md
    finding 1). Flag anything else, especially in packages that end up in
    the app.

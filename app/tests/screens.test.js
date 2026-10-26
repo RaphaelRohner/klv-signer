@@ -27,3 +27,12 @@ test('every screen is covered by the leave-the-app rules', () => {
   const missing = screens.filter((s) => !covered.has(s));
   assert.deepEqual(missing, [], `screens that wouldn't lock when you leave: ${missing.join(', ')}`);
 });
+
+test('the phone\'s Back button answers "no" on every request screen (weekly check, 26 Oct 2026)', () => {
+  // Without an entry, Back on a request screen answered "you left" instead of "rejected".
+  const block = app.match(/const previous = \{([\s\S]*?)\n {4}\};/)[1];
+  const handled = new Set([...block.matchAll(/^ {6}([A-Za-z]+):/gm)].map((m) => m[1]));
+  const missing = list('REQUEST_SCREENS').filter((s) => !handled.has(s));
+  assert.deepEqual(missing, [], `request screens without a Back answer: ${missing.join(', ')}`);
+});
+
