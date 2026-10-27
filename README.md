@@ -57,7 +57,7 @@ Settings → About.
 **Stage 4 — Safety polish: in progress.** Most protections are done and tested; AI
 reviews on 1 Oct ([REVIEW-2026-10.md](REVIEW-2026-10.md)) and 5 Oct 2026
 ([REVIEW-2026-10-05.md](REVIEW-2026-10-05.md)), and a weekly automatic check since
-6 Oct (WEEKLY-CHECK.md). **First public testnet preview: 0.1.0, 6 Oct 2026; latest: 0.1.4 (26 Oct 2026: version on screen, danger zone behind a switch); since 0.1.3 it can also sign a short text (not a transaction), e.g. a chat sign-in (SIGNER-PROTOCOL.md 3c); history of the weekly checks in [weekly-reports/](weekly-reports/).** The newest version is always at the top of the [Releases page](https://github.com/RaphaelRohner/klv-signer/releases).
+6 Oct (WEEKLY-CHECK.md). **First public testnet preview: 0.1.0, 6 Oct 2026; latest: 0.1.5 (27 Oct 2026: 64-bit phones only, less than half the size); since 0.1.3 it can also sign a short text (not a transaction), e.g. a chat sign-in (SIGNER-PROTOCOL.md 3c); history of the weekly checks in [weekly-reports/](weekly-reports/).** The newest version is always at the top of the [Releases page](https://github.com/RaphaelRohner/klv-signer/releases).
 The Signer is set to **testnet** and hasn't had an independent human review yet.
 
 ## What's in this folder
