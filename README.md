@@ -24,8 +24,10 @@ whole idea in plain English, with a build plan and a glossary.
    `shasum -a 256 -c klv-signer-<version>.apk.sha256` must say **OK**, and
    after installing, the Signer's Settings → About must say "Matches the
    official KLV Signer key" (fingerprint below).
-3. Install both on an Android 12+ phone (allow "install unknown apps" for
-   your browser or file manager when Android asks).
+3. Install both on an Android 12+ phone with a 64-bit processor (nearly
+   every phone of the last years; allow "install unknown apps" for your
+   browser or file manager when Android asks). Since 0.1.5 the Signer is
+   built for 64-bit ARM phones only, which makes it much smaller.
 4. In the Signer: create a new test wallet (write down the words), set a
    password. In the example app: **Connect KLV Signer**, allow it, and send
    a little testnet KLV to another test address.

@@ -309,6 +309,10 @@ through the Signer, and the second wallet received 0.8 test KLV.
 **F3. Android version**
 - [ ] Nothing to see on your phone (it's newer than Android 12). Phones older
       than Android 12 can't install the Signer anymore.
+- Since 0.1.5 (27 Oct 2026) the Signer is built for 64-bit ARM phones only
+  (`buildArchs` in app.json): much smaller APK. A phone with an older 32-bit
+  processor (some cheap "Android Go" models) or an x86 emulator/Chromebook
+  can't install it; Android says "app not installed" / "not compatible".
 
 **F4. Overlays are hidden** (only if you use something that floats over other
 apps, e.g. Messenger chat heads, a screen-dimmer or a floating-button app)
