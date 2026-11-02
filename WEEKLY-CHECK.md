@@ -88,6 +88,8 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
    2026), install with npm ci --ignore-scripts for the dependency checks, and
    instead read GitHub's latest run of the "Tests" workflow:
    curl -s "https://api.github.com/repos/RaphaelRohner/klv-signer/actions/workflows/tests.yml/runs?per_page=5"
+   (if the shell can't reach it, use the WebFetch tool on
+   https://github.com/RaphaelRohner/klv-signer/actions/workflows/tests.yml).
    Report its result (success/failure), date and commit, and whether that
    commit is the latest on main. If it failed, give the failing tests from
    the run's log if you can read it. If you can't reach it either, say:
