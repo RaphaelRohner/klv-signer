@@ -959,6 +959,14 @@ Install both new builds over the old ones (wallet and allowed apps stay).
 - F36 passed on 2 Nov 2026 (example app 0.1.5): the boxes stay above the
   keyboard, sending and signing a text work as before. ✔
 
+**F37. Latin-looking special characters get the warning (2 Nov 2026, Signer 0.1.6)**
+- [ ] Example app → "Sign a text": `Sign in to Devⅰkins` (the ⅰ is a
+      Roman-numeral character; copy it from here) → the Signer shows the
+      yellow warning naming "styled or unusual Latin". Reject.
+- [ ] `pɑypal` (a phonetic ɑ) → the same warning. Reject.
+- [ ] `Lⵔgin` (a Tifinagh letter) → refused straight away.
+- [ ] `Grüße, Łódź, İstanbul` → no warning.
+
 ---
 
 ## Good to know

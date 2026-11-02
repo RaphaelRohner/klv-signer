@@ -28,12 +28,17 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
 
 ## Fixed
 - 2 Nov 2026 — Look-alike letters (Low, weekly check 2 Nov; Signer 0.1.6):
-  a word mixing Latin with Armenian, Cherokee, Coptic, Lisu or Canadian
-  syllabics is now refused too (before: only Cyrillic and Greek). A word
+  a word mixing Latin with Armenian, Cherokee, Coptic, Lisu, Canadian
+  syllabics, Georgian or Tifinagh is now refused too (before: only Cyrillic
+  and Greek). A word
   written entirely in look-alikes ("СОРЕ" for "COPE") can't be refused
   (real Russian words look like that), so the approval screen now warns
   whenever a text has letters that aren't plain Latin, naming the
-  alphabets. Risk was low either way: a text can't move anything, and a
+  alphabets, or styled or unusual Latin characters (fullwidth,
+  mathematical, Roman-numeral, Kelvin sign, phonetic letters; found by the
+  four-reviewer check the same evening, with the Georgian/Tifinagh gap, a
+  wrong label for mathematical Greek, two GitHub-workflow hardening points
+  and small doc gaps, all fixed 2 Nov). Risk was low either way: a text can't move anything, and a
   look-alike text doesn't pass as the real one at a service.
 
 - 26 Oct 2026 — Second opinion (ChatGPT, on the 0.1.3 text-signing code):

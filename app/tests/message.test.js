@@ -162,14 +162,32 @@ test('weekly check (2 Nov 2026): more look-alike alphabets refused in a mixed wo
   assert.deepEqual(otherLetters('Sign in to ' + cope), ['Cyrillic']);
   assert.deepEqual(otherLetters(ch(0x0585) + ch(0x0585)), ['Armenian']);
   // "Styled" Latin: fullwidth and mathematical letters
-  assert.deepEqual(otherLetters(ch(0xff23) + ch(0xff2f)), ['styled Latin']);
-  assert.deepEqual(otherLetters(ch(0x1d402) + ch(0x1d40e)), ['styled Latin']);
+  assert.deepEqual(otherLetters(ch(0xff23) + ch(0xff2f)), ['styled or unusual Latin']);
+  assert.deepEqual(otherLetters(ch(0x1d402) + ch(0x1d40e)), ['styled or unusual Latin']);
   // Plain and accented Latin, digits and punctuation: no warning
   assert.deepEqual(otherLetters('Gr' + ch(0xfc) + 'ezi! Caf' + ch(0xe9) + ' 123, ' + ch(0xf1)), []);
   assert.deepEqual(otherLetters(HUB_SIGN_IN), []);
   // several alphabets are all named, once each
   assert.deepEqual(otherLetters(ch(0x03b1) + ' ' + ch(0x0430) + ch(0x0431) + ' ' + ch(0x4f60)), ['Greek', 'Cyrillic', 'Chinese']);
   assert.deepEqual(otherLetters(undefined), []);
+});
+
+test('review (2 Nov 2026): Latin-looking special characters get the warning; Georgian and Tifinagh refused in a mixed word', () => {
+  const W = ['styled or unusual Latin'];
+  // Roman-numeral characters, the Kelvin sign, phonetic letters, small capitals
+  assert.deepEqual(otherLetters('Sign in to Dev' + ch(0x2170) + 'kins'), W); // small Roman numeral one
+  assert.deepEqual(otherLetters(ch(0x216e) + 'EVIKINS'), W); // Roman numeral 500 (looks like D)
+  assert.deepEqual(otherLetters(ch(0x212a) + 'lever'), W); // Kelvin sign
+  for (const cp of [0x0251, 0x0261, 0x026a, 0x1d20]) assert.deepEqual(otherLetters('p' + ch(cp) + 'y'), W, cp.toString(16));
+  assert.deepEqual(otherLetters('ab' + ch(0x1d7cf)), W); // mathematical bold digit 1
+  // mathematical Greek is named Greek
+  assert.deepEqual(otherLetters(ch(0x1d6c2)), ['Greek']);
+  // ordinary letters still need no warning: German, French, Polish, Turkish, Nordic, Vietnamese
+  assert.deepEqual(otherLetters('Gr' + ch(0xfc) + ch(0xdf) + 'e, ' + ch(0xe9) + 't' + ch(0xe9) + ', ' + ch(0x141) + ch(0xf3) + 'd' + ch(0x17a) + ', ' + ch(0x131) + 'stanbul, ' + ch(0xe6) + ch(0xf8) + ch(0xe5) + ', Nguy' + ch(0x1ec5) + 'n 2026'), []);
+  // Georgian and Tifinagh look-alikes inside a Latin word are refused
+  for (const cp of [0x2d54, 0x10ff]) {
+    assert.match(checkMessageText('L' + ch(cp) + 'gin') ?? '', /mixes Latin letters with letters of another alphabet/, cp.toString(16));
+  }
 });
 
 test('Klever\'s message format, rebuilt by hand: prefix + length in BYTES + text, keccak-256', () => {

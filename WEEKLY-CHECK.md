@@ -99,9 +99,11 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
 3. In app/: npm audit --omit=dev --json. For each finding,
    npm ls <package> --omit=dev to see where it sits. Known and accepted:
    braces/micromatch, node-forge, uuid, zod, deepmerge, glob and minimatch
-   under the Expo build tools (@expo/cli, @expo/config, @expo/fingerprint,
-   @expo/metro-config), and source-map-js under postcss/@expo/metro-config
-   (build tools only, DEPENDENCIES.md finding 1). Flag anything else, especially in packages that end up in
+   under Expo's build tools (any @expo/* package, e.g. @expo/cli,
+   @expo/config, @expo/config-plugins, @expo/fingerprint,
+   @expo/metro-config, @expo/code-signing-certificates), and source-map-js
+   under postcss/@expo/metro-config (build tools only, DEPENDENCIES.md
+   finding 1). Flag anything else, especially in packages that end up in
    the app.
 4. In app/: npm outdated for @klever/connect-crypto, @klever/connect-encoding,
    @noble/hashes, @noble/ciphers, @noble/curves, @noble/ed25519,

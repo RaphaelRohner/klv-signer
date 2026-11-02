@@ -34,8 +34,9 @@
  *       "enclosing" marks – anything that could hide or rearrange text;
  *     - a word mixing Latin letters with letters of an alphabet that has
  *       Latin look-alikes: Cyrillic, Greek (second-opinion review, 26 Oct
- *       2026), and since 2 Nov 2026 also Armenian, Cherokee, Coptic, Lisu
- *       and Canadian syllabics (weekly check of 2 Nov 2026);
+ *       2026), and since 2 Nov 2026 also Armenian, Cherokee, Coptic, Lisu,
+ *       Canadian syllabics, Georgian and Tifinagh (weekly check and review
+ *       of 2 Nov 2026);
  *     - marks that strike through or pile up on letters (3 or more), spaces
  *       other than the normal one, more than two empty lines in a row
  *       (weekly check, 26 Oct 2026);
@@ -47,10 +48,13 @@
  *   A word written ENTIRELY in look-alike letters ("СОРЕ" in Cyrillic looks
  *   like "COPE") can't be refused: real Russian words are made of such
  *   letters too ("ОКНО", "СОК"). So any text with letters that aren't plain
- *   Latin (another alphabet, or "styled" Latin like fullwidth ＣＯＰＥ or
- *   mathematical 𝐂𝐎𝐏𝐄) is signed only after a warning on the approval
+ *   Latin (another alphabet, or "styled or unusual" Latin: fullwidth ＣＯＰＥ,
+ *   mathematical 𝐂𝐎𝐏𝐄, Roman-numeral characters ⅰ Ⅾ, the Kelvin sign K,
+ *   phonetic letters ɑ ɡ ɪ ᴠ) is signed only after a warning on the approval
  *   screen, naming the alphabets, so you read it twice. (Weekly check of
- *   2 Nov 2026, Low; Raphael chose the fix together with the extra alphabets.)
+ *   2 Nov 2026, Low; Raphael chose the fix together with the extra alphabets.
+ *   The phonetic and Roman-numeral cases came from the review the same
+ *   evening.) Accented letters (é, ü, ł, ß, ı …) count as plain Latin.
  *
  * The private key itself is never returned, stored or shown.
  * Plain calculations only (no screens), so the automated tests check them.
@@ -78,16 +82,23 @@ const ODD_SPACE = /(?! )\p{Zs}/u;
 // Since the second-opinion review of 26 Oct 2026: a word mixing Latin letters
 // with Cyrillic or Greek ones can fake a name (a Cyrillic "e" in "Devikins").
 // Since 2 Nov 2026 also the other alphabets with Latin look-alikes: Armenian
-// ("օ" = o), Cherokee ("Ꭺ" = A), Coptic, Lisu ("ꓮ" = A) and Canadian
-// syllabics ("ᑕ" = C).
+// ("օ" = o), Cherokee ("Ꭺ" = A), Coptic, Lisu ("ꓮ" = A), Canadian
+// syllabics ("ᑕ" = C), Georgian and Tifinagh ("ⵔ" = O).
 const WORD = /[\p{L}\p{M}\p{N}]+/gu;
 const LATIN = /\p{Script=Latin}/u;
-const LOOK_ALIKE_ALPHABET = /[\p{Script=Cyrillic}\p{Script=Greek}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Coptic}\p{Script=Lisu}\p{Script=Canadian_Aboriginal}]/u;
+const LOOK_ALIKE_ALPHABET = /[\p{Script=Cyrillic}\p{Script=Greek}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Coptic}\p{Script=Lisu}\p{Script=Canadian_Aboriginal}\p{Script=Georgian}\p{Script=Tifinagh}]/u;
 // For the warning (otherLetters): which alphabet a letter that isn't plain
-// Latin belongs to. Fullwidth Latin (ＡＢＣ) counts as Latin to Unicode but is
-// "styled", like the mathematical letters (𝐀𝐁𝐂, Unicode calls them "Common").
-const LETTER = /\p{L}/u;
-const STYLED_LATIN = /[\uFF21-\uFF3A\uFF41-\uFF5A\u{1D400}-\u{1D7FF}]/u;
+// Latin belongs to. Some characters count as Latin (or "Common") to Unicode
+// but aren't plain letters: fullwidth ＡＢＣ, mathematical 𝐀𝐁𝐂, Roman-numeral
+// characters ⅰ Ⅾ, the Kelvin sign K, phonetic letters ɑ ɡ ɪ ᴠ. Most of them
+// turn into plain letters under Unicode's "compatibility" form (NFKC); the
+// phonetic ones don't, so their blocks are listed (review of 2 Nov 2026).
+// Mathematical GREEK letters (𝛂) are named Greek.
+const LETTER_OR_NUMBER = /[\p{L}\p{Nd}\p{Nl}]/u;
+const PLAIN_DIGIT = /[0-9]/;
+const MATH_GREEK = /[\u{1D6A8}-\u{1D7CB}]/u;
+const UNUSUAL_LATIN = /[\u0250-\u02AF\u1D00-\u1DBF\u2100-\u218F\uFF21-\uFF3A\uFF41-\uFF5A\u{1D400}-\u{1D6A5}\u{1D7CE}-\u{1D7FF}]/u;
+const STYLED_LABEL = 'styled or unusual Latin';
 const ALPHABETS = [
   ['Cyrillic', /\p{Script=Cyrillic}/u],
   ['Greek', /\p{Script=Greek}/u],
@@ -97,6 +108,7 @@ const ALPHABETS = [
   ['Lisu', /\p{Script=Lisu}/u],
   ['Canadian syllabics', /\p{Script=Canadian_Aboriginal}/u],
   ['Georgian', /\p{Script=Georgian}/u],
+  ['Tifinagh', /\p{Script=Tifinagh}/u],
   ['Hebrew', /\p{Script=Hebrew}/u],
   ['Arabic', /\p{Script=Arabic}/u],
   ['Chinese', /\p{Script=Han}/u],
@@ -146,19 +158,21 @@ export function checkMessageText(text) {
 /**
  * otherLetters — which letters in the text aren't plain Latin? (2 Nov 2026)
  * For the warning on the approval screen; doesn't refuse anything.
- * Accented Latin letters (ä, é, ñ …) count as plain Latin.
+ * Accented Latin letters (ä, é, ñ, ß, ı …) count as plain Latin.
  *
  * @param {string} text
- * @returns {string[]}  e.g. ['Cyrillic'], ['styled Latin'], [] when all plain
+ * @returns {string[]}  e.g. ['Cyrillic'], ['styled or unusual Latin'], [] when all plain
  */
 export function otherLetters(text) {
   const found = new Set();
   for (const c of typeof text === 'string' ? text : '') {
-    if (!LETTER.test(c)) continue;
-    if (STYLED_LATIN.test(c)) { found.add('styled Latin'); continue; }
-    if (LATIN.test(c)) continue;
+    if (!LETTER_OR_NUMBER.test(c) || PLAIN_DIGIT.test(c)) continue;
+    if (MATH_GREEK.test(c)) { found.add('Greek'); continue; }
     const alphabet = ALPHABETS.find(([, re]) => re.test(c));
-    found.add(alphabet ? alphabet[0] : 'another alphabet');
+    if (alphabet) { found.add(alphabet[0]); continue; }
+    if (UNUSUAL_LATIN.test(c) || c.normalize('NFKC') !== c) { found.add(STYLED_LABEL); continue; }
+    if (LATIN.test(c)) continue;
+    found.add('another alphabet');
   }
   return [...found];
 }

@@ -42,8 +42,14 @@ jobs:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # The two GitHub helpers are pinned to an exact version (commit), so a
+      # later change to them can't slip in unnoticed (review, 2 Nov 2026).
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Don't leave the run's GitHub key in the copy, where install
+          # scripts could read it (it's read-only anyway).
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm

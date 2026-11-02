@@ -39,12 +39,6 @@ export const colors = {
   dangerBg: '#2E1A18', dangerEdge: '#6B2E28',
 };
 
-/**
- * Screen — the page every screen sits on.
- * Keeps content clear of the notch/status bar, lets long pages scroll, and
- * moves content up when the keyboard opens so text boxes stay visible.
- * An optional `footer` stays fixed at the bottom, outside the scrolling part.
- */
 // Keeping the text box you type in above the keyboard (2 Nov 2026, Raphael:
 // "the keyboard hides the text fields"). The screen already shrinks for the
 // keyboard (KeyboardAvoidingView below), but the page didn't scroll, so a box
@@ -63,6 +57,12 @@ export function revealFocusedBox() {
   if (openScreenReveal) openScreenReveal();
 }
 
+/**
+ * Screen — the page every screen sits on.
+ * Keeps content clear of the notch/status bar, lets long pages scroll, and
+ * moves content up when the keyboard opens so text boxes stay visible.
+ * An optional `footer` stays fixed at the bottom, outside the scrolling part.
+ */
 export function Screen({ children, footer }) {
   const scrollRef = React.useRef(null);
   const view = React.useRef({ top: 0, height: 0 }); // the visible part of the page

@@ -73,9 +73,12 @@ package couldn't send anything out.
      [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) /
      [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)
      in `glob` 13.0.6 and `minimatch` 10.2.6 (inside `@expo/cli`,
-     `@expo/fingerprint` and `@expo/metro-config`): build tools on the Mac
-     only; Expo's app code doesn't load them. `node-forge` also gained 11
-     more advisories (TLS, PEM, PKCS#12), still only inside `@expo/cli`.
+     `@expo/config`, `@expo/config-plugins`, `@expo/fingerprint` and
+     `@expo/metro-config`): build tools on the Mac only; Expo's app code
+     doesn't load them. `node-forge` also gained 11 more advisories (TLS,
+     PEM, PKCS#12), still only inside Expo's build tools (`@expo/cli`,
+     `@expo/code-signing-certificates`). In short: anything that sits only
+     under `@expo/*` build packages is finding 1.
 
    `npm audit` lists `expo`, `react-native`, `metro` and even
    `react-native-quick-crypto` as "high" only because they *depend on*
