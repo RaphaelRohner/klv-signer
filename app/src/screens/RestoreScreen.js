@@ -30,7 +30,7 @@ import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { cancelAutofill } from '../../modules/klv-signer-requests/index.js';
 import { usePreventScreenCapture } from 'expo-screen-capture';
-import { Body, Button, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
+import { Body, Button, Notice, Screen, Strong, Title, colors, revealFocusedBox } from '../components/ui.js';
 import { isValidRecoveryPhrase, walletFromPhrase, wipeBytes } from '../crypto/wallet.js';
 import { cleanWord, isKnownWord, spreadWords } from '../crypto/phraseInput.js';
 
@@ -141,7 +141,8 @@ export default function RestoreScreen({ onRestored, onBack }) {
                 value={word}
                 editable={!foundAddress}
                 onChangeText={(text) => { cancelAutofill(); onType(index, text); }}
-                onFocus={() => { cancelAutofill(); setFocused(index); }}
+                // reveal: the box scrolls into view if the keyboard would hide it (2 Nov 2026)
+                onFocus={() => { cancelAutofill(); setFocused(index); revealFocusedBox(); }}
                 onBlur={() => setFocused(null)}
                 onSubmitEditing={() => boxes.current[index + 1]?.focus()}
                 returnKeyType={index < wordCount - 1 ? 'next' : 'done'}

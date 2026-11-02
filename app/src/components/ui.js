@@ -11,7 +11,7 @@
 
 import React from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
+  ActivityIndicator, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NETWORK } from '../config.js';
@@ -45,7 +45,53 @@ export const colors = {
  * moves content up when the keyboard opens so text boxes stay visible.
  * An optional `footer` stays fixed at the bottom, outside the scrolling part.
  */
+// Keeping the text box you type in above the keyboard (2 Nov 2026, Raphael:
+// "the keyboard hides the text fields"). The screen already shrinks for the
+// keyboard (KeyboardAvoidingView below), but the page didn't scroll, so a box
+// further down stayed behind the keyboard. Now, when the keyboard opens and
+// whenever another box gets the focus, the page scrolls that box into view,
+// if it isn't fully visible already. Same idea as the Hub's Android fix of
+// 26 Oct 2026 (useKeepFocusedInputVisible).
+const ROOM_ABOVE = 80; // px of the page left visible above the box (its label)
+const ROOM_BELOW = 16; // px the box keeps from the keyboard's edge
+/** Screens hand this to their text boxes (Field): "a box just got the focus". */
+const RevealContext = React.createContext(() => {});
+// The open screen's reveal, for text boxes that aren't a Field and are built
+// by the screen itself (e.g. the recovery-word boxes): revealFocusedBox().
+let openScreenReveal = null;
+export function revealFocusedBox() {
+  if (openScreenReveal) openScreenReveal();
+}
+
 export function Screen({ children, footer }) {
+  const scrollRef = React.useRef(null);
+  const view = React.useRef({ top: 0, height: 0 }); // the visible part of the page
+  const reveal = React.useCallback((delay = 150) => {
+    // (a moment later: by then the screen has shrunk for the keyboard)
+    setTimeout(() => {
+      const box = TextInput.State?.currentlyFocusedInput?.();
+      const scroll = scrollRef.current;
+      const content = scroll?.getInnerViewRef?.();
+      if (!box || !scroll || !content || typeof box.measureLayout !== 'function') return;
+      try {
+        box.measureLayout(content, (x, y, w, h) => {
+          const { top, height } = view.current;
+          const hidden = y < top || (height > 0 && y + h > top + height - ROOM_BELOW);
+          if (hidden) scroll.scrollTo({ y: Math.max(0, y - ROOM_ABOVE), animated: true });
+        }, () => {}); // not on this page: leave it
+      } catch {
+        // (measuring can fail on an unusual setup: then just don't scroll)
+      }
+    }, delay);
+  }, []);
+  React.useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidShow', () => reveal());
+    openScreenReveal = reveal;
+    return () => {
+      sub.remove();
+      if (openScreenReveal === reveal) openScreenReveal = null;
+    };
+  }, [reveal]);
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
       {/* noExcludeDescendants: Android's autofill service ignores this whole screen.
@@ -57,8 +103,15 @@ export function Screen({ children, footer }) {
         behavior="padding"
         importantForAutofill="noExcludeDescendants"
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {children}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          onLayout={(e) => { view.current.height = e.nativeEvent.layout.height; }}
+          onScroll={(e) => { view.current.top = e.nativeEvent.contentOffset.y; }}
+          scrollEventThrottle={32}
+        >
+          <RevealContext.Provider value={reveal}>{children}</RevealContext.Provider>
         </ScrollView>
         {/* `footer`: a bar fixed at the bottom that doesn't scroll (e.g. "Unsaved changes · Save"). */}
         {footer ? <View style={styles.footer}>{footer}</View> : null}
@@ -165,6 +218,7 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy, style
  * Any other TextInput settings can be passed through (`...rest`).
  */
 export function Field({ label, secret, noLearning, error, ...rest }) {
+  const reveal = React.useContext(RevealContext);
   // For password boxes: is the password currently shown in plain text?
   // Starts hidden every time the screen opens.
   const [revealed, setRevealed] = React.useState(false);
@@ -206,7 +260,8 @@ export function Field({ label, secret, noLearning, error, ...rest }) {
           // Each focus and keystroke ends any password-manager session (see
           // cancelAutofill in modules/klv-signer-requests), so nothing typed
           // here is ever offered for saving.
-          onFocus={(e) => { cancelAutofill(); if (rest.onFocus) rest.onFocus(e); }}
+          // reveal: scroll this box into view if the keyboard would hide it.
+          onFocus={(e) => { cancelAutofill(); reveal(); if (rest.onFocus) rest.onFocus(e); }}
           onChangeText={(t) => { cancelAutofill(); if (rest.onChangeText) rest.onChangeText(t); }}
         />
         {secret ? (
