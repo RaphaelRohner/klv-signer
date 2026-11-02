@@ -68,6 +68,14 @@ package couldn't send anything out.
    - (added 26 Oct 2026, weekly check) [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
      in `zod` 3.25.76 (a very large input can use up memory), used only by
      `@expo/cli` on the Mac; not in the app.
+   - (added 2 Nov 2026, weekly check) [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4)
+     in `deepmerge` 4.3.1 (inside `@expo/config`), and
+     [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) /
+     [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)
+     in `glob` 13.0.6 and `minimatch` 10.2.6 (inside `@expo/cli`,
+     `@expo/fingerprint` and `@expo/metro-config`): build tools on the Mac
+     only; Expo's app code doesn't load them. `node-forge` also gained 11
+     more advisories (TLS, PEM, PKCS#12), still only inside `@expo/cli`.
 
    `npm audit` lists `expo`, `react-native`, `metro` and even
    `react-native-quick-crypto` as "high" only because they *depend on*

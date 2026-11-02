@@ -25,6 +25,11 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
   weekly check 26 Oct): that's Klever's message format. SECURITY.md
   ("Misleading text to sign", Partly) and SIGNER-PROTOCOL.md 3c tell
   services to put their name and a one-time number in the text.
+- 2 Nov 2026 — The look-alike letter rule only catches a word that *mixes*
+  alphabets (Low, weekly check 2 Nov, a known limit): a word written
+  entirely in Cyrillic look-alikes ("СОРЕ" looks like "COPE") or with an
+  Armenian look-alike "o" passes. A text can't move anything, and services
+  are told to put their name and a one-time number in it (SIGNER-PROTOCOL.md 3c).
 
 ## Fixed
 

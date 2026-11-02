@@ -1,0 +1,57 @@
+# Runs the Signer's automatic tests on GitHub's own computers
+# (added 2 Nov 2026: since 26 Oct the weekly Claude check's cloud sandbox
+# isn't allowed to run the project's code any more, so it can't run the
+# tests itself).
+#
+# When it runs:
+#   - on every push to `main` (so every change is tested),
+#   - every Monday at 06:17 UTC, before the weekly Claude check at 8:54
+#     Dublin time, which reads this result into its report,
+#   - by hand from the repo's "Actions" tab ("Run workflow").
+#
+# What it does, in plain words: takes a fresh copy of the code, installs the
+# exact packages from app/package-lock.json, runs all tests (`npm test`),
+# then lists `npm audit` warnings for information only (they never turn the
+# run red; the weekly check decides what they mean, see DEPENDENCIES.md).
+# A failed test shows as a red cross next to the commit, and GitHub emails
+# the owner.
+#
+# Note: GitHub pauses scheduled runs in a repository with no activity for
+# 60 days and emails a warning first; one click on "Enable workflow" in the
+# Actions tab turns it back on.
+#
+# Read-only: it never changes, builds or publishes anything.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Fixed version, like the Hub (GitHub moves "ubuntu-latest" over time).
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm test
+      # For information only: shows this week's security warnings in the log.
+      - name: npm audit (information only)
+        if: always()
+        continue-on-error: true
+        run: npm audit --omit=dev

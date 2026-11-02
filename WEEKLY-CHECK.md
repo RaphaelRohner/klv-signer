@@ -15,7 +15,12 @@ on too (below).
 
 1. Gets the latest code from `https://github.com/RaphaelRohner/klv-signer`
    (branch `main`).
-2. `npm ci` and `npm test` in `app/` (all tests must pass).
+2. The tests: all must pass. Since 26 Oct 2026 the check's cloud sandbox
+   isn't allowed to run the project's code, so GitHub runs them instead
+   (`.github/workflows/tests.yml`: every Monday at 06:17 UTC and on every
+   push) and the check reads that result. It still tries `npm ci` and
+   `npm test` itself first. On the Mac, Claude runs them on request ("run the
+   Signer tests on my Mac").
 3. `npm audit --omit=dev`, and for every finding where it sits
    (`npm ls <package> --omit=dev`): only Expo's build tools (known, see
    DEPENDENCIES.md, finding 1) or something new that ends up in the app?
@@ -66,7 +71,7 @@ nothing.
 
 ## The instruction the scheduled task runs
 
-(Used as the scheduled task's prompt, word for word since 19 Oct 2026.
+(Used as the scheduled task's prompt, word for word since 2 Nov 2026.
 Every run starts with no memory of earlier ones, so it's complete on its own.)
 
 ```
@@ -79,13 +84,22 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
    OPEN-FINDINGS.md first. WEEKLY-CHECK.md describes this check; follow it
    if it differs from this text.
 2. In app/: npm ci, then npm test. Note the pass/fail count and any failures.
-   (If npm ci fails because of the network, say so and continue with what
-   is possible.)
+   If the sandbox blocks running the project's code (as it has since 26 Oct
+   2026), install with npm ci --ignore-scripts for the dependency checks, and
+   instead read GitHub's latest run of the "Tests" workflow:
+   curl -s "https://api.github.com/repos/RaphaelRohner/klv-signer/actions/workflows/tests.yml/runs?per_page=5"
+   Report its result (success/failure), date and commit, and whether that
+   commit is the latest on main. If it failed, give the failing tests from
+   the run's log if you can read it. If you can't reach it either, say:
+   "Tests: not run in the cloud. To run them, tell Claude in the KLV Signer
+   App project: run the Signer tests on my Mac." (If npm ci fails because of
+   the network, say so and continue with what is possible.)
 3. In app/: npm audit --omit=dev --json. For each finding,
    npm ls <package> --omit=dev to see where it sits. Known and accepted:
-   braces/micromatch, node-forge, uuid and zod under @expo/cli, and source-map-js
-   under postcss/@expo/metro-config (build tools only, DEPENDENCIES.md
-   finding 1). Flag anything else, especially in packages that end up in
+   braces/micromatch, node-forge, uuid, zod, deepmerge, glob and minimatch
+   under the Expo build tools (@expo/cli, @expo/config, @expo/fingerprint,
+   @expo/metro-config), and source-map-js under postcss/@expo/metro-config
+   (build tools only, DEPENDENCIES.md finding 1). Flag anything else, especially in packages that end up in
    the app.
 4. In app/: npm outdated for @klever/connect-crypto, @klever/connect-encoding,
    @noble/hashes, @noble/ciphers, @noble/curves, @noble/ed25519,
@@ -94,10 +108,10 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
    version, read its release notes/changelog and say whether it mentions
    security fixes. Do not install anything.
 5. git log --since="8 days ago" --stat (fetch enough history for that). If
-   code changed, review the changed files independently (use separate
-   reviewer agents if available: crypto/key handling, transaction
-   reading/signing, Android/app-to-app, and docs claims vs code; the example
-   app in example/ too). Verify each finding against the code before
+   code changed, ALWAYS review the changed files with four separate
+   reviewer agents, however small the change: (a) crypto/key handling,
+   (b) transaction and text reading/signing, (c) Android/app-to-app,
+   (d) docs claims vs code; the example app in example/ too. Verify each finding against the code before
    reporting it. If nothing changed, do a light spot check of one area,
    chosen by the ISO week number modulo 4 (0 crypto, 1 transactions,
    2 Android, 3 docs claims).
