@@ -36,6 +36,18 @@ on too (below).
 7. Writes the report (below) and ends with a short summary, which is what
    arrives by email.
 
+## Misleading-text variants: collected, fixed monthly
+
+(2 Nov 2026, Raphael.) New Low findings that are only another way to make
+a signed text *look* like something else (look-alike letters, odd
+characters, wording) don't change the verdict. The report lists them under
+"Collected for the monthly round", and they're added to that section of
+OPEN-FINDINGS.md when the report is worked through. On the first Monday of
+each month the report says "Monthly round due" and lists everything
+collected, and they're fixed together. Anything that could make a text pass
+as a transaction or hide/reorder part of what's signed is handled at once,
+as before.
+
 ## The report
 
 - **Verdict in one line:** "All fine", or "Something needs a look", or
@@ -116,14 +128,23 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
    reviewer agents, however small the change: (a) crypto/key handling,
    (b) transaction and text reading/signing, (c) Android/app-to-app,
    (d) docs claims vs code; the example app in example/ too. Verify each finding against the code before
-   reporting it. If nothing changed, do a light spot check of one area,
+   reporting it. A Low finding that is only another way to make a signed
+   TEXT look like something else (look-alike letters, odd characters,
+   wording) is a "misleading-text variant": don't let it change the
+   verdict; list it under "Collected for the monthly round" instead. Anything
+   that could make a text pass as a transaction, or hide or reorder part of
+   what's signed, is a normal finding. If nothing changed, do a light spot check of one area,
    chosen by the ISO week number modulo 4 (0 crypto, 1 transactions,
    2 Android, 3 docs claims).
 6. Open findings: list every point under "Open" in OPEN-FINDINGS.md with its
    severity, and check against the code whether it is still open (say so if
    one looks fixed but is still listed). Any open Medium or higher means at
    least "Something needs a look", even in a week without code changes.
-   (If OPEN-FINDINGS.md doesn't exist, say so.)
+   (If OPEN-FINDINGS.md doesn't exist, say so.) Items under "Collected for
+   the monthly round" don't count as open findings for the verdict. If today
+   is the first Monday of the month, add a section "Monthly round due"
+   listing them all (plus any collected this week); otherwise just give
+   their number.
 7. Also check that the latest GitHub release's Signer APK checksum (its
    .sha256 file) matches app/tools/released-versions.json, if you can
    download it.
@@ -133,7 +154,9 @@ Report only: do NOT change, commit, push or open pull requests or issues anywher
    sit; newer versions of the important packages and whether they're
    security fixes); code changes and review findings with severity
    (High/Medium/Low) and a one-line explanation each; "Still open from
-   earlier" (from OPEN-FINDINGS.md); anything else notable. End with: "To act
+   earlier" (from OPEN-FINDINGS.md); "Collected for the monthly round"
+   (new ones this week, and the monthly list on the first Monday); anything
+   else notable. End with: "To act
    on this, paste this report into a chat in the claude.ai project 'KLV
    Signer App'." Mention nothing secret (there is nothing secret in the
    repository).

@@ -14,6 +14,20 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
   slightly wrong "neighbouring keys" score for some passwords; not a
   security gap.
 
+## Collected for the monthly round (misleading-text variants)
+
+Since 2 Nov 2026 (Raphael): new ways to make a signed TEXT look like
+something else (another look-alike alphabet, odd characters, wording
+tricks) are Low by nature in this setup: a request only comes when the
+owner starts it, from an app he allowed, and a text can never move
+anything. So they no longer turn a weekly report into "Something needs a
+look". They're collected here and fixed together once a month (first
+Monday of the month). Not collected but handled at once, as before:
+anything that could make a text pass as a transaction, hide or reorder
+part of what's signed, or concerns transactions, keys or the Android side.
+
+(none yet)
+
 ## Accepted
 
 - 26 Oct 2026 — The example app's "pass a request on" test screen ships in
@@ -100,6 +114,3 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
 - 19 Oct 2026 — Outdated docs (Low): RELEASING.md examples, DEPENDENCIES.md
   summary, SECURITY.md date, signingRules.js comment.
 
-## Accepted
-
-(none yet)
