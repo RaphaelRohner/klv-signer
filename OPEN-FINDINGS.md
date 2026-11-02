@@ -25,13 +25,16 @@ it to "Fixed" with the date; when it's accepted as it is, move it to
   weekly check 26 Oct): that's Klever's message format. SECURITY.md
   ("Misleading text to sign", Partly) and SIGNER-PROTOCOL.md 3c tell
   services to put their name and a one-time number in the text.
-- 2 Nov 2026 — The look-alike letter rule only catches a word that *mixes*
-  alphabets (Low, weekly check 2 Nov, a known limit): a word written
-  entirely in Cyrillic look-alikes ("СОРЕ" looks like "COPE") or with an
-  Armenian look-alike "o" passes. A text can't move anything, and services
-  are told to put their name and a one-time number in it (SIGNER-PROTOCOL.md 3c).
 
 ## Fixed
+- 2 Nov 2026 — Look-alike letters (Low, weekly check 2 Nov; Signer 0.1.6):
+  a word mixing Latin with Armenian, Cherokee, Coptic, Lisu or Canadian
+  syllabics is now refused too (before: only Cyrillic and Greek). A word
+  written entirely in look-alikes ("СОРЕ" for "COPE") can't be refused
+  (real Russian words look like that), so the approval screen now warns
+  whenever a text has letters that aren't plain Latin, naming the
+  alphabets. Risk was low either way: a text can't move anything, and a
+  look-alike text doesn't pass as the real one at a service.
 
 - 26 Oct 2026 — Second opinion (ChatGPT, on the 0.1.3 text-signing code):
   no transaction-signature bypass, no approval bypass found. Acted on:

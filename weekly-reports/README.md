@@ -15,4 +15,4 @@ history behind it. Nothing in them is secret (no keys, no passwords).
 | [12 Oct 2026](2026-10-12.md) | Something needs a look (1 Medium, 9 Low) | All fixed 19 Oct |
 | [19 Oct 2026](2026-10-19.md) | All fine (2 Low, docs) | Both fixed 19 Oct; missed the open 12 Oct Medium (see file) |
 | [26 Oct 2026](2026-10-26.md) | Something needs a look (6 Low; tests couldn't run in its sandbox) | 3 fixed 26 Oct, 2 accepted, 1 open (not security) |
-| [2 Nov 2026](2026-11-02.md) | Something needs a look (1 Low; new build-tool warnings; tests couldn't run in its sandbox) | Warnings accepted, Low accepted as a known limit; tests run on the Mac (150 pass); GitHub now runs the tests |
+| [2 Nov 2026](2026-11-02.md) | Something needs a look (1 Low; new build-tool warnings; tests couldn't run in its sandbox) | Warnings accepted, Low fixed in 0.1.6; tests run on the Mac (150 pass); GitHub now runs the tests |

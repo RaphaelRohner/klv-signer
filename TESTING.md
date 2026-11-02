@@ -910,6 +910,17 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   can't be sent from the example app (its box stops at 2,000 characters);
   the automatic tests cover it.
 
+**F34. Look-alike letters in a text (2 Nov 2026, Signer 0.1.6)**
+- [ ] Example app → Connect → "Sign a text": replace the text with
+      `Sign in to СОРЕ` (copy it from here: the word is in Cyrillic).
+      The Signer shows the text with a yellow warning under it: "This text
+      contains letters that aren't plain Latin (Cyrillic)…". Reject.
+- [ ] Plain text again (the ready-made one): no warning.
+- [ ] `Grüezi café` (accented Latin): no warning.
+- [ ] `Lօgin` (an Armenian o): refused straight away ("mixes Latin letters
+      with letters of another alphabet").
+- [ ] The version at the bottom of the start screen reads v0.1.6.
+
 **F33. Version on screen, danger zone behind a switch (26 Oct 2026)**
 - [x] Open the Signer: the start screen shows the seal, "KLV Signer" and
       at the bottom the version (e.g. "v0.1.4 · testnet"). It may only flash

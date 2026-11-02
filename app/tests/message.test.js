@@ -20,7 +20,7 @@ import {
 } from '@klever/connect-crypto';
 import { blake2b } from '@noble/hashes/blake2.js';
 import { keccak_256 } from '@noble/hashes/sha3.js';
-import { checkMessageText, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES } from '../src/klever/signMessage.js';
+import { checkMessageText, otherLetters, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES } from '../src/klever/signMessage.js';
 import { ACTIONS, ERRORS, checkRequest, messageSignedReply, PROTOCOL_VERSION } from '../src/requests/protocol.js';
 
 const ch = (cp) => String.fromCodePoint(cp);
@@ -142,11 +142,34 @@ test('second-opinion review (26 Oct 2026): normal spaces pass, look-alike alphab
   // ChatGPT thought the space rule refused normal spaces: it doesn't.
   for (const t of ['hello world', ' leading', 'trailing ', 'two  spaces', 'a b c']) assert.equal(checkMessageText(t), null, t);
   // "Devikins" with a Cyrillic e (U+0435) or a Greek omicron (U+03BF) in "Hub"... in "Login"
-  assert.match(checkMessageText('Sign in to D' + ch(0x0435) + 'vikins') ?? '', /mixes Latin letters with Cyrillic or Greek/);
-  assert.match(checkMessageText('L' + ch(0x03bf) + 'gin') ?? '', /mixes Latin letters with Cyrillic or Greek/);
+  assert.match(checkMessageText('Sign in to D' + ch(0x0435) + 'vikins') ?? '', /mixes Latin letters with letters of another alphabet/);
+  assert.match(checkMessageText('L' + ch(0x03bf) + 'gin') ?? '', /mixes Latin letters with letters of another alphabet/);
   // whole words in Cyrillic or Greek next to Latin words are fine
   assert.equal(checkMessageText(ch(0x041f) + ch(0x0440) + ch(0x0438) + ch(0x0432) + ch(0x0435) + ch(0x0442) + ' Devikins'), null);
   assert.equal(checkMessageText(ch(0x03b1) + ch(0x03b2) + ch(0x03b3) + ' abc'), null);
+});
+
+test('weekly check (2 Nov 2026): more look-alike alphabets refused in a mixed word; other letters get a warning', () => {
+  // A Latin word with an Armenian o (U+0585), a Cherokee A (U+13AA), a Lisu A (U+A4EE),
+  // a Canadian-syllabics C (U+1455) or a Coptic o (U+2C9F) is refused, like Cyrillic and Greek.
+  for (const cp of [0x0585, 0x13aa, 0xa4ee, 0x1455, 0x2c9f]) {
+    assert.match(checkMessageText('L' + ch(cp) + 'gin') ?? '', /mixes Latin letters with letters of another alphabet/, cp.toString(16));
+  }
+  // A word ENTIRELY in Cyrillic look-alikes ("COPE" as C O P E in Cyrillic) is still allowed
+  // (real Russian words look like that too), but the screen warns.
+  const cope = ch(0x0421) + ch(0x041e) + ch(0x0420) + ch(0x0415);
+  assert.equal(checkMessageText('Sign in to ' + cope), null);
+  assert.deepEqual(otherLetters('Sign in to ' + cope), ['Cyrillic']);
+  assert.deepEqual(otherLetters(ch(0x0585) + ch(0x0585)), ['Armenian']);
+  // "Styled" Latin: fullwidth and mathematical letters
+  assert.deepEqual(otherLetters(ch(0xff23) + ch(0xff2f)), ['styled Latin']);
+  assert.deepEqual(otherLetters(ch(0x1d402) + ch(0x1d40e)), ['styled Latin']);
+  // Plain and accented Latin, digits and punctuation: no warning
+  assert.deepEqual(otherLetters('Gr' + ch(0xfc) + 'ezi! Caf' + ch(0xe9) + ' 123, ' + ch(0xf1)), []);
+  assert.deepEqual(otherLetters(HUB_SIGN_IN), []);
+  // several alphabets are all named, once each
+  assert.deepEqual(otherLetters(ch(0x03b1) + ' ' + ch(0x0430) + ch(0x0431) + ' ' + ch(0x4f60)), ['Greek', 'Cyrillic', 'Chinese']);
+  assert.deepEqual(otherLetters(undefined), []);
 });
 
 test('Klever\'s message format, rebuilt by hand: prefix + length in BYTES + text, keccak-256', () => {

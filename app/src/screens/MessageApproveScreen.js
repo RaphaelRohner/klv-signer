@@ -13,6 +13,10 @@
  *   - the text itself, in full, in a box labelled as written by the app.
  *     (Here the app's text IS what gets signed – shown exactly, all of it,
  *     after checkMessageText refused anything hidden or reordering.)
+ *   - since 2 Nov 2026: a warning under the text when it contains letters
+ *     that aren't plain Latin (otherLetters): some alphabets have letters
+ *     that look exactly like Latin ones, so a name can look right and be
+ *     another one.
  *
  * Approving asks for your app password, or your fingerprint/face if you
  * switched that on (Android's prompt says "Sign a text"). Same rules as for
@@ -27,7 +31,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
-import { signWalletMessage } from '../klever/signMessage.js';
+import { otherLetters, signWalletMessage } from '../klever/signMessage.js';
 import DeviceWarning from '../components/DeviceWarning.js';
 import BiometricButton from '../components/BiometricButton.js';
 import {
@@ -58,6 +62,7 @@ export default function MessageApproveScreen({
   usePreventScreenCapture('approve-message');
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
+  const alphabets = otherLetters(text);
 
   /** Signs with the unlocked key, unless signing was switched off meanwhile. */
   function signWithKey(privateKey) {
@@ -103,6 +108,17 @@ export default function MessageApproveScreen({
         <Text style={styles.cardLabel}>The text · written by the app</Text>
         <Text selectable style={styles.text}>{text}</Text>
       </View>
+
+      {/* Letters that aren't plain Latin: some look exactly like Latin ones (2 Nov 2026). */}
+      {alphabets.length > 0 ? (
+        <Notice kind="warning">
+          <Body>
+            <Strong>This text contains letters that aren't plain Latin</Strong> ({alphabets.join(', ')}). Some of them
+            look exactly like Latin letters, so a name or word can look right and still be a different one. Read it
+            carefully. Who is asking is shown at the top, as Android reports it.
+          </Body>
+        </Notice>
+      ) : null}
 
       <Body muted style={{ marginTop: 8 }}>
         Only sign texts you expect, from apps you trust. If the text asks for something you didn't start, or doesn't

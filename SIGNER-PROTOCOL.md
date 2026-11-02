@@ -246,8 +246,12 @@ Extra `text`: the text to sign. **The Signer refuses** (`error:
 INVALID_REQUEST`, with a plain-words `message`) a text that is empty, longer
 than 2,000 characters or 40 lines, contains invisible or special characters
 (only line breaks are allowed: no tabs, zero-width or direction-changing
-marks, variation selectors, …), or mixes right-to-left letters with other
-letters or digits. Everything you send is shown, so write it for people:
+marks, variation selectors, …), mixes right-to-left letters with other
+letters or digits, or has a word mixing Latin letters with look-alike
+letters of another alphabet (Cyrillic, Greek, Armenian, Cherokee, Coptic,
+Lisu, Canadian syllabics). Texts in other alphabets are fine, but since
+Signer 0.1.6 the approval screen shows them with a warning to read
+carefully, so plain Latin reads best. Everything you send is shown, so write it for people:
 say who is asking, why, and that it's not a transaction.
 
 What's signed is **Klever's message format**, the same as the Klever

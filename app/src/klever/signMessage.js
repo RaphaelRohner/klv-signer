@@ -32,14 +32,25 @@
  *     - invisible characters and control codes (only line breaks allowed),
  *       direction-changing marks, blank-looking letters, combining
  *       "enclosing" marks – anything that could hide or rearrange text;
- *     - a word mixing Latin letters with Cyrillic or Greek look-alikes
- *       (second-opinion review, 26 Oct 2026);
+ *     - a word mixing Latin letters with letters of an alphabet that has
+ *       Latin look-alikes: Cyrillic, Greek (second-opinion review, 26 Oct
+ *       2026), and since 2 Nov 2026 also Armenian, Cherokee, Coptic, Lisu
+ *       and Canadian syllabics (weekly check of 2 Nov 2026);
  *     - marks that strike through or pile up on letters (3 or more), spaces
  *       other than the normal one, more than two empty lines in a row
  *       (weekly check, 26 Oct 2026);
  *     - text mixing right-to-left letters (Arabic, Hebrew, …) with other
  *       letters or digits: the screen could show its parts in another order
  *       than they're signed (same rule as for app names, appTrust.js).
+ *
+ * WHAT IS SHOWN WITH A WARNING (otherLetters, 2 Nov 2026)
+ *   A word written ENTIRELY in look-alike letters ("СОРЕ" in Cyrillic looks
+ *   like "COPE") can't be refused: real Russian words are made of such
+ *   letters too ("ОКНО", "СОК"). So any text with letters that aren't plain
+ *   Latin (another alphabet, or "styled" Latin like fullwidth ＣＯＰＥ or
+ *   mathematical 𝐂𝐎𝐏𝐄) is signed only after a warning on the approval
+ *   screen, naming the alphabets, so you read it twice. (Weekly check of
+ *   2 Nov 2026, Low; Raphael chose the fix together with the extra alphabets.)
  *
  * The private key itself is never returned, stored or shown.
  * Plain calculations only (no screens), so the automated tests check them.
@@ -66,9 +77,32 @@ const STACKED = /\p{M}{3,}/u;
 const ODD_SPACE = /(?! )\p{Zs}/u;
 // Since the second-opinion review of 26 Oct 2026: a word mixing Latin letters
 // with Cyrillic or Greek ones can fake a name (a Cyrillic "e" in "Devikins").
+// Since 2 Nov 2026 also the other alphabets with Latin look-alikes: Armenian
+// ("օ" = o), Cherokee ("Ꭺ" = A), Coptic, Lisu ("ꓮ" = A) and Canadian
+// syllabics ("ᑕ" = C).
 const WORD = /[\p{L}\p{M}\p{N}]+/gu;
 const LATIN = /\p{Script=Latin}/u;
-const CYRILLIC_OR_GREEK = /[\p{Script=Cyrillic}\p{Script=Greek}]/u;
+const LOOK_ALIKE_ALPHABET = /[\p{Script=Cyrillic}\p{Script=Greek}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Coptic}\p{Script=Lisu}\p{Script=Canadian_Aboriginal}]/u;
+// For the warning (otherLetters): which alphabet a letter that isn't plain
+// Latin belongs to. Fullwidth Latin (ＡＢＣ) counts as Latin to Unicode but is
+// "styled", like the mathematical letters (𝐀𝐁𝐂, Unicode calls them "Common").
+const LETTER = /\p{L}/u;
+const STYLED_LATIN = /[\uFF21-\uFF3A\uFF41-\uFF5A\u{1D400}-\u{1D7FF}]/u;
+const ALPHABETS = [
+  ['Cyrillic', /\p{Script=Cyrillic}/u],
+  ['Greek', /\p{Script=Greek}/u],
+  ['Armenian', /\p{Script=Armenian}/u],
+  ['Cherokee', /\p{Script=Cherokee}/u],
+  ['Coptic', /\p{Script=Coptic}/u],
+  ['Lisu', /\p{Script=Lisu}/u],
+  ['Canadian syllabics', /\p{Script=Canadian_Aboriginal}/u],
+  ['Georgian', /\p{Script=Georgian}/u],
+  ['Hebrew', /\p{Script=Hebrew}/u],
+  ['Arabic', /\p{Script=Arabic}/u],
+  ['Chinese', /\p{Script=Han}/u],
+  ['Japanese', /[\p{Script=Hiragana}\p{Script=Katakana}]/u],
+  ['Korean', /\p{Script=Hangul}/u],
+];
 const RTL = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u;
 const OTHER = /[\p{N}]|(?![\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}])\p{L}/u;
 
@@ -93,8 +127,8 @@ export function checkMessageText(text) {
     return 'The text contains marks that strike through or pile up on letters, which makes it hard to read, so it isn\'t signed.';
   }
   for (const word of text.match(WORD) || []) {
-    if (LATIN.test(word) && CYRILLIC_OR_GREEK.test(word)) {
-      return `The word "${word}" mixes Latin letters with Cyrillic or Greek ones that look the same, so it could fake a name. The text isn't signed.`;
+    if (LATIN.test(word) && LOOK_ALIKE_ALPHABET.test(word)) {
+      return `The word "${word}" mixes Latin letters with letters of another alphabet (such as Cyrillic or Greek) that look the same, so it could fake a name. The text isn't signed.`;
     }
   }
   if (ODD_SPACE.test(text)) {
@@ -107,6 +141,26 @@ export function checkMessageText(text) {
     return 'The text mixes right-to-left writing with other letters or digits, which can show it in a different order than it would be signed. It isn\'t signed.';
   }
   return null;
+}
+
+/**
+ * otherLetters — which letters in the text aren't plain Latin? (2 Nov 2026)
+ * For the warning on the approval screen; doesn't refuse anything.
+ * Accented Latin letters (ä, é, ñ …) count as plain Latin.
+ *
+ * @param {string} text
+ * @returns {string[]}  e.g. ['Cyrillic'], ['styled Latin'], [] when all plain
+ */
+export function otherLetters(text) {
+  const found = new Set();
+  for (const c of typeof text === 'string' ? text : '') {
+    if (!LETTER.test(c)) continue;
+    if (STYLED_LATIN.test(c)) { found.add('styled Latin'); continue; }
+    if (LATIN.test(c)) continue;
+    const alphabet = ALPHABETS.find(([, re]) => re.test(c));
+    found.add(alphabet ? alphabet[0] : 'another alphabet');
+  }
+  return [...found];
 }
 
 /**
