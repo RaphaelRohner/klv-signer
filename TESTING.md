@@ -920,6 +920,20 @@ Install both new builds over the old ones (wallet and allowed apps stay).
 - [x] `Lօgin` (an Armenian o): refused straight away ("mixes Latin letters
       with letters of another alphabet").
 - [x] The version at the bottom of the start screen reads v0.1.6.
+- F34 passed on 2 Nov 2026 (Signer 0.1.6): warning for the Cyrillic word,
+  none for plain or accented Latin, the Armenian o refused. ✔ Found while
+  testing: the keyboard hid text boxes → F35.
+
+**F35. The keyboard doesn't hide the box you type in (2 Nov 2026, Signer 0.1.6)**
+- [ ] Unlock screen: tap the password box → it stays visible above the
+      keyboard.
+- [ ] Sign a transaction or a text from the example app: tap the password
+      box at the bottom → the page scrolls so the box is above the keyboard.
+- [ ] Settings → Change password: tap the first box, then go to the second
+      and third with the keyboard open → each one scrolls into view.
+- [ ] Optional (only with a test wallet): Restore → tap a box in the lower
+      rows of the recovery words → it scrolls into view; "next" on the
+      keyboard moves on and keeps the next box visible.
 
 **F33. Version on screen, danger zone behind a switch (26 Oct 2026)**
 - [x] Open the Signer: the start screen shows the seal, "KLV Signer" and
