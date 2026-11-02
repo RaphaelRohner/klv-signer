@@ -23,15 +23,18 @@
  *   modules/klv-signer-check  the tiny native seal check (2c)
  *   plugins/withKlvSigner.js  makes the Signer visible to this app (2a)
  *   src/kleverTx.js           preparing and sending transfers on testnet
+ *   src/keepFocusedVisible.js keeps the box you type in above the keyboard
+ *                             (not Signer-specific; 2 Nov 2026)
  */
 
 import React, { useState } from 'react';
 import {
-  ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, KeyboardAvoidingView, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { getSignerAddress, signWithSigner, signTextWithSigner, forwardTest } from './src/klvSigner';
 import appJson from './app.json';
+import { useKeepFocusedVisible } from './src/keepFocusedVisible';
 import {
   broadcastSigned, buildTransfer, buildTransfers, explorerUrl, getKlvBalance, klvToUnits, unitsToKlv, MAX_TRANSFERS, parseNftList,
 } from './src/kleverTx';
@@ -53,6 +56,7 @@ export default function App() {
   const [forwardResult, setForwardResult] = useState(null); // test F30, see runForwardTest
   const [text, setText] = useState('Hello from the KLV Signer Example.\nThis is NOT a transaction.');
   const [textSignature, setTextSignature] = useState(null);
+  const { scrollProps, reveal } = useKeepFocusedVisible(); // the keyboard doesn't hide the boxes
 
   // "Sign a text": not a transaction, nothing is sent.
   async function signText() {
@@ -149,9 +153,11 @@ export default function App() {
   }
 
   return (
-    <View style={s.safe}>
+    // KeyboardAvoidingView: the page gets shorter by the keyboard's height
+    // (the app draws edge to edge, so Android doesn't do this itself).
+    <KeyboardAvoidingView style={s.safe} behavior="padding">
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
+      <ScrollView {...scrollProps} contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
         <Text style={s.title}>KLV Signer Example</Text>
         <Text style={s.badge}>TESTNET · practice network, no real value</Text>
         <Text style={s.muted}>
@@ -173,16 +179,19 @@ export default function App() {
           <View style={s.card}>
             <Text style={s.label}>Receiver</Text>
             <TextInput
+              onFocus={reveal}
               style={s.input} value={receiver} onChangeText={setReceiver} placeholder="klv1…"
               placeholderTextColor={C.muted} autoCapitalize="none" autoCorrect={false}
             />
             <Text style={[s.label, s.gap]}>Amount (KLV)</Text>
             <TextInput
+              onFocus={reveal}
               style={s.input} value={amount} onChangeText={setAmount} placeholder="0.1"
               placeholderTextColor={C.muted} keyboardType="decimal-pad"
             />
             <Text style={[s.label, s.gap]}>Or send NFTs (optional)</Text>
             <TextInput
+              onFocus={reveal}
               style={s.input} value={nft} onChangeText={setNft} placeholder="SGNTEST-3UC2/2, SGNTEST-3UC2/3"
               placeholderTextColor={C.muted} autoCapitalize="characters" autoCorrect={false} multiline
             />
@@ -198,6 +207,7 @@ export default function App() {
           <View style={s.card}>
             <Text style={s.label}>Sign a text (not a transaction)</Text>
             <TextInput
+              onFocus={reveal}
               style={s.input} value={text} onChangeText={(t) => { setText(t); setTextSignature(null); }}
               placeholderTextColor={C.muted} multiline maxLength={2000}
             />
@@ -243,7 +253,7 @@ export default function App() {
           </Text>
         ) : null}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

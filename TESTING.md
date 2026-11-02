@@ -910,6 +910,19 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   can't be sent from the example app (its box stops at 2,000 characters);
   the automatic tests cover it.
 
+**F33. Version on screen, danger zone behind a switch (26 Oct 2026)**
+- [x] Open the Signer: the start screen shows the seal, "KLV Signer" and
+      at the bottom the version (e.g. "v0.1.4 · testnet"). It may only flash
+      for a moment.
+- [x] Unlock screen: the version at the top left, TESTNET on the right.
+- [x] Settings → Danger zone: only a switch "Show the danger zone", off.
+      Switch on → **Remove wallet from this phone…** appears. Tap it, then
+      switch off → it's all hidden again. Leave Settings and come back →
+      the switch is off again.
+- F33 passed on 26 Oct 2026 (Signer 0.1.4): version on the start and
+  unlock screens; the danger zone stays hidden until switched on, and is
+  off again after leaving Settings. ✔
+
 **F34. Look-alike letters in a text (2 Nov 2026, Signer 0.1.6)**
 - [x] Example app → Connect → "Sign a text": replace the text with
       `Sign in to СОРЕ` (copy it from here: the word is in Cyrillic).
@@ -925,28 +938,24 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   testing: the keyboard hid text boxes → F35.
 
 **F35. The keyboard doesn't hide the box you type in (2 Nov 2026, Signer 0.1.6)**
-- [ ] Unlock screen: tap the password box → it stays visible above the
+- [x] Unlock screen: tap the password box → it stays visible above the
       keyboard.
-- [ ] Sign a transaction or a text from the example app: tap the password
+- [x] Sign a transaction or a text from the example app: tap the password
       box at the bottom → the page scrolls so the box is above the keyboard.
-- [ ] Settings → Change password: tap the first box, then go to the second
+- [x] Settings → Change password: tap the first box, then go to the second
       and third with the keyboard open → each one scrolls into view.
 - [ ] Optional (only with a test wallet): Restore → tap a box in the lower
       rows of the recovery words → it scrolls into view; "next" on the
       keyboard moves on and keeps the next box visible.
+- F35 passed on 2 Nov 2026 (Signer 0.1.6): unlock, signing and change
+  password keep the box above the keyboard. ✔ (Restore not tried.)
 
-**F33. Version on screen, danger zone behind a switch (26 Oct 2026)**
-- [x] Open the Signer: the start screen shows the seal, "KLV Signer" and
-      at the bottom the version (e.g. "v0.1.4 · testnet"). It may only flash
-      for a moment.
-- [x] Unlock screen: the version at the top left, TESTNET on the right.
-- [x] Settings → Danger zone: only a switch "Show the danger zone", off.
-      Switch on → **Remove wallet from this phone…** appears. Tap it, then
-      switch off → it's all hidden again. Leave Settings and come back →
-      the switch is off again.
-- F33 passed on 26 Oct 2026 (Signer 0.1.4): version on the start and
-  unlock screens; the danger zone stays hidden until switched on, and is
-  off again after leaving Settings. ✔
+**F36. The example app: the keyboard doesn't hide its boxes (2 Nov 2026, example app 0.1.5)**
+- [ ] Example app → Connect → tap **Amount**, then the NFT box → each stays
+      visible above the keyboard.
+- [ ] Tap the **Sign a text** box (further down) → the page scrolls so the
+      box is above the keyboard.
+- [ ] The rest works as before: send 0.1 KLV, and sign a text.
 
 ---
 

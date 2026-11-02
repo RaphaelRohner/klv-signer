@@ -2,13 +2,13 @@
   "expo": {
     "name": "KLV Signer Example",
     "slug": "klv-signer-example",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#121214",
     "android": {
       "package": "com.raphaelrohner.klvsignerexample",
-      "versionCode": 5,
+      "versionCode": 6,
       "permissions": []
     },
     "plugins": [
