@@ -951,11 +951,13 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   password keep the box above the keyboard. ✔ (Restore not tried.)
 
 **F36. The example app: the keyboard doesn't hide its boxes (2 Nov 2026, example app 0.1.5)**
-- [ ] Example app → Connect → tap **Amount**, then the NFT box → each stays
+- [x] Example app → Connect → tap **Amount**, then the NFT box → each stays
       visible above the keyboard.
-- [ ] Tap the **Sign a text** box (further down) → the page scrolls so the
+- [x] Tap the **Sign a text** box (further down) → the page scrolls so the
       box is above the keyboard.
-- [ ] The rest works as before: send 0.1 KLV, and sign a text.
+- [x] The rest works as before: send 0.1 KLV, and sign a text.
+- F36 passed on 2 Nov 2026 (example app 0.1.5): the boxes stay above the
+  keyboard, sending and signing a text work as before. ✔
 
 ---
 
