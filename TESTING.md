@@ -960,12 +960,15 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   keyboard, sending and signing a text work as before. ✔
 
 **F37. Latin-looking special characters get the warning (2 Nov 2026, Signer 0.1.6)**
-- [ ] Example app → "Sign a text": `Sign in to Devⅰkins` (the ⅰ is a
+- [x] Example app → "Sign a text": `Sign in to Devⅰkins` (the ⅰ is a
       Roman-numeral character; copy it from here) → the Signer shows the
       yellow warning naming "styled or unusual Latin". Reject.
-- [ ] `pɑypal` (a phonetic ɑ) → the same warning. Reject.
-- [ ] `Lⵔgin` (a Tifinagh letter) → refused straight away.
-- [ ] `Grüße, Łódź, İstanbul` → no warning.
+- [x] `pɑypal` (a phonetic ɑ) → the same warning. Reject.
+- [x] `Lⵔgin` (a Tifinagh letter) → refused straight away.
+- [x] `Grüße, Łódź, İstanbul` → no warning.
+- F37 passed on 3 Nov 2026 (Signer 0.1.6, example app 0.1.5): the warning
+  for the Roman-numeral ⅰ and the phonetic ɑ, Tifinagh refused, no warning
+  for German, Polish and Turkish letters. ✔
 
 ---
 
