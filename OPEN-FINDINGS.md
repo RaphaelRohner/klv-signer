@@ -26,7 +26,12 @@ Monday of the month). Not collected but handled at once, as before:
 anything that could make a text pass as a transaction, hide or reorder
 part of what's signed, or concerns transactions, keys or the Android side.
 
-(none yet)
+- Low (weekly check 9 Nov 2026) — Some unusual Latin letters get no
+  warning, e.g. `ǀ` (dental click) used for "l" ("Kǀever") and small-capital
+  `ꜱ`.
+- Low (weekly check 9 Nov 2026) — Letter-like symbols are skipped by the
+  check, so a text using them shows no warning, e.g. circled `Ⓓ`
+  ("Ⓓevikins") and squared letters.
 
 ## Accepted
 
