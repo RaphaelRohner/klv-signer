@@ -153,4 +153,4 @@ that affects a row above.
 - [WalletScrutiny: Methodology](https://walletscrutiny.com/methodology/)
 - [Google Play: Cryptocurrency Exchanges and Software Wallets policy](https://support.google.com/googleplay/android-developer/answer/16329703?hl=en)
 
-_Last updated 26 Oct 2026._
+_Last updated 2 Nov 2026 (Signer 0.1.6)._
