@@ -970,6 +970,23 @@ Install both new builds over the old ones (wallet and allowed apps stay).
   for the Roman-numeral ⅰ and the phonetic ɑ, Tifinagh refused, no warning
   for German, Polish and Turkish letters. ✔
 
+**F38. "Show exact characters" on the text-signing screen (21 Nov 2026, Signer 0.1.7; suggested by jenniferseward)**
+- [ ] Example app → "Sign a text": `Sign in to Devikins` → the Signer opens the
+      approval screen. Tap **Show exact characters** → the text appears again
+      in a second box, and the note says "Only plain keyboard characters".
+      Tap **Hide exact characters** → the box disappears. Reject.
+- [ ] `Grüße СОРЕ` (the second word is Cyrillic; copy it from here) → the
+      yellow "Cyrillic" warning as before. Tap **Show exact characters** →
+      `Gr[U+00FC][U+00DF]e [U+0421][U+041E][U+0420][U+0415]`, with the codes
+      in yellow, and a list below: ü and ß as "Latin letter beyond A–Z",
+      С О Р Е as "Cyrillic letter", each with its bytes. Reject.
+- [ ] Two lines (`Line one` Enter `Line two`) → the view shows `[U+000A]`
+      at the end of the first line and the second line below it. Reject.
+- [ ] The reviewer's case: copy `Sign in to Dеvikins​` from here (it has a
+      Cyrillic е **and** an invisible zero-width space at the end) into the
+      example app's "Sign a text" box → refused straight away with "invisible
+      or special characters", no approval screen.
+
 ---
 
 ## Good to know

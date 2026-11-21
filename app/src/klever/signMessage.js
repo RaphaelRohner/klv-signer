@@ -56,6 +56,16 @@
  *   The phonetic and Roman-numeral cases came from the review the same
  *   evening.) Accented letters (é, ü, ł, ß, ı …) count as plain Latin.
  *
+ * THE "EXACT CHARACTERS" VIEW (characterView, 21 Nov 2026)
+ *   On the approval screen you can switch to a view that shows the text with
+ *   every character that isn't a plain keyboard character (A–Z, a–z, 0–9,
+ *   punctuation, the normal space) written as its code, e.g. "D[U+0435]vikins",
+ *   plus a list of those characters with their alphabet and their bytes. So
+ *   you can see exactly which characters will be signed without relying on
+ *   how the phone's font draws them. It adds to the refusals and warnings
+ *   above; it doesn't replace them. (Suggested by jenniferseward, Klever
+ *   forum, 21 Nov 2026.)
+ *
  * The private key itself is never returned, stored or shown.
  * Plain calculations only (no screens), so the automated tests check them.
  */
@@ -175,6 +185,80 @@ export function otherLetters(text) {
     found.add('another alphabet');
   }
   return [...found];
+}
+
+/**
+ * characterView — the text as exact characters, for the approval screen's
+ * "Show exact characters" view (21 Nov 2026, suggested by jenniferseward).
+ * Doesn't refuse or change anything; it only describes what will be signed.
+ *
+ * Plain keyboard characters (codes 32–126: A–Z, a–z, 0–9, punctuation and the
+ * normal space) are kept as they are. Every other character becomes a code
+ * like U+0435, so it can't hide behind a font that draws it like a Latin
+ * letter. A line break is shown as U+000A and then really breaks the line,
+ * so the layout stays readable.
+ *
+ * @param {string} text
+ * @returns {{
+ *   parts: Array<{ plain: string } | { code: string, lineBreak?: boolean }>,
+ *   special: Array<{ char: string, code: string, what: string, bytes: string, count: number }>
+ * }}
+ *   parts:   the text in order, plain stretches and codes;
+ *   special: each non-plain character once, in order of first appearance,
+ *            with what it is, its UTF-8 bytes (what's really in the signed
+ *            data) and how often it appears.
+ */
+export function characterView(text) {
+  const parts = [];
+  const special = new Map();
+  const encoder = new TextEncoder();
+  let plain = '';
+  for (const c of typeof text === 'string' ? text : '') {
+    const cp = c.codePointAt(0);
+    if (cp >= 0x20 && cp <= 0x7e) { plain += c; continue; } // plain keyboard character
+    if (plain) { parts.push({ plain }); plain = ''; }
+    const code = codeOf(cp);
+    parts.push(cp === 0x0a ? { code, lineBreak: true } : { code });
+    const seen = special.get(code);
+    if (seen) seen.count += 1;
+    else {
+      const bytes = [...encoder.encode(c)].map((b) => b.toString(16).padStart(2, '0')).join(' ');
+      special.set(code, { char: c, code, what: describeCharacter(c), bytes, count: 1 });
+    }
+  }
+  if (plain) parts.push({ plain });
+  return { parts, special: [...special.values()] };
+}
+
+/** "U+0435" for a code point (at least 4 hex digits, capital letters). */
+function codeOf(cp) {
+  return 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
+}
+
+/**
+ * describeCharacter — what a non-plain character is, in plain words, e.g.
+ * "Cyrillic letter", "Latin letter with accent", "line break". Used by
+ * characterView. Only a rough kind, not Unicode's full name (that list
+ * would add megabytes to the app); together with the code, anyone can look
+ * the character up.
+ */
+function describeCharacter(c) {
+  if (c === '\n') return 'line break';
+  if (/\p{M}/u.test(c)) return 'mark that combines with the character before it';
+  if (/\p{Nd}/u.test(c)) return 'digit that isn\'t 0–9'; // e.g. Arabic-Indic or fullwidth digits
+  if (LETTER_OR_NUMBER.test(c)) { // letters, and letter-like numbers such as the Roman numeral Ⅷ
+    if (MATH_GREEK.test(c)) return 'Greek letter (styled)';
+    const alphabet = ALPHABETS.find(([, re]) => re.test(c));
+    if (alphabet) return `${alphabet[0]} letter`;
+    if (UNUSUAL_LATIN.test(c) || c.normalize('NFKC') !== c) return 'styled or unusual Latin character';
+    if (LATIN.test(c)) return 'Latin letter beyond A–Z (accented or special, e.g. é ü ß)';
+    return 'letter of another alphabet';
+  }
+  if (/\p{N}/u.test(c)) return 'number sign (e.g. ² or ½)';
+  if (/\p{P}/u.test(c)) return 'punctuation';
+  if (/\p{S}/u.test(c)) return 'symbol';
+  if (/\p{Z}/u.test(c)) return 'space';
+  return 'other character';
 }
 
 /**

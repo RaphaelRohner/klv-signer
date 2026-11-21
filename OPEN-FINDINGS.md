@@ -46,6 +46,16 @@ part of what's signed, or concerns transactions, keys or the Android side.
   services to put their name and a one-time number in the text.
 
 ## Fixed
+- 21 Nov 2026 — Outside feedback by jenniferseward (Signer 0.1.7):
+  (1) "a text mixing Latin/Cyrillic plus zero-width characters must be
+  caught before any signature, not only on the final screen" – checked:
+  it's refused when the request arrives, before the approval screen opens,
+  and the signing step refuses it again; a test now covers exactly this
+  case. (2) Suggested a view of the exact code points: added as "Show exact
+  characters" on the text-signing screen (each non-plain character as
+  U+XXXX, highlighted, with its alphabet and UTF-8 bytes). It also makes the
+  two collected look-alike cases above (ǀ, ꜱ, Ⓓ) visible as codes; their
+  warnings stay for the monthly round.
 - 2 Nov 2026 — Look-alike letters (Low, weekly check 2 Nov; Signer 0.1.6):
   a word mixing Latin with Armenian, Cherokee, Coptic, Lisu, Canadian
   syllabics, Georgian or Tifinagh is now refused too (before: only Cyrillic

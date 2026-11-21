@@ -20,7 +20,9 @@ import {
 } from '@klever/connect-crypto';
 import { blake2b } from '@noble/hashes/blake2.js';
 import { keccak_256 } from '@noble/hashes/sha3.js';
-import { checkMessageText, otherLetters, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES } from '../src/klever/signMessage.js';
+import {
+  characterView, checkMessageText, otherLetters, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES,
+} from '../src/klever/signMessage.js';
 import { ACTIONS, ERRORS, checkRequest, messageSignedReply, PROTOCOL_VERSION } from '../src/requests/protocol.js';
 
 const ch = (cp) => String.fromCodePoint(cp);
@@ -223,4 +225,40 @@ test('the Android side knows SIGN_MESSAGE and its "text" value', () => {
   assert.ok(kt.includes(`const val ACTION_SIGN_MESSAGE = "${ACTIONS.SIGN_MESSAGE}"`));
   assert.match(kt, /EXTRA_TEXT to \d+/);
   assert.ok(activity.includes('SignerProtocol.ACTION_SIGN_MESSAGE'));
+});
+
+test('review (jenniferseward, 21 Nov 2026): mixed Latin/Cyrillic plus zero-width is refused before anything is shown', () => {
+  // The reviewer's case: a word mixing a Cyrillic e into Latin, plus a zero-width space.
+  // checkRequest runs when the request arrives, before the approval screen; a refused
+  // text never reaches the screen, and signWalletMessage refuses it again.
+  const request = { action: ACTIONS.SIGN_MESSAGE, extras: { protocolVersion: PROTOCOL_VERSION, text: `Sign in to D${ch(0x0435)}vikins${ch(0x200b)}` } };
+  assert.equal(checkRequest(request).code, ERRORS.INVALID_REQUEST);
+  for (const zw of [0x200b, 0x200c, 0x200d, 0x2060, 0xfeff]) {
+    assert.notEqual(checkMessageText(`Sign${ch(zw)} in`), null, zw.toString(16));
+  }
+  assert.throws(() => signWalletMessage(`D${ch(0x0435)}vikins`, new Uint8Array(32), 'klv1x'), /mixes Latin/);
+});
+
+test('characterView (21 Nov 2026): non-plain characters become codes, plain ones stay', () => {
+  const view = characterView(`Sign in to D${ch(0x0435)}vikins\nGr${ch(0xfc)}${ch(0xfc)}`);
+  assert.deepEqual(view.parts, [
+    { plain: 'Sign in to D' }, { code: 'U+0435' }, { plain: 'vikins' }, { code: 'U+000A', lineBreak: true },
+    { plain: 'Gr' }, { code: 'U+00FC' }, { code: 'U+00FC' },
+  ]);
+  assert.deepEqual(view.special.map((c) => [c.code, c.what, c.bytes, c.count]), [
+    ['U+0435', 'Cyrillic letter', 'd0 b5', 1],
+    ['U+000A', 'line break', '0a', 1],
+    ['U+00FC', 'Latin letter beyond A–Z (accented or special, e.g. é ü ß)', 'c3 bc', 2],
+  ]);
+  // Plain keyboard text: nothing special, one plain part.
+  assert.deepEqual(characterView('Hello, World! 123'), { parts: [{ plain: 'Hello, World! 123' }], special: [] });
+  // Characters outside the basic plane get 5-digit codes and their 4 UTF-8 bytes.
+  const math = characterView(String.fromCodePoint(0x1d402));
+  assert.equal(math.special[0].code, 'U+1D402');
+  assert.equal(math.special[0].bytes, 'f0 9d 90 82');
+  assert.equal(math.special[0].what, 'styled or unusual Latin character');
+  // The codes always add up to exactly the signed text, character by character.
+  const sample = `a${ch(0x0430)}${ch(0x2167)} ${ch(0x0663)}${ch(0xb2)}\n${ch(0x20ac)}`;
+  const rebuilt = characterView(sample).parts.map((p) => (p.plain ?? String.fromCodePoint(parseInt(p.code.slice(2), 16)))).join('');
+  assert.equal(rebuilt, sample);
 });

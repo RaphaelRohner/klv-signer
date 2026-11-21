@@ -17,6 +17,13 @@
  *     that aren't plain Latin (otherLetters): some alphabets have letters
  *     that look exactly like Latin ones, so a name can look right and be
  *     another one.
+ *   - since 21 Nov 2026: a "Show exact characters" switch under the text
+ *     (characterView). It shows the text again with every character that
+ *     isn't a plain keyboard character written as its code (U+0435 …),
+ *     highlighted, plus a list of those characters with their alphabet and
+ *     bytes. So you can check exactly what will be signed without trusting
+ *     the font. Off by default, so the normal screen stays simple.
+ *     (Suggested by jenniferseward, Klever forum.)
  *
  * Approving asks for your app password, or your fingerprint/face if you
  * switched that on (Android's prompt says "Sign a text"). Same rules as for
@@ -31,7 +38,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
-import { otherLetters, signWalletMessage } from '../klever/signMessage.js';
+import { characterView, otherLetters, signWalletMessage } from '../klever/signMessage.js';
 import DeviceWarning from '../components/DeviceWarning.js';
 import BiometricButton from '../components/BiometricButton.js';
 import {
@@ -63,6 +70,9 @@ export default function MessageApproveScreen({
   const [password, setPassword] = useState('');
   const pw = usePasswordCheck();
   const alphabets = otherLetters(text);
+  // "Show exact characters" (21 Nov 2026): off until the user switches it on.
+  const [showCharacters, setShowCharacters] = useState(false);
+  const characters = characterView(text);
 
   /** Signs with the unlocked key, unless signing was switched off meanwhile. */
   function signWithKey(privateKey) {
@@ -108,6 +118,14 @@ export default function MessageApproveScreen({
         <Text style={styles.cardLabel}>The text · written by the app</Text>
         <Text selectable style={styles.text}>{text}</Text>
       </View>
+
+      {/* The exact characters (21 Nov 2026): codes instead of font-drawn letters. */}
+      <Button
+        title={showCharacters ? 'Hide exact characters' : 'Show exact characters'}
+        kind="secondary"
+        onPress={() => setShowCharacters((on) => !on)}
+      />
+      {showCharacters ? <CharacterView view={characters} /> : null}
 
       {/* Letters that aren't plain Latin: some look exactly like Latin ones (2 Nov 2026). */}
       {alphabets.length > 0 ? (
@@ -184,6 +202,48 @@ export default function MessageApproveScreen({
   );
 }
 
+/**
+ * CharacterView — the text with every non-plain character as its code, and a
+ * list of those characters (see characterView in klever/signMessage.js).
+ * Codes are highlighted, so a single odd letter in a long word stands out.
+ */
+function CharacterView({ view }) {
+  return (
+    <View style={styles.charBox}>
+      <Text style={styles.cardLabel}>Exact characters · what is signed</Text>
+      <Text selectable style={styles.text}>
+        {view.parts.map((part, i) => (part.plain !== undefined ? (
+          <Text key={i}>{part.plain}</Text>
+        ) : (
+          // A line break shows its code and then really breaks the line.
+          <Text key={i} style={styles.code}>{`[${part.code}]`}{part.lineBreak ? '\n' : ''}</Text>
+        )))}
+      </Text>
+      {view.special.length === 0 ? (
+        <Text style={styles.charNote}>
+          Only plain keyboard characters: A–Z, a–z, 0–9, punctuation and normal spaces.
+        </Text>
+      ) : (
+        <>
+          <Text style={[styles.charNote, { marginTop: 10 }]}>
+            Characters that aren't plain keyboard characters (A–Z, a–z, 0–9, punctuation, normal space):
+          </Text>
+          {view.special.map((c) => (
+            <View key={c.code} style={styles.charRow}>
+              {/* The character itself, except a line break (nothing to draw). */}
+              <Text style={styles.charGlyph}>{c.char === '\n' ? '⏎' : c.char}</Text>
+              <View style={styles.flex}>
+                <Text style={styles.code}>{c.code}{c.count > 1 ? `  ×${c.count}` : ''}</Text>
+                <Text style={styles.charNote}>{c.what} · bytes {c.bytes}</Text>
+              </View>
+            </View>
+          ))}
+        </>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   requester: {
@@ -205,6 +265,18 @@ const styles = StyleSheet.create({
     padding: 12, marginVertical: 8,
   },
   text: { color: colors.text, fontSize: 15, fontFamily: 'monospace' },
+  // The exact-characters view (21 Nov 2026)
+  charBox: {
+    backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12,
+    padding: 12, marginVertical: 8,
+  },
+  code: { color: colors.warning, fontFamily: 'monospace', fontWeight: '600' },
+  charNote: { color: colors.muted, fontSize: 12 },
+  charRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  charGlyph: {
+    color: colors.text, fontSize: 20, width: 40, height: 40, textAlign: 'center', textAlignVertical: 'center',
+    backgroundColor: colors.raised, borderRadius: 8, marginRight: 10,
+  },
   buttons: { flexDirection: 'row', marginHorizontal: -5 },
   half: { flex: 1, marginHorizontal: 5 },
 });
