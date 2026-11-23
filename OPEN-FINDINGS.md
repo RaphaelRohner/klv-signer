@@ -32,6 +32,13 @@ part of what's signed, or concerns transactions, keys or the Android side.
 - Low (weekly check 9 Nov 2026) — Letter-like symbols are skipped by the
   check, so a text using them shows no warning, e.g. circled `Ⓓ`
   ("Ⓓevikins") and squared letters.
+- Low (weekly check 23 Nov 2026) — "Show exact characters" (0.1.7): an
+  app could write fake codes like "[U+0435]" as ordinary text; in the view
+  they look like real codes, only not coloured.
+- Low (weekly check 23 Nov 2026) — "Show exact characters" (0.1.7): the
+  list labels ǀ and ꜱ as "Latin letter beyond A–Z (accented or special…)"
+  and Ⓓ as "symbol", which makes a look-alike sound like a normal letter
+  (its code is shown correctly).
 
 ## Accepted
 
