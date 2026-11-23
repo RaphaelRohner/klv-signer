@@ -19,7 +19,8 @@
  *     another one.
  *   - since 21 Nov 2026: a "Show exact characters" switch under the text
  *     (characterView). It shows the text again with every character that
- *     isn't a plain keyboard character written as its code (U+0435 …),
+ *     isn't a plain keyboard character written as its code (⟨U+0435⟩ …, in
+ *     brackets an app can't fake),
  *     highlighted, plus a list of those characters with their alphabet and
  *     bytes. So you can check exactly what will be signed without trusting
  *     the font. Off by default, so the normal screen stays simple.
@@ -38,7 +39,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import { Body, Button, Field, Notice, Screen, Strong, Title, colors } from '../components/ui.js';
 import { usePasswordCheck } from '../security/usePasswordCheck.js';
-import { characterView, otherLetters, signWalletMessage } from '../klever/signMessage.js';
+import {
+  CODE_CLOSE, CODE_OPEN, characterView, otherLetters, signWalletMessage,
+} from '../klever/signMessage.js';
 import DeviceWarning from '../components/DeviceWarning.js';
 import BiometricButton from '../components/BiometricButton.js';
 import {
@@ -216,7 +219,7 @@ function CharacterView({ view }) {
           <Text key={i}>{part.plain}</Text>
         ) : (
           // A line break shows its code and then really breaks the line.
-          <Text key={i} style={styles.code}>{`[${part.code}]`}{part.lineBreak ? '\n' : ''}</Text>
+          <Text key={i} style={styles.code}>{`${CODE_OPEN}${part.code}${CODE_CLOSE}`}{part.lineBreak ? '\n' : ''}</Text>
         )))}
       </Text>
       {view.special.length === 0 ? (

@@ -21,7 +21,7 @@ import {
 import { blake2b } from '@noble/hashes/blake2.js';
 import { keccak_256 } from '@noble/hashes/sha3.js';
 import {
-  characterView, checkMessageText, otherLetters, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES,
+  characterView, checkMessageText, otherLetters, signWalletMessage, MESSAGE_MAX_CHARS, MESSAGE_MAX_LINES, CODE_OPEN, CODE_CLOSE,
 } from '../src/klever/signMessage.js';
 import { ACTIONS, ERRORS, checkRequest, messageSignedReply, PROTOCOL_VERSION } from '../src/requests/protocol.js';
 
@@ -248,7 +248,7 @@ test('characterView (21 Nov 2026): non-plain characters become codes, plain ones
   assert.deepEqual(view.special.map((c) => [c.code, c.what, c.bytes, c.count]), [
     ['U+0435', 'Cyrillic letter', 'd0 b5', 1],
     ['U+000A', 'line break', '0a', 1],
-    ['U+00FC', 'Latin letter beyond A–Z (accented or special, e.g. é ü ß)', 'c3 bc', 2],
+    ['U+00FC', 'Latin letter with accent', 'c3 bc', 2],
   ]);
   // Plain keyboard text: nothing special, one plain part.
   assert.deepEqual(characterView('Hello, World! 123'), { parts: [{ plain: 'Hello, World! 123' }], special: [] });
@@ -256,9 +256,31 @@ test('characterView (21 Nov 2026): non-plain characters become codes, plain ones
   const math = characterView(String.fromCodePoint(0x1d402));
   assert.equal(math.special[0].code, 'U+1D402');
   assert.equal(math.special[0].bytes, 'f0 9d 90 82');
-  assert.equal(math.special[0].what, 'styled or unusual Latin character');
+  assert.equal(math.special[0].what, 'looks like "C" (styled or letter-like character)');
   // The codes always add up to exactly the signed text, character by character.
   const sample = `a${ch(0x0430)}${ch(0x2167)} ${ch(0x0663)}${ch(0xb2)}\n${ch(0x20ac)}`;
   const rebuilt = characterView(sample).parts.map((p) => (p.plain ?? String.fromCodePoint(parseInt(p.code.slice(2), 16)))).join('');
   assert.equal(rebuilt, sample);
+});
+
+test('weekly check (23 Nov 2026): codes can\'t be faked, and look-alikes are labelled as such', () => {
+  // The brackets around a code aren't plain keyboard characters, so an app that writes
+  // "⟨U+0435⟩" into its text gets its brackets shown as codes too – a fake never looks real.
+  for (const b of [CODE_OPEN, CODE_CLOSE]) {
+    const cp = b.codePointAt(0);
+    assert.ok(cp < 0x20 || cp > 0x7e, 'bracket must not be a plain keyboard character');
+  }
+  const fake = characterView(`D${CODE_OPEN}U+0435${CODE_CLOSE}vikins`);
+  assert.deepEqual(fake.parts.map((p) => p.code || p.plain), ['D', 'U+27E8', 'U+0435', 'U+27E9', 'vikins']);
+  // With plain [ ] it would have been one innocent-looking plain part – that's the old problem.
+  assert.deepEqual(characterView('D[U+0435]vikins').parts, [{ plain: 'D[U+0435]vikins' }]);
+  // Labels: say what a styled character looks like; name unusual Latin letters as such.
+  const what = (c) => characterView(c).special[0].what;
+  assert.equal(what('\u24B9'), 'looks like "D" (styled or letter-like character)'); // Ⓓ
+  assert.equal(what('\u2167'), 'looks like "VIII" (styled or letter-like character)'); // Ⅷ
+  assert.equal(what('\uFF11'), 'looks like "1" (styled or letter-like character)'); // fullwidth 1
+  assert.match(what('\u01C0'), /^unusual Latin letter/); // ǀ (looks like l)
+  assert.match(what('\uA731'), /^unusual Latin letter/); // small-capital s
+  assert.equal(what('\u00E9'), 'Latin letter with accent'); // é
+  assert.equal(what('\u0663'), 'digit that isn\'t 0–9'); // Arabic-Indic 3
 });

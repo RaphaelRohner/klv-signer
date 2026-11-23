@@ -32,13 +32,6 @@ part of what's signed, or concerns transactions, keys or the Android side.
 - Low (weekly check 9 Nov 2026) — Letter-like symbols are skipped by the
   check, so a text using them shows no warning, e.g. circled `Ⓓ`
   ("Ⓓevikins") and squared letters.
-- Low (weekly check 23 Nov 2026) — "Show exact characters" (0.1.7): an
-  app could write fake codes like "[U+0435]" as ordinary text; in the view
-  they look like real codes, only not coloured.
-- Low (weekly check 23 Nov 2026) — "Show exact characters" (0.1.7): the
-  list labels ǀ and ꜱ as "Latin letter beyond A–Z (accented or special…)"
-  and Ⓓ as "symbol", which makes a look-alike sound like a normal letter
-  (its code is shown correctly).
 
 ## Accepted
 
@@ -53,6 +46,15 @@ part of what's signed, or concerns transactions, keys or the Android side.
   services to put their name and a one-time number in the text.
 
 ## Fixed
+- 23 Nov 2026 — Two collected variants of the new "Show exact characters"
+  view (weekly check 23 Nov; fixed before releasing 0.1.7, Raphael): real
+  codes now use the brackets ⟨ ⟩, which aren't keyboard characters – an
+  app writing "⟨U+0435⟩" gets its brackets shown as codes too, so a fake
+  can't look like a real code (plain "[U+0435]" stays visibly uncoloured
+  text). Labels: styled or letter-like characters say what they look like
+  ('looks like "D"' for Ⓓ); Latin letters that aren't A–Z with accents are
+  named "unusual Latin letter (some look exactly like plain ones…)" (ǀ, ꜱ).
+  The other two collected points (no WARNING for ǀ ꜱ Ⓓ) stay for 7 Dec.
 - 21 Nov 2026 — Outside feedback by jenniferseward (Signer 0.1.7):
   (1) "a text mixing Latin/Cyrillic plus zero-width characters must be
   caught before any signature, not only on the final screen" – checked:

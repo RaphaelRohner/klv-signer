@@ -59,7 +59,8 @@
  * THE "EXACT CHARACTERS" VIEW (characterView, 21 Nov 2026)
  *   On the approval screen you can switch to a view that shows the text with
  *   every character that isn't a plain keyboard character (A–Z, a–z, 0–9,
- *   punctuation, the normal space) written as its code, e.g. "D[U+0435]vikins",
+ *   punctuation, the normal space) written as its code, e.g. "D⟨U+0435⟩vikins"
+ *   (special brackets an app can't fake, since 23 Nov 2026),
  *   plus a list of those characters with their alphabet and their bytes. So
  *   you can see exactly which characters will be signed without relying on
  *   how the phone's font draws them. It adds to the refusals and warnings
@@ -230,6 +231,16 @@ export function characterView(text) {
   return { parts, special: [...special.values()] };
 }
 
+/**
+ * The brackets the approval screen puts around a code: ⟨U+0435⟩ (weekly check
+ * 23 Nov 2026). They're deliberately NOT plain keyboard characters: if an app
+ * wrote "⟨U+0435⟩" into its text to fake a code, the brackets themselves would
+ * be shown as codes (⟨U+27E8⟩…), so a fake can't look like a real one.
+ * (With plain [ ] an app could write "[U+0435]" as ordinary text.)
+ */
+export const CODE_OPEN = '\u27E8';
+export const CODE_CLOSE = '\u27E9';
+
 /** "U+0435" for a code point (at least 4 hex digits, capital letters). */
 function codeOf(cp) {
   return 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
@@ -245,13 +256,24 @@ function codeOf(cp) {
 function describeCharacter(c) {
   if (c === '\n') return 'line break';
   if (/\p{M}/u.test(c)) return 'mark that combines with the character before it';
-  if (/\p{Nd}/u.test(c)) return 'digit that isn\'t 0–9'; // e.g. Arabic-Indic or fullwidth digits
-  if (LETTER_OR_NUMBER.test(c)) { // letters, and letter-like numbers such as the Roman numeral Ⅷ
+  // Characters that Unicode itself treats as a styled form of plain letters or
+  // digits: say WHAT they look like (weekly check 23 Nov 2026: "symbol" for
+  // Ⓓ made a look-alike sound harmless). E.g. Ⓓ → D, 𝐂 → C, ＡＢＣ → A, Ⅷ → VIII.
+  const looks = c.normalize('NFKC');
+  if (looks !== c && /^[A-Za-z0-9]+$/.test(looks)) return `looks like "${looks}" (styled or letter-like character)`;
+  if (/\p{Nd}/u.test(c)) return 'digit that isn\'t 0–9'; // e.g. Arabic-Indic digits
+  if (LETTER_OR_NUMBER.test(c)) {
     if (MATH_GREEK.test(c)) return 'Greek letter (styled)';
     const alphabet = ALPHABETS.find(([, re]) => re.test(c));
     if (alphabet) return `${alphabet[0]} letter`;
-    if (UNUSUAL_LATIN.test(c) || c.normalize('NFKC') !== c) return 'styled or unusual Latin character';
-    if (LATIN.test(c)) return 'Latin letter beyond A–Z (accented or special, e.g. é ü ß)';
+    if (LATIN.test(c)) {
+      // A plain letter with accents (é = e + ´): its base is A–Z. Everything else
+      // Latin (ß, ø, ǀ, ꜱ, phonetic letters …) is named as unusual, because some of
+      // these look exactly like plain letters (ǀ like l, ꜱ like s) – weekly check 23 Nov.
+      const base = c.normalize('NFD').replace(/\p{M}/gu, '');
+      if (/^[A-Za-z]$/.test(base)) return 'Latin letter with accent';
+      return 'unusual Latin letter (some look exactly like plain ones, e.g. ǀ like l)';
+    }
     return 'letter of another alphabet';
   }
   if (/\p{N}/u.test(c)) return 'number sign (e.g. ² or ½)';

@@ -977,15 +977,20 @@ Install both new builds over the old ones (wallet and allowed apps stay).
       Tap **Hide exact characters** → the box disappears. Reject.
 - [ ] `Grüße СОРЕ` (the second word is Cyrillic; copy it from here) → the
       yellow "Cyrillic" warning as before. Tap **Show exact characters** →
-      `Gr[U+00FC][U+00DF]e [U+0421][U+041E][U+0420][U+0415]`, with the codes
-      in yellow, and a list below: ü and ß as "Latin letter beyond A–Z",
-      С О Р Е as "Cyrillic letter", each with its bytes. Reject.
-- [ ] Two lines (`Line one` Enter `Line two`) → the view shows `[U+000A]`
+      `Gr⟨U+00FC⟩⟨U+00DF⟩e ⟨U+0421⟩⟨U+041E⟩⟨U+0420⟩⟨U+0415⟩`, with the codes
+      in yellow, and a list below: ü as "Latin letter with accent", ß as
+      "unusual Latin letter", С О Р Е as "Cyrillic letter", each with its
+      bytes. Reject.
+- [ ] Two lines (`Line one` Enter `Line two`) → the view shows `⟨U+000A⟩`
       at the end of the first line and the second line below it. Reject.
 - [ ] The reviewer's case: copy `Sign in to Dеvikins​` from here (it has a
       Cyrillic е **and** an invisible zero-width space at the end) into the
       example app's "Sign a text" box → refused straight away with "invisible
       or special characters", no approval screen.
+- [ ] Fake codes (weekly check 23 Nov): `D[U+0435]vikins` → the view shows it
+      as plain text, uncoloured (real codes use ⟨ ⟩). `Ⓓevikins` (copy it from
+      here) → the yellow warning, and in the view `⟨U+24B9⟩evikins` with the
+      label 'looks like "D"'. Reject both.
 
 ---
 
